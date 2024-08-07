@@ -90,7 +90,7 @@
 							<t:Column id="equipment"  width="100px" class="customColumnBackground" hAlign="Center" sortProperty="equipment" filterProperty="equipment">
 								<Label text="{i18n>equipment}"/>
 								<t:template>
-									<Text text="{LicencesListJsonModel>Equnr}" wrapping="false" class="text-bold" visible="{= !${LicencesListJsonModel>nested} }"/>
+									<Text  text="{LicencesListJsonModel>Equnr}" wrapping="false" class="text-bold" visible="{= !${LicencesListJsonModel>nested} }"/>
 								</t:template>
 							</t:Column>
 							<t:Column id="status" hAlign="Center" sortProperty="status" filterProperty="status">
