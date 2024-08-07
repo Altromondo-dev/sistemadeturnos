@@ -83,7 +83,7 @@
 							<t:Column>
 								<t:template>
 									<VBox>
-										<Button icon="sap-icon://expand-group" press="onShowDetailsPress" visible="{= !${LicencesListJsonModel>nested} }"/>
+										<Button icon="sap-icon://expand-group"  press="onShowDetailsPress" visible="{= !${LicencesListJsonModel>nested} }"/>
 									</VBox>
 								</t:template>
 							</t:Column>
