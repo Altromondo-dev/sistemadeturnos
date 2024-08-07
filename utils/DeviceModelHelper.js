@@ -1,0 +1,1 @@
+sap.ui.define(["sap/ui/Device","transener/sistemadeturnos/utils/FioriComponentHelper"],function(e,n){"use strict";return{loadModel:function(){var n=sap.ui.getCore().getComponent();var i=new sap.ui.model.json.JSONModel(e);i.setDefaultBindingMode("OneWay");n.byId("App").setModel(i,"Device")}}});

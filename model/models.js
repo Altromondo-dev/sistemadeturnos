@@ -1,0 +1,4 @@
+sap.ui.define(["sap/ui/model/json/JSONModel","sap/ui/Device","transener/sistemadeturnos/services/LicenseService","transener/sistemadeturnos/utils/AppManagementHelper","transener/sistemadeturnos/utils/FioriHelper"],function(e,t,n,s,o){"use strict";return{createDeviceModel:function(){var n=new e(t);n.setDefaultBindingMode("OneWay");return n},
+// createLicensesModel: function () {
+// 	// LicenseService.GET();
+createLicenseJsonModel:function(){var e=o.getAppPath();var t=s.getModel("LicenseJsonModel");t.loadData(e+"model/LicenseJsonModel.json","",false);return t},createFiltersModel:function(){var e=o.getAppPath();var t=s.getModel("FiltersJsonModel");var n=s.getModel("LocalFilterJsonModel").setData({});t.loadData(e+"model/FiltersJsonModel.json","",false);return t,n}}});

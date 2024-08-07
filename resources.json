@@ -1,0 +1,502 @@
+{
+    "resources": [
+        {
+            "name": "utils/DateHelper.js"
+        },
+        {
+            "name": "utils/FioriHelper.js"
+        },
+        {
+            "name": "model/FiltersJsonModel.json"
+        },
+        {
+            "name": "conf/permisosPorEstado.json"
+        },
+        {
+            "name": "conf/permisos.json"
+        },
+        {
+            "name": "conf/centroToRegion.json"
+        },
+        {
+            "name": "manifest.json"
+        },
+        {
+            "name": "view/Main/ExcelDownloadHelper.js"
+        },
+        {
+            "name": "utils/jspdfmin.js"
+        },
+        {
+            "name": "utils/jspdf.js"
+        },
+        {
+            "name": "utils/i18nTranslationHelper.js"
+        },
+        {
+            "name": "utils/formatter.js"
+        },
+        {
+            "name": "utils/ValidateHelper.js"
+        },
+        {
+            "name": "utils/UnifilarHelper.js"
+        },
+        {
+            "name": "utils/TramitacionMasivaCalendarHelper.js"
+        },
+        {
+            "name": "utils/TramitacionCalendarHelper.js"
+        },
+        {
+            "name": "utils/RolAuthorizationHelper.js"
+        },
+        {
+            "name": "utils/ODataRequestHelper.js"
+        },
+        {
+            "name": "utils/NavigationHelper.js"
+        },
+        {
+            "name": "utils/MessageBoxHelper.js"
+        },
+        {
+            "name": "utils/MailHelper.js"
+        },
+        {
+            "name": "utils/LicenseHelper.js"
+        },
+        {
+            "name": "utils/LegacyValidationHelper.js"
+        },
+        {
+            "name": "utils/FormatterHelper.js"
+        },
+        {
+            "name": "utils/FormatHelper.js"
+        },
+        {
+            "name": "model/LicenseJsonModel.json"
+        },
+        {
+            "name": "utils/FioriComponentHelper.js"
+        },
+        {
+            "name": "utils/FileDownloadHelper.js"
+        },
+        {
+            "name": "utils/ExportLicenseHelper.js"
+        },
+        {
+            "name": "utils/DocumentCreationHelper.js"
+        },
+        {
+            "name": "utils/DeviceModelHelper.js"
+        },
+        {
+            "name": "i18n/i18n.properties",
+            "raw": "i18n/i18n.properties"
+        },
+        {
+            "name": "utils/BusyDialogHelper.js"
+        },
+        {
+            "name": "utils/BatchOperationsHelper.js"
+        },
+        {
+            "name": "utils/AppManagementHelper.js"
+        },
+        {
+            "name": "utils/AdvancedFilterHelper.js"
+        },
+        {
+            "name": "services/oDataService.js"
+        },
+        {
+            "name": "services/checkAlternativeLabelService.js"
+        },
+        {
+            "name": "services/WorkPlaceService.js"
+        },
+        {
+            "name": "services/UserService.js"
+        },
+        {
+            "name": "services/UserDataService.js"
+        },
+        {
+            "name": "services/UpkeepTypeService.js"
+        },
+        {
+            "name": "services/TipoOfEstacionalListService.js"
+        },
+        {
+            "name": "services/TipoEquipoService.js"
+        },
+        {
+            "name": "services/StatusService.js"
+        },
+        {
+            "name": "services/StationService.js"
+        },
+        {
+            "name": "services/RepositionTimeService.js"
+        },
+        {
+            "name": "services/ReportesService.js"
+        },
+        {
+            "name": "services/RegionesService.js"
+        },
+        {
+            "name": "services/PersonalHabilitadoService.js"
+        },
+        {
+            "name": "services/OrdenesService.js"
+        },
+        {
+            "name": "services/MailAROService.js"
+        },
+        {
+            "name": "services/LicenseTypeService.js"
+        },
+        {
+            "name": "services/LicenseService.js"
+        },
+        {
+            "name": "services/LibroGuardiasService.js"
+        },
+        {
+            "name": "services/InterventionTypesService.js"
+        },
+        {
+            "name": "services/GrupoPlanificadorService.js"
+        },
+        {
+            "name": "services/EtMailService.js"
+        },
+        {
+            "name": "services/EstacionesService.js"
+        },
+        {
+            "name": "services/EquiposService.js"
+        },
+        {
+            "name": "services/EmpresaTramitacionService.js"
+        },
+        {
+            "name": "model/models.js"
+        },
+        {
+            "name": "model/HardCodeModel.js"
+        },
+        {
+            "name": "libs/xlsx.js"
+        },
+        {
+            "name": "libs/jszip.js"
+        },
+        {
+            "name": "libs/FileSaver.js"
+        },
+        {
+            "name": "controller/Main.controller.js"
+        },
+        {
+            "name": "Component.js"
+        },
+        {
+            "name": "manifest-bundle.zip"
+        },
+        {
+            "name": "Component-preload.js",
+            "merged": true
+        },
+        {
+            "name": "services/OrdenesService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "view/Main/ExcelDownloadHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/jspdfmin-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/jspdf-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/i18nTranslationHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/formatter-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/ValidateHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/UnifilarHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/TramitacionMasivaCalendarHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/TramitacionCalendarHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/RolAuthorizationHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/ODataRequestHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/NavigationHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/MessageBoxHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/MailHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/LicenseHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/LegacyValidationHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/FormatterHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/FormatHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/FioriHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/FioriComponentHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/FileDownloadHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/ExportLicenseHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/DocumentCreationHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/DeviceModelHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/DateHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/BusyDialogHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/BatchOperationsHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/AppManagementHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "utils/AdvancedFilterHelper-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/oDataService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/checkAlternativeLabelService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/WorkPlaceService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/UserService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/UserDataService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/UpkeepTypeService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/TipoOfEstacionalListService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/TipoEquipoService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/StatusService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/StationService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/RepositionTimeService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/ReportesService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/RegionesService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/PersonalHabilitadoService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/MailAROService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/LicenseTypeService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/LicenseService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/LibroGuardiasService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/InterventionTypesService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/GrupoPlanificadorService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/EtMailService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/EstacionesService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/EquiposService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "services/EmpresaTramitacionService-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "model/models-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "model/HardCodeModel-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "libs/xlsx-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "libs/jszip-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "libs/FileSaver-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "controller/Main-dbg.controller.js",
+            "isDebug": true
+        },
+        {
+            "name": "Component-dbg.js",
+            "isDebug": true
+        },
+        {
+            "name": "../../sap-ui-version.json"
+        },
+        {
+            "name": "neo-app.json"
+        },
+        {
+            "name": "di.code-validation.core_issues.json"
+        },
+        {
+            "name": "view/Main.view.xml"
+        },
+        {
+            "name": "localService/metadata.xml"
+        },
+        {
+            "name": "images/transenerheader.png"
+        },
+        {
+            "name": "images/transener_top.png"
+        },
+        {
+            "name": "images/transener.png"
+        },
+        {
+            "name": "images/transbaheader.png"
+        },
+        {
+            "name": "images/transba_top.png"
+        },
+        {
+            "name": "images/TRANSBA.png"
+        },
+        {
+            "name": "fragments/newShift.fragment.xml"
+        },
+        {
+            "name": "css/style.css"
+        },
+        {
+            "name": "index.html"
+        }
+    ]
+}

@@ -1,0 +1,1 @@
+sap.ui.define(["transener/sistemadeturnos/services/oDataService"],function(e){"use strict";return{load:function(e,t){e({results:[{key:1,text:"Diaria"},{key:2,text:"Continua"}]})}}});

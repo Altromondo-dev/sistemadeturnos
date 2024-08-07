@@ -1,0 +1,39 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form" xmlns:core="sap.ui.core" width="50%">
+    <Dialog id="formNewShift" title="{i18n>newShift}" titleAlignment="Center">
+        <content>
+            <f:Form width="800px">
+                <f:layout>
+                    <f:ResponsiveGridLayout labelSpanXL="4" labelSpanL="3" labelSpanM="4" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="" columnsM="2" singleContainerFullSize="true" />
+                </f:layout>
+                <f:formContainers>
+                    <f:FormContainer>
+                        <f:formElements>
+                            <f:FormElement>
+                                <f:fields>
+                                    <VBox justifyContent="SpaceBetween">
+                                        <Label text="{i18n>init}:" required="true" />
+                                        <DateTimePicker id="initDate" width="40%" valueFormat="dd.MM.yyyy HH:mm" displayFormat="dd.MM.yyyy HH:mm" change="handleChange" class="sapUiSmallMarginBottom" />
+                                    </VBox>
+                                </f:fields>
+                            </f:FormElement>
+                            <f:FormElement>
+                                <f:fields>
+                                    <VBox justifyContent="SpaceBetween">
+                                        <Label text="{i18n>end}:" required="true" />
+                                        <DateTimePicker id="endDate" width="40%" valueFormat="dd.MM.yyyy HH:mm" displayFormat="dd.MM.yyyy HH:mm" change="handleChange" class="sapUiSmallMarginBottom" />
+                                    </VBox>
+                                </f:fields>
+                            </f:FormElement>
+                        </f:formElements>
+                    </f:FormContainer>
+                </f:formContainers>
+            </f:Form>
+        </content>
+        <beginButton>
+            <Button  icon="sap-icon://save" text="Crear Turno" press="onSearch" />
+        </beginButton>
+        <endButton>
+            <Button icon="sap-icon://inspect-down" text="Cerrar" press="closeDialog" />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

@@ -1,0 +1,1 @@
+sap.ui.define(["transener/sistemadeturnos/utils/FormatHelper","transener/sistemadeturnos/services/oDataService","transener/sistemadeturnos/utils/AppManagementHelper"],function(e,t,r){"use strict";return{_entitySet:"/CheckAlternativeLabelSet",getPromise:function(){let e=this._entitySet;return new Promise((r,s)=>{t.getModel("TransenerOperaciones").read(e,{success:r,error:s})})}}});

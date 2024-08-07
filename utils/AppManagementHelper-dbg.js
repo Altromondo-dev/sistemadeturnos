@@ -1,0 +1,98 @@
+sap.ui.define([
+	"transener/sistemadeturnos/utils/FioriComponentHelper"
+], function (FioriComponentHelper) {
+	"use strict";
+	return {
+		// globales 
+		_oApp: null,
+		isPhone: null,
+
+		setApp: function (oApp) {
+			this._oApp = oApp;
+		},
+
+		getModel: function (sModelName) {
+
+			var oComponent = FioriComponentHelper.getComponent()
+			var oApp = oComponent.getAggregation("rootControl");
+			var jsonModel = oApp.getModel(sModelName);
+			if (!jsonModel) {
+				jsonModel = new sap.ui.model.json.JSONModel();
+				jsonModel.setSizeLimit(9999);
+				oApp.setModel(jsonModel, sModelName);
+			}
+			return jsonModel;
+		},
+
+		getApp: function () {
+			return this._oApp;
+		},
+
+		getAppRouter: function () {
+			return
+		},
+
+		getUser: function () {
+			var oUserData = oApp.getModel("UserJsonModel").getData();
+			return oUserData.nombre + " " + oUserData.apellido;
+		},
+
+		getLoginName: function () {
+			var oUserData = oApp.getModel("UserJsonModel").getData();
+			return oUserData.login_name;
+		},
+
+		getStringUserLegacy: function () {
+			var oUserData = oApp.getModel("UserJsonModel").getData();
+			var oUserDataCu = oApp.getModel("CurrentUser").getData();
+			var name = oUserData.nombre + " " + oUserData.apellido;
+			var legacy = oUserDataCu.Legajo ? oUserDataCu.Legajo + " - " : "";
+			return `${legacy} ${name}`;
+		},
+
+		getUserLegacy: function () {
+			return oApp.getModel("CurrentUser").getData();
+		},
+
+		handleTramitacionesLicenciaExpand: function (aTramitacionesExpand) {
+			if (aTramitacionesExpand.length) {
+				aTramitacionesExpand.forEach(tramitacion => {
+					if (tramitacion.Estado === "01") {
+						tramitacion.Enabled = false;
+					}
+					if (tramitacion.Estado === "02") {
+						tramitacion.Enabled = true;
+					}
+					tramitacion.CalendarDates = [];
+				});
+				return aTramitacionesExpand;
+			}
+			return []
+		},
+
+		setNavigationProperties: function (oObject) {
+			oApp.getModel("CoordinationTableJsonModel").setData({
+				Coordinations: oObject.CoordinacionesLicencia_nav
+			});
+			oApp.getModel("TramitacionListJsonModel").setData({
+				Tramitaciones: this.handleTramitacionesLicenciaExpand(oObject.TramitacionesLicencia_nav)
+			});
+			oApp.getModel("ObservationTableJsonModel").setData({
+				Observations: oObject.ObservacionesLicencia_nav
+			});
+			oApp.getModel("SuspensionTableJsonModel").setData({
+				Suspensions: oObject.SuspensionLicencia_nav
+			});
+			oApp.getModel("ReanudationTableJsonModel").setData({
+				Reanudations: oObject.ReanudacionLicencia_nav
+			});
+			oApp.getModel("TransferListJsonModel").setData({
+				Transfers: oObject.TransferenciaJefeTrabajo_nav
+			});
+			oApp.getModel("FileListJsonModel").setData({
+				Files: oObject.AttachmentXLicencia_nav
+			});
+		}
+
+	};
+});

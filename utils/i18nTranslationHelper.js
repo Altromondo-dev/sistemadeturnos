@@ -1,0 +1,1 @@
+sap.ui.define(["transener/sistemadeturnos/utils/FioriComponentHelper"],function(e){"use strict";return{getTranslation:function(t,n){var r=e.getComponent();var i=r.getModel("i18n").getResourceBundle();var o=i.getText(t,n);if(o){return o}return t}}});
