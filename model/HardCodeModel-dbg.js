@@ -8,15 +8,16 @@ sap.ui.define([
 
 		getModel: function () {
 			//gets component
-			var component = FioriComponentHelper.getComponent();
+			var oComponent = FioriComponentHelper.getComponent();
+				var oApp = oComponent.getAggregation("rootControl");
 			//gets model
-			var jsonModel = sap.ui.getCore().getModel("HardCodeModel");
+			var jsonModel = oApp.getModel("HardCodeModel");
 			//checks if model exists
 			if (!jsonModel) {
 				jsonModel = new sap.ui.model.json.JSONModel(this.getData());
 				jsonModel.setSizeLimit(9999);
 				//sets model
-				sap.ui.getCore().setModel(jsonModel, "HardCodeModel");
+				oApp.setModel(jsonModel, "HardCodeModel");
 			}
 			return jsonModel;
 		},

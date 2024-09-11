@@ -28,14 +28,13 @@ sap.ui.define([
 			})
 		},
 
-		successGet: function (data) {
+	successGet: function (data) {
 			var aData = FormatHelper.removeResults(data);
-		//	var aOrdered = _.orderBy(aData, ['Codigo'], ['asc'])
-			AppManagementHelper.getModel("EstacionesJsonModel").setProperty("/Estaciones");
+			// var aOrdered = _.orderBy(aData, ['Codigo'], ['asc'])
+			AppManagementHelper.getModel("EstacionesJsonModel").setProperty("/Estaciones", aData);
 			if (!AppManagementHelper.getModel("EstacionesJsonModel").getProperty("/EstacionesPorRegion")) {
-				AppManagementHelper.getModel("EstacionesJsonModel").setProperty("/EstacionesPorRegion");
+				AppManagementHelper.getModel("EstacionesJsonModel").setProperty("/EstacionesPorRegion", aData);
 			}
-			
 		},
 
 		errorGet: function (error) {

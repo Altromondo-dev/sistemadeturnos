@@ -15,7 +15,7 @@ sap.ui.define([
 		getUser: function () {
 			var self = this;
 			var path = this._servicePathPrefix + this._servicePath + "?multiValuesAsArrays=true";
-			console.log(path)
+		
 			jQuery.ajax(path, {
 				method: "GET",
 				success: jQuery.proxy(self.onReadUserApiSuccess, self),
@@ -36,7 +36,7 @@ sap.ui.define([
 		},
 
 		onReadUserApiSuccess: function (data, textStatus, jqXHR) {
-				console.log("User",data)
+		//		console.log("User",data)
 			AppManagementHelper.getModel("UserJsonModel").setData({
 				nombre: data.firstName,
 				apellido: data.lastName,

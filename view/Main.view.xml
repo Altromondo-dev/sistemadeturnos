@@ -9,24 +9,29 @@
 							<VBox width="50%" alignItems="End">
 								<HBox alignItems="Center">
 									<Label text="{i18n>region}:" class="sapUiTinyMarginEnd"/>
-									<ComboBox width="20rem" id="Estaciones" selectionChange=".loadGrupoPlanificador"
+									<ComboBox width="20rem" id="Region" selectionChange=".loadGrupoPlanificador" selectedKey="{FiltersJsonModel>/Werks/value}"
 										items="{ path: 'RegionesJsonModel>/Regiones', templateShareable: true }">
 										<core:Item key="{RegionesJsonModel>Werks}" text="{RegionesJsonModel>Name1}"/>
 									</ComboBox>
 								</HBox>
 								<HBox alignItems="Center">
 									<Label text="{i18n>ET}:" class="sapUiTinyMarginEnd"/>
-									<MultiComboBox width="20rem" selectionChange=".changeUbicacion" items="{ path: 'EquiposJsonModel>/Equipos', templateShareable: true }">
-										<core:Item key="{EquiposJsonModel>CodigoEquipo}" text="{EquiposJsonModel>CodigoEquipo} - {EquiposJsonModel>DescEquipo}"/>
+									<MultiComboBox width="20rem" selectionChange=".changeUbicacion" items="{ path: 'EstacionesJsonModel>/Estaciones', templateShareable: true }">
+										<core:Item key="{EstacionesJsonModel>Codigo}" text="{EstacionesJsonModel>Codigo} - {EstacionesJsonModel>Descripcion}"/>
 									</MultiComboBox>
 								</HBox>
 								<HBox alignItems="Center">
 									<Label text="{i18n>equipmentCAM}:" class="sapUiTinyMarginEnd"/>
-									<ComboBox width="20rem"/>
+									<ComboBox width="20rem" id="EquipCammesa" enabled="{parts: ['EnabledFilterLicstat>/enabled', 'FilterSelectionJsonModel>/enabledComboEQUIPO'], formatter: '.FormatterHelper.enabledCombo'}"
+										selectionChange="" items="{ path: 'EquiposJsonModel>/Equipos', templateShareable: true }">
+										<core:Item key="{EquiposJsonModel>CodigoEquipo}" text="{EquiposJsonModel>CodigoEquipo} - {EquiposJsonModel>DescEquipo}"/>
+									</ComboBox>
 								</HBox>
 								<HBox alignItems="Center">
 									<Label text="{i18n>statusCAM}:" class="sapUiTinyMarginEnd"/>
-									<ComboBox width="20rem"/>
+									<ComboBox width="20rem" id="StatusECammesa" selectionChange="" items="{ path: 'HardCodeModel>/EqustatCammesa', templateShareable: true }">
+										<core:Item key="{HardCodeModel>key}" text="{HardCodeModel>value}"/>
+									</ComboBox>
 								</HBox>
 							</VBox>
 							<VBox width="50%" alignItems="End">
@@ -36,11 +41,15 @@
 								</HBox>
 								<HBox alignItems="Center">
 									<Label text="{i18n>equipRecierre}:" class="sapUiTinyMarginEnd"/>
-									<ComboBox/>
+									<ComboBox width="10rem" id="ERecierre" selectionChange="" items="{ path: 'HardCodeModel>/Rdisparo', templateShareable: true }">
+										<core:Item key="{HardCodeModel>key}" text="{HardCodeModel>value}"/>
+									</ComboBox>
 								</HBox>
 								<HBox alignItems="Center">
 									<Label text="{i18n>equipDisparo}:" class="sapUiTinyMarginEnd"/>
-									<ComboBox/>
+									<ComboBox width="10rem" id="EDisparo" selectionChange="" items="{ path: 'HardCodeModel>/Bloqueo', templateShareable: true }">
+										<core:Item key="{HardCodeModel>key}" text="{HardCodeModel>value}"/>
+									</ComboBox>
 								</HBox>
 							</VBox>
 						</FlexBox>
@@ -78,22 +87,23 @@
 							</HBox>
 						</HBox>
 					</FlexBox>
-					<t:Table id="auditTable" class="customTable" rows='{path:"LicencesListJsonModel>/"}' selectionMode="None" visibleRowCount='12'>
+					<t:Table id="auditTable" class="customTable" rows='{path:"LicencesListJsonModel>/"}' selectionMode="None" visibleRowCount='12'
+						enableCellFilter="true">
 						<t:columns>
 							<t:Column>
 								<t:template>
 									<VBox>
-										<Button icon="sap-icon://expand-group"  press="onShowDetailsPress" visible="{= !${LicencesListJsonModel>nested} }"/>
+										<Button icon="sap-icon://expand-group" press="onShowDetailsPress" visible="{= !${LicencesListJsonModel>nested} }"/>
 									</VBox>
 								</t:template>
 							</t:Column>
-							<t:Column id="equipment"  width="100px" class="customColumnBackground" hAlign="Center" sortProperty="equipment" filterProperty="equipment">
+							<t:Column id="equipment" width="100px" class="customColumnBackground" hAlign="Center" sortProperty="equipment" filterProperty="equipment">
 								<Label text="{i18n>equipment}"/>
 								<t:template>
 									<Text text="{LicencesListJsonModel>Equnr}" wrapping="false" class="text-bold" visible="{= !${LicencesListJsonModel>nested} }"/>
 								</t:template>
 							</t:Column>
-							<t:Column id="status" hAlign="Center" sortProperty="status" filterProperty="status">
+							<t:Column id="status" hAlign="Center" sortProperty="Equstat" filterProperty="Equstat">
 								<Label text="{i18n>status}" class="back"/>
 								<t:template>
 									<Text text="{ path: 'LicencesListJsonModel>Equstat' ,formatter: '.FormatterHelper.getEstado' }" wrapping="false"/>
@@ -112,7 +122,8 @@
 									<Text text="{LicencesListJsonModel>Solbeg}" wrapping="false"/>
 								</t:template>
 							</t:Column>
-							<t:Column id="toDoWork" width="350px" sortProperty="toDoWork" filterProperty="toDoWork">
+						
+							<t:Column id="toDoWork" width="350px" sortProperty="Comments" filterProperty="Comments">
 								<Label text="{i18n>toDoWork}"/>
 								<t:template>
 									<Text text="{LicencesListJsonModel>Comments}" wrapping="true"/>
@@ -130,13 +141,13 @@
 									<Text text="{LicencesListJsonModel>Id}" wrapping="false"/>
 								</t:template>
 							</t:Column>
-							<t:Column id="shift" hAlign="End" sortProperty="shift" filterProperty="shift">
-								<Label text="{i18n>shift}"/>
+								<t:Column  hAlign="End" sortProperty="initHour" filterProperty="TurnoAsignado">
+								<Label text="{i18n>shift}" textAlign="Center"/>
 								<t:template>
-									<Text text="{shift}" wrapping="false" class="text-bold"/>
+									<Text text="{LicencesListJsonModel>TurnoAsignado}" wrapping="false" class="turno"/>
 								</t:template>
 							</t:Column>
-							<t:Column id="comment" hAlign="End" sortProperty="comment" filterProperty="comment">
+							<t:Column id="comment" hAlign="End" sortProperty="Prgcomments" filterProperty="Prgcomments">
 								<Label text="{i18n>comment}"/>
 								<t:template>
 									<Text text="{LicencesListJsonModel>Prgcomments}" wrapping="true"/>

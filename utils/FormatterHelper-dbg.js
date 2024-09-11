@@ -12,6 +12,13 @@ sap.ui.define([
 			return oRepositionTime.Valtext;
 		},
 
+		enabledCombo: function (enabled, ComboEquipo) {
+			if (enabled && ComboEquipo) {
+				return true
+			} else {
+				return false
+			}
+		},
 		getNovedadType: function (sProccess) {
 			switch (sProccess) {
 			case "E":

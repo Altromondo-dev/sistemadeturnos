@@ -85,6 +85,7 @@ sap.ui.define([
 			AppManagementHelper.getModel('vistaSeleccionada').setProperty("/vista", 0);
 			//	oRouter.getRoute("Licencias").attachPatternMatched(this._routePatternMatched, this);
 			HardCodeModel.getModel();
+
 			AppManagementHelper.getModel("LocalFilterJsonModel"); //this creates the model
 			AppManagementHelper.getModel("filtrosAplicadosTextVisibleModel");
 			AppManagementHelper.getModel("filtrosAplicadosTextVisibleModel").setData({
@@ -379,9 +380,8 @@ sap.ui.define([
 					console.log("DataResults", data.results)
 					const nestedData = this.transformData(data.results)
 					console.log("Nested", nestedData)
-					var oLicencesListJsonModel = new sap.ui.model.json.JSONModel(nestedData);
-					this.onCountItems(nestedData)
-					oView.setModel(oLicencesListJsonModel, "LicencesListJsonModel");
+					this.onCountItems(data.results)
+					this.rows(nestedData)
 					oTable.setBusy(false)
 				},
 				error: (error) => {
@@ -390,6 +390,22 @@ sap.ui.define([
 			})
 			this.closeDialog()
 				//oView.setModel("LicencesListJsonModel", LiceneService.GET(filters))
+		},
+		rows: function (data) {
+			const oView = this.getView()
+			var startTime = new Date();
+			startTime.setHours(7, 0);
+
+			var timeSlots = this.generateTimeSlots(startTime, data);
+
+			data.forEach(function (row, index) {
+				row["TurnoAsignado"] = timeSlots[index];
+			});
+
+			console.log(data)
+			var oLicencesListJsonModel = new sap.ui.model.json.JSONModel(data);
+
+			oView.setModel(oLicencesListJsonModel, "LicencesListJsonModel");
 		},
 		formatTime: function (dDate) {
 			if (dDate) {
@@ -1441,7 +1457,6 @@ sap.ui.define([
 		},
 
 		loadSociety: function () {
-			console.log("entre")
 			var that = this;
 			var oModeld = oDataService.getModel("TransenerOperaciones");
 			oModeld.read("/EmpresaUsuarioSet", {
@@ -1663,7 +1678,7 @@ sap.ui.define([
 			centroToRegion.loadData(sPath + "/conf/centroToRegion.json", "", false);
 
 			//	AppManagementHelper.getModel("FiltersJsonModel").setProperty("/Werks/value", werks);
-
+			console.log("Estaciones", AppManagementHelper.getModel("EstacionesJsonModel").getData())
 		},
 
 		loadAllOrdenes: function (regiones) {
@@ -4499,10 +4514,11 @@ sap.ui.define([
 			}
 
 		},
-
 		loadGrupoPlanificador: function (evt) {
 			//let region = evt.getParameters().selectedItem.getKey();
 			let region = AppManagementHelper.getModel("FiltersJsonModel").getData().Werks.value;
+
+			console.log("Region", region)
 			if (region === '') {
 				AppManagementHelper.getModel("FiltersJsonModel").setProperty("/Werks/value", "");
 			}
@@ -4570,6 +4586,24 @@ sap.ui.define([
 				// Asignar el modelo al View
 			const oModel = new sap.ui.model.json.JSONModel(counts);
 			this.getView().setModel(oModel, "countsModel");
+		},
+
+		generateTimeSlots: function (startTime, rowsData) {
+			var timeSlots = [];
+			var time = new Date(startTime);
+
+			rowsData.forEach(function (row) {
+				// Verificar el valor de condTrabajo y sumar 30 o 45 minutos
+				var increment = row.Jobcond === "04" ? 45 : 30; // Ajusta "valorX" al valor de la condición específica
+				var hours = time.getHours().toString().padStart(2, '0');
+				var minutes = time.getMinutes().toString().padStart(2, '0');
+				timeSlots.push(hours + ":" + minutes);
+
+				// Sumar los minutos correspondientes (30 o 45)
+				time.setMinutes(time.getMinutes() + increment);
+			});
+
+			return timeSlots;
 		}
 
 	});
