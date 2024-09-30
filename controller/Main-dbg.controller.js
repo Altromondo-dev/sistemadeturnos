@@ -82,9 +82,11 @@ sap.ui.define([
 				Odering: "down"
 			});
 			AppManagementHelper.getModel("vistaSeleccionada");
+
 			AppManagementHelper.getModel('vistaSeleccionada').setProperty("/vista", 0);
 			//	oRouter.getRoute("Licencias").attachPatternMatched(this._routePatternMatched, this);
 			HardCodeModel.getModel();
+			AppManagementHelper.getModel("HorarioLicenciaJsonModel");
 
 			AppManagementHelper.getModel("LocalFilterJsonModel"); //this creates the model
 			AppManagementHelper.getModel("filtrosAplicadosTextVisibleModel");
@@ -323,7 +325,7 @@ sap.ui.define([
 			var oLicenseTableItems = oTable.getBinding("items");
 			var aFilter = [];
 
-			var Region = this.byId('Estaciones').getSelectedKey()
+			var Region = this.byId('Region').getSelectedKey()
 			if (Region) {
 				aFilter.push(new sap.ui.model.Filter("Werks", sap.ui.model.FilterOperator.EQ, Region));
 				// aFilter.push(new sap.ui.model.Filter("Idsolicitud", sap.ui.model.FilterOperator.Contains, sSearchId));
@@ -375,19 +377,20 @@ sap.ui.define([
 
 			oDataModel.setUseBatch(false)
 			oDataModel.read('/LicenciaTrabajoSet', {
-				filters: aFilters,
-				success: (data) => {
-					console.log("DataResults", data.results)
-					const nestedData = this.transformData(data.results)
-					console.log("Nested", nestedData)
-					this.onCountItems(data.results)
-					this.rows(nestedData)
-					oTable.setBusy(false)
-				},
-				error: (error) => {
-					console.log(error)
-				}
-			})
+					filters: aFilters,
+					success: (data) => {
+						console.log("DataResults", data.results)
+						const nestedData = this.transformData(data.results)
+						console.log("Nested", nestedData)
+						this.onCountItems(data.results)
+						this.rows(nestedData)
+						oTable.setBusy(false)
+					},
+					error: (error) => {
+						console.log(error)
+					}
+				})
+				// LicenseService.GETWithFilters(aFilters)
 			this.closeDialog()
 				//oView.setModel("LicencesListJsonModel", LiceneService.GET(filters))
 		},
@@ -420,6 +423,7 @@ sap.ui.define([
 			let isFirstItem = true;
 
 			data.forEach(item => {
+				AppManagementHelper.setNavigationProperties(item);
 				if (!equipoMap[item.Equnr]) {
 					equipoMap[item.Equnr] = {
 						Equnr: item.Equnr,
@@ -4604,6 +4608,199 @@ sap.ui.define([
 			});
 
 			return timeSlots;
+		},
+		// onAddMinutesPress: function (oEvent) {
+		// 	// Crear el Dialog solo si no existe ya
+		// 	if (!this.oMinuteDialog) {
+		// 		this.oMinuteDialog = new sap.m.Dialog({
+		// 			title: "Agregar Minutos",
+		// 			justifyContent: "Center",
+		// 			content: [
+		// 				new sap.m.StepInput("minuteInput", {
+		// 					min: 1,
+		// 					max: 120,
+		// 					step: 5,
+		// 					value: 30,
+		// 					width: "60px"
+
+		// 				})
+		// 			],
+		// 			beginButton: new sap.m.Button({
+		// 				text: "Aceptar",
+		// 				press: function () {
+		// 					var iMinutesToAdd = sap.ui.getCore().byId("minuteInput").getValue();
+		// 					this._applyMinuteChange(oEvent, iMinutesToAdd); // Lógica principal
+		// 					this.oMinuteDialog.close();
+		// 				}.bind(this)
+		// 			}),
+		// 			endButton: new sap.m.Button({
+		// 				text: "Cancelar",
+		// 				press: function () {
+		// 					this.oMinuteDialog.close();
+		// 				}.bind(this)
+		// 			})
+		// 		});
+
+		// 		// Agregar el Dialog al view
+		// 		this.getView().addDependent(this.oMinuteDialog);
+		// 	}
+		// 	// Abrir el Dialog
+		// 	this.oMinuteDialog.open();
+		// },
+		onAddMinutesPress: function (oEvent) {
+			// Get the row context explicitly if needed
+			var oContext = oEvent.getSource().getBindingContext("LicencesListJsonModel");
+			if (!oContext) {
+				jQuery.sap.log.error("No se puede obtener el contexto de la fila.");
+				return;
+			}
+
+			// Open the dialog and pass the row context
+			this._openMinuteDialog(oContext);
+		},
+
+		// _applyMinuteChange: function (oEvent, iMinutesToAdd) {
+		// 	// Obtener el modelo y la fila seleccionada
+		// 	var oTable = this.byId("auditTable");
+		// 	var oModel = oTable.getModel("LicencesListJsonModel");
+		// 	var oContext = oEvent.getSource().getBindingContext("LicencesListJsonModel"); // Contexto de la fila
+
+		// 	// Verificar si el contexto es válido
+		// 	if (!oContext) {
+		// 		jQuery.sap.log.error("No se puede obtener el contexto de la fila.");
+		// 		return;
+		// 	}
+
+		// 	var sPath = oContext.getPath();
+
+		// 	// Verificar el camino y el índice de la fila
+		// 	console.log("Path:", sPath); // Añadir depuración
+		// 	var iIndex = parseInt(sPath.split("/").pop(), 10); // Obtener el índice de la fila desde la ruta del binding
+
+		// 	// Verificar el índice
+		// 	if (isNaN(iIndex)) {
+		// 		jQuery.sap.log.error("No se puede obtener el índice de la fila.");
+		// 		return;
+		// 	}
+
+		// 	// Obtener todos los datos del modelo
+		// 	var aData = oModel.getProperty("/");
+
+		// 	// Recorrer desde la fila siguiente en adelante
+		// 	for (var i = iIndex + 1; i < aData.length; i++) {
+		// 		// Obtener el valor del horario actual de la fila siguiente
+		// 		var sNextTime = aData[i].TurnoAsignado; // Ejemplo: "07:00"
+
+		// 		// Convertir el horario a un objeto Date
+		// 		var oNextTime = this._convertStringToDate(sNextTime);
+
+		// 		// Sumar los minutos al horario actual de la fila siguiente
+		// 		oNextTime.setMinutes(oNextTime.getMinutes() + iMinutesToAdd);
+
+		// 		// Actualizar el horario de la fila siguiente
+		// 		aData[i].TurnoAsignado = this._convertDateToString(oNextTime);
+		// 	}
+
+		// 	// Refrescar el modelo para que los cambios se reflejen en la tabla
+		// 	oModel.setProperty("/", aData);
+		// },
+		_openMinuteDialog: function (oContext) {
+			console.log(oContext)
+			if (!this.oMinuteDialog) {
+				this.oMinuteDialog = new sap.m.Dialog({
+					title: "Agregar Minutos",
+					content: [
+						new sap.m.StepInput("minuteInput", {
+							min: 1,
+							max: 120,
+							step: 5,
+							value: 30,
+							width: "60px",
+							justifyContent: "Center"
+						})
+					],
+					beginButton: new sap.m.Button({
+						text: "Aceptar",
+						press: function () {
+							var iMinutesToAdd = sap.ui.getCore().byId("minuteInput").getValue();
+							this._applyMinuteChange(oContext, iMinutesToAdd); // Pass the context here
+							this.oMinuteDialog.close();
+						}.bind(this)
+					}),
+					endButton: new sap.m.Button({
+						text: "Cancelar",
+						press: function () {
+							this.oMinuteDialog.close();
+						}.bind(this)
+					})
+				});
+
+				this.getView().addDependent(this.oMinuteDialog);
+			}
+			this.oMinuteDialog.open();
+		},
+		_applyMinuteChange: function (oContext, iMinutesToAdd) {
+			console.log(oContext)
+			var oTable = this.byId("auditTable");
+			var oModel = oTable.getModel("LicencesListJsonModel");
+
+			// Use the provided context
+			var sPath = oContext.getPath();
+			var oData = oModel.getProperty(sPath);
+
+			// Extract index from the path
+			var iIndex = parseInt(sPath.split("/").pop(), 10);
+
+			// Check if index is valid
+			if (isNaN(iIndex)) {
+				jQuery.sap.log.error("No se puede obtener el índice de la fila.");
+				return;
+			}
+
+			// Get all data and update subsequent rows
+			var aData = oModel.getProperty("/");
+			for (var i = iIndex + 1; i < aData.length; i++) {
+				var sNextTime = aData[i].TurnoAsignado;
+				var oNextTime = this._convertStringToDate(sNextTime);
+				oNextTime.setMinutes(oNextTime.getMinutes() + iMinutesToAdd);
+				aData[i].TurnoAsignado = this._convertDateToString(oNextTime);
+			}
+
+			// Refresh the model
+			oModel.setProperty("/", aData);
+		},
+
+		_convertStringToDate: function (sTime) {
+			var aTime = sTime.split(":");
+			var oDate = new Date();
+			oDate.setHours(aTime[0], aTime[1], 0, 0);
+			return oDate;
+		},
+
+		_convertDateToString: function (oDate) {
+			var sHours = String(oDate.getHours()).padStart(2, '0');
+			var sMinutes = String(oDate.getMinutes()).padStart(2, '0');
+			return sHours + ":" + sMinutes;
+		},
+		onDeleteRow: function (oEvent) {
+			// Obtener el contexto de la fila donde se presionó el botón
+			var oContext = oEvent.getSource().getBindingContext("LicencesListJsonModel");
+
+			// Obtener el modelo
+			var oModel = oContext.getModel("LicencesListJsonModel");
+
+			// Obtener el índice de la fila seleccionada
+			var sPath = oContext.getPath(); // Devuelve algo como '/0', '/1', etc.
+			var iIndex = parseInt(sPath.split("/")[1]); // Obtiene el número de la fila
+
+			// Obtener los datos actuales del modelo
+			var aData = oModel.getProperty("/");
+
+			// Eliminar la fila seleccionada del array
+			aData.splice(iIndex, 1);
+
+			// Actualizar el modelo con los datos modificados
+			oModel.setProperty("/", aData);
 		}
 
 	});

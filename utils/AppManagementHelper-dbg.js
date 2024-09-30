@@ -71,28 +71,28 @@ sap.ui.define([
 		},
 
 		setNavigationProperties: function (oObject) {
-			oApp.getModel("CoordinationTableJsonModel").setData({
+			this.getModel("CoordinationTableJsonModel").setData({
 				Coordinations: oObject.CoordinacionesLicencia_nav
 			});
-			oApp.getModel("TramitacionListJsonModel").setData({
+			this.getModel("TramitacionListJsonModel").setData({
 				Tramitaciones: this.handleTramitacionesLicenciaExpand(oObject.TramitacionesLicencia_nav)
 			});
-			oApp.getModel("ObservationTableJsonModel").setData({
+			this.getModel("ObservationTableJsonModel").setData({
 				Observations: oObject.ObservacionesLicencia_nav
 			});
-			oApp.getModel("SuspensionTableJsonModel").setData({
+			this.getModel("SuspensionTableJsonModel").setData({
 				Suspensions: oObject.SuspensionLicencia_nav
 			});
-			oApp.getModel("ReanudationTableJsonModel").setData({
+			this.getModel("ReanudationTableJsonModel").setData({
 				Reanudations: oObject.ReanudacionLicencia_nav
 			});
-			oApp.getModel("TransferListJsonModel").setData({
+			this.getModel("TransferListJsonModel").setData({
 				Transfers: oObject.TransferenciaJefeTrabajo_nav
 			});
-			oApp.getModel("FileListJsonModel").setData({
+			this.getModel("FileListJsonModel").setData({
 				Files: oObject.AttachmentXLicencia_nav
 			});
 		}
 
-	};
+};
 });

@@ -22,7 +22,8 @@
 								</HBox>
 								<HBox alignItems="Center">
 									<Label text="{i18n>equipmentCAM}:" class="sapUiTinyMarginEnd"/>
-									<ComboBox width="20rem" id="EquipCammesa" enabled="{parts: ['EnabledFilterLicstat>/enabled', 'FilterSelectionJsonModel>/enabledComboEQUIPO'], formatter: '.FormatterHelper.enabledCombo'}"
+									<ComboBox width="20rem" id="EquipCammesa"
+										enabled="{parts: ['EnabledFilterLicstat>/enabled', 'FilterSelectionJsonModel>/enabledComboEQUIPO'], formatter: '.FormatterHelper.enabledCombo'}"
 										selectionChange="" items="{ path: 'EquiposJsonModel>/Equipos', templateShareable: true }">
 										<core:Item key="{EquiposJsonModel>CodigoEquipo}" text="{EquiposJsonModel>CodigoEquipo} - {EquiposJsonModel>DescEquipo}"/>
 									</ComboBox>
@@ -93,8 +94,15 @@
 							<t:Column>
 								<t:template>
 									<VBox>
-										<Button icon="sap-icon://expand-group" press="onShowDetailsPress" visible="{= !${LicencesListJsonModel>nested} }"/>
+										<Button icon="sap-icon://expand-group" press="onShowDetailsPress" visible="{= !!${LicencesListJsonModel>firstItem}}"
+											enabled="{= ${LicencesListJsonModel>nestedData}.length > 0 }"/>
 									</VBox>
+								</t:template>
+							</t:Column>
+							<t:Column width="50px" class="customColumnBackground" hAlign="Center">
+								<Label text="Eliminar"/>
+								<t:template>
+									<Button icon="sap-icon://less" press="onDeleteRow"/>
 								</t:template>
 							</t:Column>
 							<t:Column id="equipment" width="100px" class="customColumnBackground" hAlign="Center" sortProperty="equipment" filterProperty="equipment">
@@ -119,14 +127,13 @@
 							<t:Column id="initHour" hAlign="End" sortProperty="initHour" filterProperty="initHour">
 								<Label text="{i18n>initHour}" textAlign="Center"/>
 								<t:template>
-									<Text text="{LicencesListJsonModel>Solbeg}" wrapping="false"/>
+									<Text text="{path:'LicencesListJsonModel>Gdate', formatter: '.FormatterHelper.msTohoursSeconds'}" class="text-bold" wrapping="false"/>
 								</t:template>
 							</t:Column>
-						
-							<t:Column id="toDoWork" width="350px" sortProperty="Comments" filterProperty="Comments">
+							<t:Column id="toDoWork" width="250px" sortProperty="Comments" filterProperty="Comments">
 								<Label text="{i18n>toDoWork}"/>
 								<t:template>
-									<Text text="{LicencesListJsonModel>Comments}" wrapping="true"/>
+									<Text text="{LicencesListJsonModel>Comments}" wrapping="false"/>
 								</t:template>
 							</t:Column>
 							<t:Column id="region" width="200px" hAlign="Center" sortProperty="Werks" filterProperty="Werks">
@@ -138,13 +145,16 @@
 							<t:Column id="console" hAlign="Center" sortProperty="Id" filterProperty="Id">
 								<Label text="{i18n>console}"/>
 								<t:template>
-									<Text text="{LicencesListJsonModel>Id}" wrapping="false"/>
+									<Text text="{LicencesListJsonModel>Creador}" wrapping="false"/>
 								</t:template>
 							</t:Column>
-								<t:Column  hAlign="End" sortProperty="initHour" filterProperty="TurnoAsignado">
+							<t:Column hAlign="Center" width="130px" sortProperty="initHour" filterProperty="TurnoAsignado">
 								<Label text="{i18n>shift}" textAlign="Center"/>
 								<t:template>
-									<Text text="{LicencesListJsonModel>TurnoAsignado}" wrapping="false" class="turno"/>
+									<HBox alignItems="Center" justifyContent="SpaceBetween">
+										<Text text="{LicencesListJsonModel>TurnoAsignado}" wrapping="false" class="turno"/>
+										<Button icon="sap-icon://create-entry-time" press="onAddMinutesPress"/>
+									</HBox>
 								</t:template>
 							</t:Column>
 							<t:Column id="comment" hAlign="End" sortProperty="Prgcomments" filterProperty="Prgcomments">

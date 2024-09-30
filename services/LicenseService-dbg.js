@@ -1990,20 +1990,20 @@ sap.ui.define([
 		GETWithFilters: function (aFilters, bDontSort) {
 			
 			console.log("Pase", aFilters)
-			var aFiltersFound = this.checkFilterLogic(aFilters);
-			this.validateChecks(aFiltersFound);
-			this.validateLicStatFilters(aFiltersFound);
-			var aWithoutAroBloqueoRdisparo = this.validateAroBloqueoRdisparoFilters(aFiltersFound);
+			// var aFiltersFound = this.checkFilterLogic(aFilters);
+			// this.validateChecks(aFiltersFound);
+			// this.validateLicStatFilters(aFiltersFound);
+			// var aWithoutAroBloqueoRdisparo = this.validateAroBloqueoRdisparoFilters(aFiltersFound);
 			BusyDialogHelper.open("", "");
 			var entity = "/LicenciaTrabajoSet";
 			oDataService.getModel("TransenerOperaciones").read(entity, {
-				filters: aWithoutAroBloqueoRdisparo,
-				urlParameters: {
-					"$top": 60
-				},
-				/*urlParameters: {
-					"$expand": "HorariosPorLicencia_nav"
-				},*/
+				filters: aFilters,
+				// urlParameters: {
+				// 	"$top": 60
+				// },
+				// urlParameters: {
+				// 	"$expand": "HorariosPorLicencia_nav"
+				// },
 				success: function (bDontSort, oData) {
 					sap.m.MessageToast.show("Se han recuperado las ultimas 60 licencias/solicitudes, las demas estaran disponibles en breve");
 					this.successGET(bDontSort, oData);
@@ -2902,11 +2902,11 @@ sap.ui.define([
 			//	var aLicensesWithCheck = this.validateChecks(aLicensesOrdered);
 			// Issue 548 - Para las vistas  LTs de equipos y Salidas y Lineas la info viene ya ordenada de back end y no se debe reordenar
 			// para estas llamadas el parametro dontSort vendra en true
-			if (bDontSort !== true) {
-				var aLicensesOrdered = _.orderBy(aLicenses, ['Anio', "Id"], ["desc", "desc"])
-			} else {
-				aLicensesOrdered = aLicenses;
-			}
+			// if (bDontSort !== true) {
+			// 	var aLicensesOrdered = _.orderBy(aLicenses, ['Anio', "Id"], ["desc", "desc"])
+			// } else {
+			 var 	aLicensesOrdered = aLicenses;
+			// }
 
 			AppManagementHelper.getModel("LicencesListJsonModel").setData({
 				Licenses: aLicensesOrdered
