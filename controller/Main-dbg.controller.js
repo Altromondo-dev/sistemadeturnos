@@ -87,7 +87,7 @@ sap.ui.define([
 			//	oRouter.getRoute("Licencias").attachPatternMatched(this._routePatternMatched, this);
 			HardCodeModel.getModel();
 			AppManagementHelper.getModel("HorarioLicenciaJsonModel");
-
+			AppManagementHelper.getModel("consolasModel")
 			AppManagementHelper.getModel("LocalFilterJsonModel"); //this creates the model
 			AppManagementHelper.getModel("filtrosAplicadosTextVisibleModel");
 			AppManagementHelper.getModel("filtrosAplicadosTextVisibleModel").setData({
@@ -108,6 +108,9 @@ sap.ui.define([
 		setApplicationModels: function () {
 
 			var sPath = FioriHelper.getAppPath();
+
+			AppManagementHelper.getModel("consolasModel").loadData(sPath + "model/ConsolasModel.json", "", false);
+			console.log(AppManagementHelper.getModel("consolasModel").getData())
 
 			var permisosModel = AppManagementHelper.getModel("permisosModel");
 			permisosModel.loadData(sPath + "conf/permisos.json", "", false);
@@ -379,9 +382,9 @@ sap.ui.define([
 			oDataModel.read('/LicenciaTrabajoSet', {
 					filters: aFilters,
 					success: (data) => {
-						console.log("DataResults", data.results)
+
 						const nestedData = this.transformData(data.results)
-						console.log("Nested", nestedData)
+							//		console.log("Nested", nestedData)
 						this.onCountItems(data.results)
 						this.rows(nestedData)
 						oTable.setBusy(false)
@@ -417,6 +420,65 @@ sap.ui.define([
 			}
 			return "";
 		},
+		// transformData: function (data) {
+		// 	const transformedData = [];
+		// 	const equipoMap = {};
+		// 	let isFirstItem = true;
+
+		// 	data.forEach(item => {
+		// 		AppManagementHelper.setNavigationProperties(item);
+		// 		if (!equipoMap[item.Equnr]) {
+		// 			equipoMap[item.Equnr] = {
+		// 				Equnr: item.Equnr,
+		// 				expanded: false,
+		// 				nestedData: []
+		// 			};
+		// 			transformedData.push(equipoMap[item.Equnr]);
+		// 			isFirstItem = true
+		// 		}
+		// 		if (isFirstItem) {
+		// 			equipoMap[item.Equnr].firstItem = true;
+		// 			Object.assign(equipoMap[item.Equnr], item);
+		// 			isFirstItem = false;
+		// 		} else {
+		// 			equipoMap[item.Equnr].nestedData.push(item);
+		// 		}
+		// 	});
+
+		// 	// console.log("Transformed",transformedData)
+		// 	return transformedData
+		// },
+		encontrarGrupo: function (consola) {
+			const consolasModel = AppManagementHelper.getModel("consolasModel").getData();
+
+			// Validate the model
+			if (!consolasModel || typeof consolasModel !== "object") {
+				return "Modelo no encontrado o no es válido";
+			}
+
+			// Initialize a variable to track if the console was found
+			let foundGroup = null;
+
+			// Iterate through each group in the consolasModel
+			for (const grupo in consolasModel) {
+				const consolas = consolasModel[grupo];
+
+				// Check if the current group is an array
+				if (Array.isArray(consolas)) {
+					// Check if the console is in the current group
+					if (consolas.includes(consola)) {
+						foundGroup = grupo;
+						break; // Exit the loop once the group is found
+					}
+				} else {
+					console.warn(`El grupo '${grupo}' no es un array. Se ignorará.`);
+				}
+			}
+
+			// Return the result
+			return foundGroup ? foundGroup : "Consola no encontrada";
+		},
+
 		transformData: function (data) {
 			const transformedData = [];
 			const equipoMap = {};
@@ -424,28 +486,35 @@ sap.ui.define([
 
 			data.forEach(item => {
 				AppManagementHelper.setNavigationProperties(item);
+
+				const consola = this.encontrarGrupo(item.Tplnr);
+
 				if (!equipoMap[item.Equnr]) {
 					equipoMap[item.Equnr] = {
 						Equnr: item.Equnr,
 						expanded: false,
-						nestedData: []
+						nestedData: [],
+						Consola: consola
 					};
 					transformedData.push(equipoMap[item.Equnr]);
-					isFirstItem = true
+					isFirstItem = true;
 				}
+
 				if (isFirstItem) {
 					equipoMap[item.Equnr].firstItem = true;
 					Object.assign(equipoMap[item.Equnr], item);
+					equipoMap[item.Equnr].Consola = consola; // Aseguramos que el grupo se asigne al primer item también
 					isFirstItem = false;
 				} else {
+					item.Consola = consola; // Asignamos el grupo también a los items anidados
 					equipoMap[item.Equnr].nestedData.push(item);
 				}
 			});
 
-			console.log("Transformed",
-				transformedData)
-			return transformedData
+			// console.log("Transformed",transformedData)
+			return transformedData;
 		},
+
 		onShowDetailsPress: function (oEvent) {
 			const oButton = oEvent.getSource();
 			const oContext = oButton.getBindingContext("LicencesListJsonModel");
@@ -4609,44 +4678,7 @@ sap.ui.define([
 
 			return timeSlots;
 		},
-		// onAddMinutesPress: function (oEvent) {
-		// 	// Crear el Dialog solo si no existe ya
-		// 	if (!this.oMinuteDialog) {
-		// 		this.oMinuteDialog = new sap.m.Dialog({
-		// 			title: "Agregar Minutos",
-		// 			justifyContent: "Center",
-		// 			content: [
-		// 				new sap.m.StepInput("minuteInput", {
-		// 					min: 1,
-		// 					max: 120,
-		// 					step: 5,
-		// 					value: 30,
-		// 					width: "60px"
 
-		// 				})
-		// 			],
-		// 			beginButton: new sap.m.Button({
-		// 				text: "Aceptar",
-		// 				press: function () {
-		// 					var iMinutesToAdd = sap.ui.getCore().byId("minuteInput").getValue();
-		// 					this._applyMinuteChange(oEvent, iMinutesToAdd); // Lógica principal
-		// 					this.oMinuteDialog.close();
-		// 				}.bind(this)
-		// 			}),
-		// 			endButton: new sap.m.Button({
-		// 				text: "Cancelar",
-		// 				press: function () {
-		// 					this.oMinuteDialog.close();
-		// 				}.bind(this)
-		// 			})
-		// 		});
-
-		// 		// Agregar el Dialog al view
-		// 		this.getView().addDependent(this.oMinuteDialog);
-		// 	}
-		// 	// Abrir el Dialog
-		// 	this.oMinuteDialog.open();
-		// },
 		onAddMinutesPress: function (oEvent) {
 			// Get the row context explicitly if needed
 			var oContext = oEvent.getSource().getBindingContext("LicencesListJsonModel");
@@ -4655,55 +4687,9 @@ sap.ui.define([
 				return;
 			}
 
-			// Open the dialog and pass the row context
 			this._openMinuteDialog(oContext);
 		},
 
-		// _applyMinuteChange: function (oEvent, iMinutesToAdd) {
-		// 	// Obtener el modelo y la fila seleccionada
-		// 	var oTable = this.byId("auditTable");
-		// 	var oModel = oTable.getModel("LicencesListJsonModel");
-		// 	var oContext = oEvent.getSource().getBindingContext("LicencesListJsonModel"); // Contexto de la fila
-
-		// 	// Verificar si el contexto es válido
-		// 	if (!oContext) {
-		// 		jQuery.sap.log.error("No se puede obtener el contexto de la fila.");
-		// 		return;
-		// 	}
-
-		// 	var sPath = oContext.getPath();
-
-		// 	// Verificar el camino y el índice de la fila
-		// 	console.log("Path:", sPath); // Añadir depuración
-		// 	var iIndex = parseInt(sPath.split("/").pop(), 10); // Obtener el índice de la fila desde la ruta del binding
-
-		// 	// Verificar el índice
-		// 	if (isNaN(iIndex)) {
-		// 		jQuery.sap.log.error("No se puede obtener el índice de la fila.");
-		// 		return;
-		// 	}
-
-		// 	// Obtener todos los datos del modelo
-		// 	var aData = oModel.getProperty("/");
-
-		// 	// Recorrer desde la fila siguiente en adelante
-		// 	for (var i = iIndex + 1; i < aData.length; i++) {
-		// 		// Obtener el valor del horario actual de la fila siguiente
-		// 		var sNextTime = aData[i].TurnoAsignado; // Ejemplo: "07:00"
-
-		// 		// Convertir el horario a un objeto Date
-		// 		var oNextTime = this._convertStringToDate(sNextTime);
-
-		// 		// Sumar los minutos al horario actual de la fila siguiente
-		// 		oNextTime.setMinutes(oNextTime.getMinutes() + iMinutesToAdd);
-
-		// 		// Actualizar el horario de la fila siguiente
-		// 		aData[i].TurnoAsignado = this._convertDateToString(oNextTime);
-		// 	}
-
-		// 	// Refrescar el modelo para que los cambios se reflejen en la tabla
-		// 	oModel.setProperty("/", aData);
-		// },
 		_openMinuteDialog: function (oContext) {
 			console.log(oContext)
 			if (!this.oMinuteDialog) {
@@ -4790,17 +4776,69 @@ sap.ui.define([
 			var oModel = oContext.getModel("LicencesListJsonModel");
 
 			// Obtener el índice de la fila seleccionada
-			var sPath = oContext.getPath(); // Devuelve algo como '/0', '/1', etc.
-			var iIndex = parseInt(sPath.split("/")[1]); // Obtiene el número de la fila
+			var sPath = oContext.getPath(); // Devuelve algo como '/0', '/1', '/nestedData/0', etc.
+			var aPathParts = sPath.split("/"); // Dividir el path para determinar si es nested
 
 			// Obtener los datos actuales del modelo
 			var aData = oModel.getProperty("/");
 
-			// Eliminar la fila seleccionada del array
-			aData.splice(iIndex, 1);
+			var oRowData; // Aquí guardaremos la fila a mover
+
+			if (aPathParts[2] === "nestedData") {
+				// Caso donde la fila está en nestedData
+
+				var iParentIndex = parseInt(aPathParts[1]); // Índice del elemento padre en el array principal
+				var iNestedIndex = parseInt(aPathParts[3]); // Índice dentro de nestedData
+
+				// Obtener el array nestedData correspondiente
+				var aNestedData = aData[iParentIndex].nestedData;
+
+				// Extraer la fila seleccionada de nestedData
+				oRowData = aNestedData.splice(iNestedIndex, 1)[0];
+
+				// Si el array nestedData queda vacío después de mover, eliminar el array nestedData
+				if (aNestedData.length === 0) {
+					delete aData[iParentIndex].nestedData;
+				}
+
+			} else {
+				// Caso donde la fila está directamente en el array principal
+				var iIndex = parseInt(aPathParts[1]); // Obtener el índice de la fila en el array principal
+
+				// Extraer la fila seleccionada del array principal
+				oRowData = aData.splice(iIndex, 1)[0];
+			}
+
+			// Agregar la fila extraída al final del array principal
+			aData.push(oRowData);
 
 			// Actualizar el modelo con los datos modificados
 			oModel.setProperty("/", aData);
+
+			// Refrescar la tabla para forzar la actualización visual
+			oModel.refresh(true);
+
+			// Para depuración
+			console.log("Fila movida al final: ", oRowData);
+		},
+		onSelectTurno: function (oEvent) {
+			// Obtén el valor seleccionado del DatePicker
+			var oDatePicker = oEvent.getSource(); // El control que disparó el evento
+			var sSelectedDate = oDatePicker.getDateValue(); // Obtiene el valor de fecha
+
+			// Convierte la fecha al formato adecuado si es necesario (por ejemplo, si necesitas un string)
+			var sFormattedDate = this._formatDate(sSelectedDate);
+
+			// Actualiza el modelo con el valor seleccionado
+			AppManagementHelper.getModel("LicencesJsonModel").setProperty("/FechaTurno", sFormattedDate);
+		},
+
+		// Método auxiliar para formatear la fecha si es necesario
+		_formatDate: function (oDate) {
+			var oDateFormat = sap.ui.core.format.DateFormat.getDateTimeInstance({
+				pattern: "dd/MM/yyyy" // El formato que necesites
+			});
+			return oDateFormat.format(oDate);
 		}
 
 	});

@@ -38,7 +38,7 @@
 							<VBox width="50%" alignItems="End">
 								<HBox alignItems="Center">
 									<Label text="{i18n>date}:" class="sapUiTinyMarginEnd"/>
-									<DateTimePicker id="date"/>
+									<DatePicker id="date"  valueFormat="dd.MM.yyyy" displayFormat="dd.MM.yyyy" change="onSelectTurno" class="sapUiSmallMarginBottom" />
 								</HBox>
 								<HBox alignItems="Center">
 									<Label text="{i18n>equipRecierre}:" class="sapUiTinyMarginEnd"/>
@@ -58,7 +58,7 @@
 					<FlexBox height="100px">
 						<VBox width="20%" justifyContent="SpaceAround" alignItems="Center">
 							<Title class="textColor" text="FECHA" titleStyle="H2"/>
-							<Title class="textColor" text="27/06/2024" titleStyle="H3"/>
+							<Title class="textColor" text="{LicencesJsonModel>/FechaTurno}" titleStyle="H3"/>
 						</VBox>
 						<VBox width="25%" justifyContent="SpaceAround">
 							<HBox justifyContent="SpaceBetween">
@@ -108,7 +108,8 @@
 							<t:Column id="equipment" width="100px" class="customColumnBackground" hAlign="Center" sortProperty="equipment" filterProperty="equipment">
 								<Label text="{i18n>equipment}"/>
 								<t:template>
-									<Text text="{LicencesListJsonModel>Equnr}" wrapping="false" class="text-bold" visible="{= !${LicencesListJsonModel>nested} }"/>
+									<Text text="{LicencesListJsonModel>Equnr}" wrapping="false" class="{= ${LicencesListJsonModel>firstItem} ? 'text-bold' : '' }"
+ />
 								</t:template>
 							</t:Column>
 							<t:Column id="status" hAlign="Center" sortProperty="Equstat" filterProperty="Equstat">
@@ -145,7 +146,7 @@
 							<t:Column id="console" hAlign="Center" sortProperty="Id" filterProperty="Id">
 								<Label text="{i18n>console}"/>
 								<t:template>
-									<Text text="{LicencesListJsonModel>Creador}" wrapping="false"/>
+									<Text text="{LicencesListJsonModel>Consola}" wrapping="false"/>
 								</t:template>
 							</t:Column>
 							<t:Column hAlign="Center" width="130px" sortProperty="initHour" filterProperty="TurnoAsignado">
