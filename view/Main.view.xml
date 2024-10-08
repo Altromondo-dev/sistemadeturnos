@@ -88,7 +88,7 @@
 							</HBox>
 						</HBox>
 					</FlexBox>
-					<t:Table id="auditTable" class="customTable" rows='{path:"LicencesListJsonModel>/"}' selectionMode="None" visibleRowCount='12'
+					<t:Table id="turnosTable" class="customTable" rows='{path:"LicencesListJsonModel>/"}' selectionMode="None" visibleRowCount='12'
 						enableCellFilter="true">
 						<t:columns>
 							<t:Column>
@@ -102,7 +102,7 @@
 							<t:Column width="50px" class="customColumnBackground" hAlign="Center">
 								<Label text="Eliminar"/>
 								<t:template>
-									<Button icon="sap-icon://less" press="onDeleteRow"/>
+									<Button icon="sap-icon://less" press="onOpenActionSheet"/>
 								</t:template>
 							</t:Column>
 							<t:Column id="equipment" width="100px" class="customColumnBackground" hAlign="Center" sortProperty="equipment" filterProperty="equipment">
@@ -171,7 +171,8 @@
 						<OverflowToolbar>
 							<Button text="{i18n>reports}" press="onReportsPress"/>
 							<ToolbarSpacer/>
-							<Button icon="sap-icon://create-form" text="{i18n>createShift}" press="onCreateShiftPress"/>
+								<Button icon="sap-icon://save" text="{i18n>saveTurno}" press="onSaveTurnoPress"/>
+							<Button icon="sap-icon://create-form" text="{i18n>createTurno}" press="onCreateShiftPress"/>
 							<Button icon="sap-icon://email" text="{i18n>sendEmail}" press="onSendEmailPress"/>
 						</OverflowToolbar>
 					</footer>

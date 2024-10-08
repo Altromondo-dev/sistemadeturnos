@@ -66,12 +66,12 @@ sap.ui.define([
 		FormatterHelper: FormatterHelper,
 		_url: "",
 		validURLToLicense: null,
-		_oLicenseTable: "auditTable",
+		_oLicenseTable: "turnosTable",
 		localFilters: {},
 
 		fastSearch: function (oEvent) {
 			var sValue = oEvent.getParameter("value");
-			var oTableBindingItems = this.byId("auditTable").getBinding("items");
+			var oTableBindingItems = this.byId("turnosTable").getBinding("items");
 			oTableBindingItems.filter(LicenseHelper.getFastSearchFilters(sValue, this));
 		},
 		onInit: function () {
@@ -323,7 +323,7 @@ sap.ui.define([
 		/******************************************************search*****************************************************/
 		onFilter: function (oEvent) {
 
-			var oTable = this.getView().byId('auditTable')
+			var oTable = this.getView().byId('turnosTable')
 
 			var oLicenseTableItems = oTable.getBinding("items");
 			var aFilter = [];
@@ -342,7 +342,7 @@ sap.ui.define([
 		},
 		onSearch: function () {
 
-			var oTable = this.byId('auditTable')
+			var oTable = this.byId('turnosTable')
 			oTable.setBusy(true)
 			var oView = this.getView()
 			var aFilters = []
@@ -1472,7 +1472,7 @@ sap.ui.define([
 
 		onAfterRendering: function () {
 			var oController = this;
-			// this.byId("auditTable").addEventDelegate({
+			// this.byId("turnosTable").addEventDelegate({
 			// 	onkeyup: function (event) {
 			// 		var data = event.srcControl.getBindingContext("LicencesListJsonModel").getObject();
 			// 		oController.formatAndShowData(data);
@@ -1733,7 +1733,7 @@ sap.ui.define([
 				this.getView().setBusy(true);
 				var oDataUrl = LicenseHelper.getURLLicenseData(this._url);
 				setTimeout(() => {
-					/*var aTableItems = this.byId("auditTable").getItems();
+					/*var aTableItems = this.byId("turnosTable").getItems();
 					var oLicenseItem = aTableItems.find(oItem => {
 						var oItemData = oItem.getBindingContext("LicencesListJsonModel").getObject()
 						return oDataUrl.Id === oItemData.Id && oDataUrl.Empresa === oItemData.Empresa && oDataUrl.Tipo === oItemData.Tipo &&
@@ -1819,7 +1819,7 @@ sap.ui.define([
 
 		solicitudAcuerdoExport: function () {
 			var aData = [];
-			var aLicenses = this.byId("auditTable").getSelectedItems();
+			var aLicenses = this.byId("turnosTable").getSelectedItems();
 			if (aLicenses.length > 0) {
 				var aData = this.generateSolicitudAcuerdoData(aLicenses, aData);
 				ReportesHelper.exportSolicitudAcuerdo(aData, this.society);
@@ -1833,7 +1833,7 @@ sap.ui.define([
 
 		comparacionReporte: function () {
 			var aData = [];
-			var aLicenses = this.byId("auditTable").getSelectedItems();
+			var aLicenses = this.byId("turnosTable").getSelectedItems();
 			if (aLicenses.length > 0) {
 				var aData = this.generateSolicitudAcuerdoData(aLicenses, aData);
 				ReportesHelper.comparacionLicencia(aData);
@@ -3455,11 +3455,11 @@ sap.ui.define([
 		},
 
 		/*onDisableLicenses: function () {
-			var items = this.byId("auditTable").getSelectedContexts();
+			var items = this.byId("turnosTable").getSelectedContexts();
 		},*/
 
 		/*onCancelledLicenses: function () {
-			var items = this.byId("auditTable").getSelectedContexts();
+			var items = this.byId("turnosTable").getSelectedContexts();
 		},*/
 
 		clearAdvancedFilters: function () {
@@ -3718,7 +3718,7 @@ sap.ui.define([
 			}
 		},
 		onClearFilter: function () {
-			var oTable = this.getView().byId('auditTable')
+			var oTable = this.getView().byId('turnosTable')
 
 			var cmbEstaciones = this.getView().byId('Estaciones')
 			cmbEstaciones.setValue("")
@@ -3757,7 +3757,7 @@ sap.ui.define([
 		},
 
 		makeFilters: function (oEvent) {
-			this._oActGrowInfo = this.getView().byId("auditTable").getGrowingInfo().actual;
+			this._oActGrowInfo = this.getView().byId("turnosTable").getGrowingInfo().actual;
 			if (typeof oEvent === 'number') {
 				// Issue 548 - Si la vista esta filtrada ( vista NO Original ) y se ingresa a una licencia al momento de volver se debe retomar la vista filtrada
 				// previamente siempre volvia a la original sin importar si se habia filtrado antes
@@ -3810,7 +3810,7 @@ sap.ui.define([
 		},
 
 		cleanSelections: function () {
-			this.getView().byId("auditTable").removeSelections(true)
+			this.getView().byId("turnosTable").removeSelections(true)
 		},
 
 		getEval: function (filterExtendedWithoutWerks) {
@@ -4017,7 +4017,7 @@ sap.ui.define([
 			if (this.tipoLicenciaFilter) filters.push(this.tipoLicenciaFilter);
 			/*	if (this.localFilters.fechaInicio) filters.push(this.localFilters.fechaInicio);
 				if (this.localFilters.fechaFin) filters.push(this.localFilters.fechaFin);*/
-			this.getView().byId("auditTable").getBinding("items").filter(filters);
+			this.getView().byId("turnosTable").getBinding("items").filter(filters);
 
 			/*var filtros = [a,b,c,d,e,f,g,h,i,j,k,l,ll,m,n,o,p,q,r,s,t,u,v,w,x,y,z];
 			var Eval = filtros.some(function(item){ return item!==undefined && item!==null && item!=="" && item!==" " && item.length!==0 });
@@ -4607,6 +4607,54 @@ sap.ui.define([
 		onCreateShiftPress: function () {
 			this.openDialog("transener.sistemadeturnos.fragments.newShift");
 		},
+		onSaveTurnoPress: function () {
+
+			const FechaTurno = AppManagementHelper.getModel("LicencesJsonModel").getProperty("/FechaTurno")
+			const oTable = this.getView().byId('turnosTable');
+			const aRows = oTable.getRows(); // Obtén las filas visibles de la tabla
+			const aData = []; // Array para almacenar los datos de cada fila
+
+			aRows.forEach(function (oRow) {
+				// Accede al contexto de cada fila (a través del modelo asociado)
+				const oContext = oRow.getBindingContext("LicencesListJsonModel");
+				if (oContext) {
+					// Obtén los datos de la fila a través del contexto
+					const oRowData = oContext.getObject();
+
+					const row = {
+						Id: oRowData.Id,
+						Empresa: oRowData.Empresa,
+						Tipo: oRowData.Tipo,
+						Anio: oRowData.Anio,
+						Fecha: FechaTurno,
+						Turno: oRowData.TurnoAsignado
+
+					}
+
+					aData.push(row);
+
+				}
+			});
+
+			console.log("Datos de cada fila:", aData);
+
+			this.createTurno()
+		},
+		createTurno: function () {
+			var entity = "/TurnosLicenciasSet";
+			const license = {
+				"Id": "L202400038",
+				"Empresa": "100",
+				"Tipo": "L",
+				"Anio": "2024",
+				"Dateturno": new Date("08/10/2024"),
+				"Turno": "07:00"
+			}
+
+			oDataService.getModel("TransenerOperaciones").update(entity + "(Empresa='" + license.Empresa + "',Id='" + license.Id + "',Tipo='" +
+				license.Tipo + "',Anio='" + license.Anio + "',Dateturno='" + license.Dateturno + "')", license);
+
+		},
 		openDialog: function (fragment) {
 			var oView = this.getView()
 			if (oDialog) {
@@ -4727,7 +4775,7 @@ sap.ui.define([
 		},
 		_applyMinuteChange: function (oContext, iMinutesToAdd) {
 			console.log(oContext)
-			var oTable = this.byId("auditTable");
+			var oTable = this.byId("turnosTable");
 			var oModel = oTable.getModel("LicencesListJsonModel");
 
 			// Use the provided context
@@ -4768,59 +4816,7 @@ sap.ui.define([
 			var sMinutes = String(oDate.getMinutes()).padStart(2, '0');
 			return sHours + ":" + sMinutes;
 		},
-		onDeleteRow: function (oEvent) {
-			// Obtener el contexto de la fila donde se presionó el botón
-			var oContext = oEvent.getSource().getBindingContext("LicencesListJsonModel");
 
-			// Obtener el modelo
-			var oModel = oContext.getModel("LicencesListJsonModel");
-
-			// Obtener el índice de la fila seleccionada
-			var sPath = oContext.getPath(); // Devuelve algo como '/0', '/1', '/nestedData/0', etc.
-			var aPathParts = sPath.split("/"); // Dividir el path para determinar si es nested
-
-			// Obtener los datos actuales del modelo
-			var aData = oModel.getProperty("/");
-
-			var oRowData; // Aquí guardaremos la fila a mover
-
-			if (aPathParts[2] === "nestedData") {
-				// Caso donde la fila está en nestedData
-
-				var iParentIndex = parseInt(aPathParts[1]); // Índice del elemento padre en el array principal
-				var iNestedIndex = parseInt(aPathParts[3]); // Índice dentro de nestedData
-
-				// Obtener el array nestedData correspondiente
-				var aNestedData = aData[iParentIndex].nestedData;
-
-				// Extraer la fila seleccionada de nestedData
-				oRowData = aNestedData.splice(iNestedIndex, 1)[0];
-
-				// Si el array nestedData queda vacío después de mover, eliminar el array nestedData
-				if (aNestedData.length === 0) {
-					delete aData[iParentIndex].nestedData;
-				}
-
-			} else {
-				// Caso donde la fila está directamente en el array principal
-				var iIndex = parseInt(aPathParts[1]); // Obtener el índice de la fila en el array principal
-
-				// Extraer la fila seleccionada del array principal
-				oRowData = aData.splice(iIndex, 1)[0];
-			}
-
-			// Agregar la fila extraída al final del array principal
-			aData.push(oRowData);
-
-			// Actualizar el modelo con los datos modificados
-			oModel.setProperty("/", aData);
-
-			// Refrescar la tabla para forzar la actualización visual
-			oModel.refresh(true);
-
-			// Para depuración
-			console.log("Fila movida al final: ", oRowData);
-		},
 		onSelectTurno: function (oEvent) {
 			// Obtén el valor seleccionado del DatePicker
 			var oDatePicker = oEvent.getSource(); // El control que disparó el evento
@@ -4839,6 +4835,64 @@ sap.ui.define([
 				pattern: "dd/MM/yyyy" // El formato que necesites
 			});
 			return oDateFormat.format(oDate);
+		},
+		onOpenActionSheet: function (oEvent) {
+			// Crear el ActionSheet solo si no existe
+			if (!this._oActionSheet) {
+				this._oActionSheet = new sap.m.ActionSheet({
+					buttons: [
+						new sap.m.Button({
+							text: "Reubicar",
+							press: () => this.onReubicar() // Usar función flecha para preservar el contexto
+						}),
+						new sap.m.Button({
+							text: "Eliminar",
+							press: () => this.onEliminar() // Usar función flecha para preservar el contexto
+						})
+					]
+				});
+			}
+
+			// Guardar el contexto de la fila en una propiedad temporal
+			this._oSelectedContext = oEvent.getSource().getBindingContext();
+
+			// Abre el ActionSheet en el botón que activó el evento
+			this._oActionSheet.openBy(oEvent.getSource());
+		},
+
+		onEliminar: function () {
+			if (!this._oSelectedContext) {
+				sap.m.MessageToast.show("No se pudo determinar la fila.");
+				return;
+			}
+
+			// Obtener el path de la fila seleccionada
+			var sPath = this._oSelectedContext.getPath(); // Ejemplo: "/myData/0"
+
+			// Obtener el índice de la fila
+			var iIndex = parseInt(sPath.split("/")[2], 10); // Obtener el índice de la fila
+
+			// Obtener el modelo y los datos actuales
+			var oModel = this.getView().getModel();
+			var aData = oModel.getProperty("/myData");
+
+			// Eliminar la fila en el índice correspondiente
+			aData.splice(iIndex, 1);
+
+			// Actualizar el modelo con la nueva data
+			oModel.setProperty("/myData", aData);
+
+			sap.m.MessageToast.show("Fila eliminada correctamente.");
+		},
+
+		onReubicar: function () {
+			if (!this._oSelectedContext) {
+				sap.m.MessageToast.show("No se pudo determinar la fila.");
+				return;
+			}
+
+			// Aquí puedes hacer la lógica de reubicar
+			sap.m.MessageToast.show("Reubicar fila: " + this._oSelectedContext.getPath());
 		}
 
 	});
