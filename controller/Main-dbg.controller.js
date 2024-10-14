@@ -4,6 +4,8 @@ sap.ui.define([
 	//ui
 	"sap/ui/core/mvc/Controller",
 	"sap/ui/core/Fragment",
+	"sap/ui/model/Filter",
+	"sap/ui/model/FilterOperator",
 	//utils
 	"transener/sistemadeturnos/utils/NavigationHelper",
 	"transener/sistemadeturnos/utils/FormatHelper",
@@ -49,7 +51,8 @@ sap.ui.define([
 	"transener/sistemadeturnos/utils/UnifilarHelper",
 	"transener/sistemadeturnos/services/checkAlternativeLabelService",
 
-], function (Controller, Fragment, NavigationHelper, FormatHelper, FioriComponentHelper, MailHelper, ValidateHelper,
+], function (Controller, Fragment, Filter, FilterOperator, NavigationHelper, FormatHelper, FioriComponentHelper, MailHelper,
+	ValidateHelper,
 	MessageBoxHelper, i18nTranslationHelper, AppManagementHelper, DateHelper, ExportLicenseHelper, formatter, HardCodeModel, models,
 	LicenseService,
 	RegionesService,
@@ -485,7 +488,7 @@ sap.ui.define([
 			let isFirstItem = true;
 
 			data.forEach(item => {
-				AppManagementHelper.setNavigationProperties(item);
+				//	AppManagementHelper.setNavigationProperties(item);
 
 				const consola = this.encontrarGrupo(item.Tplnr);
 
@@ -3467,84 +3470,83 @@ sap.ui.define([
 		},
 
 		openAdvancedFilters: function () {
-
 			var oFiltersModel = AppManagementHelper.getModel("FiltersJsonModel");
 			var oHardCodeModel = AppManagementHelper.getModel("HardCodeModel");
 			var PersonalHabilitadoModel = AppManagementHelper.getModel("PersonalHabilitadoModel");
 			var oRepModel = AppManagementHelper.getModel("RepositionTimes");
-			var pageName = "transener.sistemadeturnos.views.Main.Dialogs.advancedFilters";
-			var oController = this;
-			var component = FioriComponentHelper.getComponent();
-			var view = component.byId("App").byId(pageName);
 			var oSelectModel = AppManagementHelper.getModel("SelectModel");
-			var society = this.society
+			var society = this.society;
+
+			// Carga los servicios necesarios
 			TipoEquipoService.loadTipoEquipo(society);
 			InterventionTypesService.getPromise();
 
-			if (!view) {
-				//creates view
-				var viewId = component.byId("App").createId(pageName);
-				view = sap.ui.jsview(viewId, pageName);
-				//adds view to split app
-				//create model?
-				var oDialog = new sap.m.Dialog({
-					title: "Filtros Avanzados",
-					contentWidth: "60%",
-					modal: true,
-					content: view,
-					buttons: [
-						new sap.m.Button({
-							text: "Cancelar",
-							icon: "sap-icon://decline",
-							press: [oController.closeAdvancedFilters, oController]
-						}).addStyleClass("buttonInverted floatLeft"),
-						new sap.m.Button({
-							text: "Limpiar",
-							icon: "sap-icon://document",
-							press: [oController.clearAdvancedFilters, oController]
-						}).addStyleClass("buttonInverted floatLeft"),
-						new sap.m.Button({
-							text: "Aplicar",
-							icon: "sap-icon://search",
-							press: [oController.makeFilters, oController]
-						}).addStyleClass("buttonInverted floatRight")
-					]
-				}).addStyleClass("customDialog");
-				oDialog.open();
-				oDialog.setModel(AppManagementHelper.getModel("WorkPlacesJsonModel"), "WorkPlacesJsonModel");
-				oDialog.setModel(this.getView().getModel("GrupoPlanificador"), "GrupoPlanificador");
-				oDialog.setModel(AppManagementHelper.getModel("TiposIntervencion"), "TiposIntervencion");
-				oDialog.setModel(AppManagementHelper.getModel("TipoEquipoJsonModel"), "TipoEquipoJsonModel");
-				oDialog.setModel(oSelectModel, "SelectModel");
-				oDialog.setModel(oFiltersModel, "FiltersJsonModel");
-				oDialog.setModel(oHardCodeModel, "HardCodeModel");
-				oDialog.setModel(PersonalHabilitadoModel, "PersonalHabilitadoModel");
-				oDialog.setModel(oRepModel, "RepositionTimes");
-				oDialog.setModel(this.getView().getModel("RepositionTimes"), "RepositionTimes");
-				oDialog.setModel(AppManagementHelper.getModel("TipoLicFiltersModel"), "TipoLicFiltersModel");
-				oDialog.setModel(AppManagementHelper.getModel("CheckAdvancedFiltersModel"), "CheckAdvancedFiltersModel");
-				this.advancedFilters = oDialog;
-				if (oDialog) {
-					return true;
-				}
-			} else {
-				if (this.advancedFilters) {
-					this.advancedFilters.setModel(PersonalHabilitadoModel, "PersonalHabilitadoModel");
-					this.advancedFilters.setModel(oSelectModel, "SelectModel");
-					this.advancedFilters.setModel(oHardCodeModel, "HardCodeModel");
-					this.advancedFilters.setModel(oFiltersModel, "FiltersJsonModel");
-					this.advancedFilters.setModel(oRepModel, "RepositionTimes");
-					this.advancedFilters.setModel(this.getView().getModel("RepositionTimes"), "RepositionTimes");
-					this.advancedFilters.setModel(AppManagementHelper.getModel("WorkPlacesJsonModel"), "WorkPlacesJsonModel");
-					this.advancedFilters.setModel(this.getView().getModel("GrupoPlanificador"), "GrupoPlanificador");
-					this.advancedFilters.setModel(AppManagementHelper.getModel("TipoLicFiltersModel"), "TipoLicFiltersModel");
-					this.advancedFilters.setModel(AppManagementHelper.getModel("CheckAdvancedFiltersModel"), "CheckAdvancedFiltersModel");
-					this.advancedFilters.open();
-					return true;
-				}
-			}
+			// Verifica si ya existe el diálogo
+			if (!this.advancedFilters) {
+				// Carga el fragmento y lo inserta en el diálogo
+				var oView = this.getView();
+				Fragment.load({
+					id: oView.getId(),
+					name: "transener.sistemadeturnos.fragments.advancedFilters",
+					controller: this
+				}).then(function (oDialogContent) {
+					var oDialog = new sap.m.Dialog({
+						title: "Filtros Avanzados",
+						contentWidth: "60%",
+						modal: true,
+						content: oDialogContent,
+						buttons: [
+							new sap.m.Button({
+								text: "Cancelar",
+								icon: "sap-icon://decline",
+								press: this.closeAdvancedFilters.bind(this)
+							}).addStyleClass("buttonInverted floatLeft"),
+							new sap.m.Button({
+								text: "Limpiar",
+								icon: "sap-icon://document",
+								press: this.clearAdvancedFilters.bind(this)
+							}).addStyleClass("buttonInverted floatLeft"),
+							new sap.m.Button({
+								text: "Aplicar",
+								icon: "sap-icon://search",
+								press: this.makeFilters.bind(this)
+							}).addStyleClass("buttonInverted floatRight")
+						]
+					}).addStyleClass("customDialog");
 
+					// Asignar los modelos al diálogo
+					oDialog.setModel(AppManagementHelper.getModel("WorkPlacesJsonModel"), "WorkPlacesJsonModel");
+					oDialog.setModel(oView.getModel("GrupoPlanificador"), "GrupoPlanificador");
+					oDialog.setModel(AppManagementHelper.getModel("TiposIntervencion"), "TiposIntervencion");
+					oDialog.setModel(AppManagementHelper.getModel("TipoEquipoJsonModel"), "TipoEquipoJsonModel");
+					oDialog.setModel(oSelectModel, "SelectModel");
+					oDialog.setModel(oFiltersModel, "FiltersJsonModel");
+					oDialog.setModel(oHardCodeModel, "HardCodeModel");
+					oDialog.setModel(PersonalHabilitadoModel, "PersonalHabilitadoModel");
+					oDialog.setModel(oRepModel, "RepositionTimes");
+					oDialog.setModel(oView.getModel("RepositionTimes"), "RepositionTimes");
+					oDialog.setModel(AppManagementHelper.getModel("TipoLicFiltersModel"), "TipoLicFiltersModel");
+					oDialog.setModel(AppManagementHelper.getModel("CheckAdvancedFiltersModel"), "CheckAdvancedFiltersModel");
+
+					this.advancedFilters = oDialog;
+					this.advancedFilters.open();
+				}.bind(this));
+			} else {
+				// Si ya existe el diálogo, actualiza los modelos y ábrelo
+				this.advancedFilters.setModel(PersonalHabilitadoModel, "PersonalHabilitadoModel");
+				this.advancedFilters.setModel(oSelectModel, "SelectModel");
+				this.advancedFilters.setModel(oHardCodeModel, "HardCodeModel");
+				this.advancedFilters.setModel(oFiltersModel, "FiltersJsonModel");
+				this.advancedFilters.setModel(oRepModel, "RepositionTimes");
+				this.advancedFilters.setModel(this.getView().getModel("RepositionTimes"), "RepositionTimes");
+				this.advancedFilters.setModel(AppManagementHelper.getModel("WorkPlacesJsonModel"), "WorkPlacesJsonModel");
+				this.advancedFilters.setModel(this.getView().getModel("GrupoPlanificador"), "GrupoPlanificador");
+				this.advancedFilters.setModel(AppManagementHelper.getModel("TipoLicFiltersModel"), "TipoLicFiltersModel");
+				this.advancedFilters.setModel(AppManagementHelper.getModel("CheckAdvancedFiltersModel"), "CheckAdvancedFiltersModel");
+				this.advancedFilters.open();
+			}
 		},
+
 		closeAdvancedFilters: function () {
 			this.advancedFilters.close();
 		},
@@ -3757,7 +3759,7 @@ sap.ui.define([
 		},
 
 		makeFilters: function (oEvent) {
-			this._oActGrowInfo = this.getView().byId("turnosTable").getGrowingInfo().actual;
+		//	this._oActGrowInfo = this.getView().byId("turnosTable").getGrowingInfo().actual;
 			if (typeof oEvent === 'number') {
 				// Issue 548 - Si la vista esta filtrada ( vista NO Original ) y se ingresa a una licencia al momento de volver se debe retomar la vista filtrada
 				// previamente siempre volvia a la original sin importar si se habia filtrado antes
@@ -4607,54 +4609,7 @@ sap.ui.define([
 		onCreateShiftPress: function () {
 			this.openDialog("transener.sistemadeturnos.fragments.newShift");
 		},
-		onSaveTurnoPress: function () {
 
-			const FechaTurno = AppManagementHelper.getModel("LicencesJsonModel").getProperty("/FechaTurno")
-			const oTable = this.getView().byId('turnosTable');
-			const aRows = oTable.getRows(); // Obtén las filas visibles de la tabla
-			const aData = []; // Array para almacenar los datos de cada fila
-
-			aRows.forEach(function (oRow) {
-				// Accede al contexto de cada fila (a través del modelo asociado)
-				const oContext = oRow.getBindingContext("LicencesListJsonModel");
-				if (oContext) {
-					// Obtén los datos de la fila a través del contexto
-					const oRowData = oContext.getObject();
-
-					const row = {
-						Id: oRowData.Id,
-						Empresa: oRowData.Empresa,
-						Tipo: oRowData.Tipo,
-						Anio: oRowData.Anio,
-						Fecha: FechaTurno,
-						Turno: oRowData.TurnoAsignado
-
-					}
-
-					aData.push(row);
-
-				}
-			});
-
-			console.log("Datos de cada fila:", aData);
-
-			this.createTurno()
-		},
-		createTurno: function () {
-			var entity = "/TurnosLicenciasSet";
-			const license = {
-				"Id": "L202400038",
-				"Empresa": "100",
-				"Tipo": "L",
-				"Anio": "2024",
-				"Dateturno": new Date("08/10/2024"),
-				"Turno": "07:00"
-			}
-
-			oDataService.getModel("TransenerOperaciones").update(entity + "(Empresa='" + license.Empresa + "',Id='" + license.Id + "',Tipo='" +
-				license.Tipo + "',Anio='" + license.Anio + "',Dateturno='" + license.Dateturno + "')", license);
-
-		},
 		openDialog: function (fragment) {
 			var oView = this.getView()
 			if (oDialog) {
@@ -4737,7 +4692,87 @@ sap.ui.define([
 
 			this._openMinuteDialog(oContext);
 		},
+		onSaveTurnoPress: function () {
 
+			const FechaTurno = AppManagementHelper.getModel("LicencesJsonModel").getProperty("/FechaTurno")
+			const oTable = this.getView().byId('turnosTable');
+			const aRows = oTable.getRows(); // Obtén las filas visibles de la tabla
+			const aData = []; // Array para almacenar los datos de cada fila
+
+			aRows.forEach(function (oRow) {
+				// Accede al contexto de cada fila (a través del modelo asociado)
+				const oContext = oRow.getBindingContext("LicencesListJsonModel");
+				if (oContext) {
+					// Obtén los datos de la fila a través del contexto
+					const oRowData = oContext.getObject();
+
+					const row = {
+						Id: oRowData.Id,
+						Empresa: oRowData.Empresa,
+						Tipo: oRowData.Tipo,
+						Anio: oRowData.Anio,
+						Fecha: FechaTurno,
+						Turno: oRowData.TurnoAsignado
+
+					}
+
+					aData.push(row);
+
+				}
+			});
+
+			console.log("Datos de cada fila:", aData);
+
+			//	this.createTurno()
+		},
+		createTurno: function () {
+			var entity = "/TurnosLicenciasSet";
+			const license = {
+				"Id": "L202400008",
+				"Empresa": "100",
+				"Tipo": "L",
+				"Anio": "2024",
+				"Dateturno": new Date("2024-10-08T00:00:00"),
+				"Turno": "070000"
+			}
+
+			oDataService.getModel("TransenerOperaciones").create(entity, license);
+
+		},
+
+		onSelectTurno: function (oEvent) {
+
+			var oDatePicker = oEvent.getSource();
+			var sSelectedDate = oDatePicker.getDateValue();
+			var sFormattedDate = this._formatDate(sSelectedDate);
+
+			AppManagementHelper.getModel("LicencesJsonModel").setProperty("/FechaTurno", sFormattedDate);
+			var filters = [];
+			filters.push(new Filter("Dateturno", FilterOperator.EQ, "2024-10-08"));
+			filters.push(new Filter("Empresa", FilterOperator.EQ, "100"));
+			var entity = "/TurnosLicenciasSet";
+			oDataService.getModel("TransenerOperaciones").read(entity, {
+				filters: filters,
+				success: (oData) => {
+					this.successSelectTurno(oData)
+				},
+				error: (Error) => {
+					console.log(Error);
+				},
+			});
+		},
+
+		successSelectTurno: function (data) {
+			const TurnoLicencias = []
+
+			data.results.forEach(licencia => {
+				TurnoLicencias.push(LicenseService.GETLicense(licencia))
+			})
+
+			console.log(TurnoLicencias)
+
+			AppManagementHelper.getModel('LicencesListJsonModel').setData(TurnoLicencias)
+		},
 		_openMinuteDialog: function (oContext) {
 			console.log(oContext)
 			if (!this.oMinuteDialog) {
@@ -4817,18 +4852,6 @@ sap.ui.define([
 			return sHours + ":" + sMinutes;
 		},
 
-		onSelectTurno: function (oEvent) {
-			// Obtén el valor seleccionado del DatePicker
-			var oDatePicker = oEvent.getSource(); // El control que disparó el evento
-			var sSelectedDate = oDatePicker.getDateValue(); // Obtiene el valor de fecha
-
-			// Convierte la fecha al formato adecuado si es necesario (por ejemplo, si necesitas un string)
-			var sFormattedDate = this._formatDate(sSelectedDate);
-
-			// Actualiza el modelo con el valor seleccionado
-			AppManagementHelper.getModel("LicencesJsonModel").setProperty("/FechaTurno", sFormattedDate);
-		},
-
 		// Método auxiliar para formatear la fecha si es necesario
 		_formatDate: function (oDate) {
 			var oDateFormat = sap.ui.core.format.DateFormat.getDateTimeInstance({
@@ -4893,7 +4916,10 @@ sap.ui.define([
 
 			// Aquí puedes hacer la lógica de reubicar
 			sap.m.MessageToast.show("Reubicar fila: " + this._oSelectedContext.getPath());
-		}
+		},
+		clearAdvancedFilters: function () {
+			models.createFiltersModel();
+		},
 
 	});
 });

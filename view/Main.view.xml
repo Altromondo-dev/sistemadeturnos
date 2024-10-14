@@ -34,11 +34,12 @@
 										<core:Item key="{HardCodeModel>key}" text="{HardCodeModel>value}"/>
 									</ComboBox>
 								</HBox>
+								
 							</VBox>
 							<VBox width="50%" alignItems="End">
 								<HBox alignItems="Center">
 									<Label text="{i18n>date}:" class="sapUiTinyMarginEnd"/>
-									<DatePicker id="date"  valueFormat="dd.MM.yyyy" displayFormat="dd.MM.yyyy" change="onSelectTurno" class="sapUiSmallMarginBottom" />
+									<DatePicker id="date" valueFormat="dd.MM.yyyy" displayFormat="dd.MM.yyyy" change="onSelectTurno" class="sapUiSmallMarginBottom"/>
 								</HBox>
 								<HBox alignItems="Center">
 									<Label text="{i18n>equipRecierre}:" class="sapUiTinyMarginEnd"/>
@@ -52,6 +53,7 @@
 										<core:Item key="{HardCodeModel>key}" text="{HardCodeModel>value}"/>
 									</ComboBox>
 								</HBox>
+									<Button icon="sap-icon://add-filter" text="Filtros Avanzados" press="openAdvancedFilters"/>
 							</VBox>
 						</FlexBox>
 					</Panel>
@@ -83,7 +85,7 @@
 								<HBox width="50%" class="btnContainer" justifyContent="SpaceBetween">
 									<Button icon="sap-icon://search" text="Buscar" press="onFilter"/>
 									<Button icon="sap-icon://clear-filter" text="Limpiar Filtros" press="onClearFilter"/>
-									<Button icon="sap-icon://search"/>
+									<Button icon="sap-icon://refresh" press="onRefresh"/>
 								</HBox>
 							</HBox>
 						</HBox>
@@ -108,8 +110,7 @@
 							<t:Column id="equipment" width="100px" class="customColumnBackground" hAlign="Center" sortProperty="equipment" filterProperty="equipment">
 								<Label text="{i18n>equipment}"/>
 								<t:template>
-									<Text text="{LicencesListJsonModel>Equnr}" wrapping="false" class="{= ${LicencesListJsonModel>firstItem} ? 'text-bold' : '' }"
- />
+									<Text text="{LicencesListJsonModel>Equnr}" wrapping="false" class="{= ${LicencesListJsonModel>firstItem} ? 'text-bold' : '' }"/>
 								</t:template>
 							</t:Column>
 							<t:Column id="status" hAlign="Center" sortProperty="Equstat" filterProperty="Equstat">
@@ -171,7 +172,7 @@
 						<OverflowToolbar>
 							<Button text="{i18n>reports}" press="onReportsPress"/>
 							<ToolbarSpacer/>
-								<Button icon="sap-icon://save" text="{i18n>saveTurno}" press="onSaveTurnoPress"/>
+							<Button icon="sap-icon://save" text="{i18n>saveTurno}" press="onSaveTurnoPress"/>
 							<Button icon="sap-icon://create-form" text="{i18n>createTurno}" press="onCreateShiftPress"/>
 							<Button icon="sap-icon://email" text="{i18n>sendEmail}" press="onSendEmailPress"/>
 						</OverflowToolbar>

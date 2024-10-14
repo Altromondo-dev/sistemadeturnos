@@ -1,4 +1,6 @@
 sap.ui.define([
+	"sap/ui/model/Filter",
+	"sap/ui/model/FilterOperator",
 	"transener/sistemadeturnos/services/oDataService",
 	"transener/sistemadeturnos/utils/MessageBoxHelper",
 	"transener/sistemadeturnos/utils/FormatHelper",
@@ -12,7 +14,8 @@ sap.ui.define([
 	"transener/sistemadeturnos/services/LibroGuardiasService",
 	"transener/sistemadeturnos/services/EtMailService",
 	"transener/sistemadeturnos/utils/LegacyValidationHelper",
-], function (oDataService, MessageBoxHelper, FormatHelper, AppManagementHelper, BusyDialogHelper, BatchOperationsHelper, LicenceHelper,
+], function (Filter, FilterOperator, oDataService, MessageBoxHelper, FormatHelper, AppManagementHelper, BusyDialogHelper,
+	BatchOperationsHelper, LicenceHelper,
 	FileDownloadHelper, MailHelper, FormatterHelper, LibroGuardiasService, EtMailService, LegacyValidationHelper) {
 	"use strict";
 	return {
@@ -1988,12 +1991,12 @@ sap.ui.define([
 		},
 
 		GETWithFilters: function (aFilters, bDontSort) {
-			
+
 			console.log("Pase", aFilters)
-			// var aFiltersFound = this.checkFilterLogic(aFilters);
-			// this.validateChecks(aFiltersFound);
-			// this.validateLicStatFilters(aFiltersFound);
-			// var aWithoutAroBloqueoRdisparo = this.validateAroBloqueoRdisparoFilters(aFiltersFound);
+				// var aFiltersFound = this.checkFilterLogic(aFilters);
+				// this.validateChecks(aFiltersFound);
+				// this.validateLicStatFilters(aFiltersFound);
+				// var aWithoutAroBloqueoRdisparo = this.validateAroBloqueoRdisparoFilters(aFiltersFound);
 			BusyDialogHelper.open("", "");
 			var entity = "/LicenciaTrabajoSet";
 			oDataService.getModel("TransenerOperaciones").read(entity, {
@@ -2025,6 +2028,27 @@ sap.ui.define([
 			// });
 		},
 
+		GETLicense: function (turno) {
+			const filters = []
+
+			filters.push(new Filter("Id", FilterOperator.EQ, turno.Id));
+			 filters.push(new Filter("Empresa", FilterOperator.EQ, turno.Empresa));
+			 filters.push(new Filter("Anio", FilterOperator.EQ, turno.Anio));
+			 filters.push(new Filter("Tipo", FilterOperator.EQ, turno.Tipo));
+
+			oDataService.getModel("TransenerOperaciones").read("/LicenciaTrabajoSet", {
+				filters: filters,
+				success: (data) => {
+					console.log("Licencia", data)
+					return data
+				},
+				error: (error) => {
+					this.errorGET(error);
+				}
+			});
+
+		},
+
 		GETLicenses: function (filters) {
 			let entity = "/LicenciaTrabajoSet";
 			oDataService.getModel("TransenerOperaciones").read(entity, {
@@ -2035,15 +2059,16 @@ sap.ui.define([
 				}, {
 					path: 'Id',
 					descending: false
-				}],urlParameters: {
-						"$top": 60
-					},
+				}],
+				urlParameters: {
+					"$top": 60
+				},
 				success: (data) => {
 					sap.m.MessageToast.show("Se han recuperado todas las licencias/solicitudes");
 					this.successGET(false, data);
 				},
 				error: (error) => {
-					this.errorGET( error);
+					this.errorGET(error);
 				}
 			});
 			return new Promise((resolve, reject) => {
@@ -2905,7 +2930,7 @@ sap.ui.define([
 			// if (bDontSort !== true) {
 			// 	var aLicensesOrdered = _.orderBy(aLicenses, ['Anio', "Id"], ["desc", "desc"])
 			// } else {
-			 var 	aLicensesOrdered = aLicenses;
+			var aLicensesOrdered = aLicenses;
 			// }
 
 			AppManagementHelper.getModel("LicencesListJsonModel").setData({
