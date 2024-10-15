@@ -385,11 +385,11 @@ sap.ui.define([
 			oDataModel.read('/LicenciaTrabajoSet', {
 					filters: aFilters,
 					success: (data) => {
-
-						const nestedData = this.transformData(data.results)
-							//		console.log("Nested", nestedData)
-						this.onCountItems(data.results)
-						this.rows(nestedData)
+						AppManagementHelper.getModel("LicencesListJsonModel").setData(data.results)
+							// const nestedData = this.transformData(data.results)
+							// 	//		console.log("Nested", nestedData)
+							// this.onCountItems(data.results)
+							// this.rows(data.results)
 						oTable.setBusy(false)
 					},
 					error: (error) => {
@@ -409,6 +409,7 @@ sap.ui.define([
 
 			data.forEach(function (row, index) {
 				row["TurnoAsignado"] = timeSlots[index];
+				row["Rank"] = index + 1;
 			});
 
 			console.log(data)
@@ -487,7 +488,7 @@ sap.ui.define([
 			const equipoMap = {};
 			let isFirstItem = true;
 
-			data.forEach(item => {
+			data.forEach((item, index) => {
 				//	AppManagementHelper.setNavigationProperties(item);
 
 				const consola = this.encontrarGrupo(item.Tplnr);
@@ -506,9 +507,12 @@ sap.ui.define([
 				if (isFirstItem) {
 					equipoMap[item.Equnr].firstItem = true;
 					Object.assign(equipoMap[item.Equnr], item);
-					equipoMap[item.Equnr].Consola = consola; // Aseguramos que el grupo se asigne al primer item también
+					equipoMap[item.Equnr].Consola = consola;
+
+					// Aseguramos que el grupo se asigne al primer item también
 					isFirstItem = false;
 				} else {
+
 					item.Consola = consola; // Asignamos el grupo también a los items anidados
 					equipoMap[item.Equnr].nestedData.push(item);
 				}
@@ -3759,7 +3763,7 @@ sap.ui.define([
 		},
 
 		makeFilters: function (oEvent) {
-		//	this._oActGrowInfo = this.getView().byId("turnosTable").getGrowingInfo().actual;
+			//	this._oActGrowInfo = this.getView().byId("turnosTable").getGrowingInfo().actual;
 			if (typeof oEvent === 'number') {
 				// Issue 548 - Si la vista esta filtrada ( vista NO Original ) y se ingresa a una licencia al momento de volver se debe retomar la vista filtrada
 				// previamente siempre volvia a la original sin importar si se habia filtrado antes
@@ -4919,6 +4923,155 @@ sap.ui.define([
 		},
 		clearAdvancedFilters: function () {
 			models.createFiltersModel();
+		},
+		config: {
+			initialRank: 0,
+			defaultRank: 1024,
+			rankAlgorithm: {
+				Before: function (iRank) {
+					return iRank + 1024;
+				},
+				Between: function (iRank1, iRank2) {
+					// limited to 53 rows
+					return (iRank1 + iRank2) / 2;
+				},
+				After: function (iRank) {
+					return iRank / 2;
+				}
+			}
+		},
+		getSelectedRowContext: function (sTableId, fnCallback) {
+			const oTable = this.byId(sTableId);
+			const iSelectedIndex = oTable.getSelectedIndex();
+
+			if (iSelectedIndex === -1) {
+				MessageToast.show("Please select a row!");
+				return;
+			}
+
+			const oSelectedContext = oTable.getContextByIndex(iSelectedIndex);
+			if (oSelectedContext && fnCallback) {
+				fnCallback.call(this, oSelectedContext, iSelectedIndex, oTable);
+			}
+
+			return oSelectedContext;
+		},
+
+		onDragStart: function (oEvent) {
+			const oDraggedRow = oEvent.getParameter("target");
+			const oDragSession = oEvent.getParameter("dragSession");
+
+			// keep the dragged row context for the drop action
+			oDragSession.setComplexData("draggedRowContext", oDraggedRow.getBindingContext());
+		},
+
+		onDropTable1: function (oEvent) {
+			const oDragSession = oEvent.getParameter("dragSession");
+			const oDraggedRowContext = oDragSession.getComplexData("draggedRowContext");
+			if (!oDraggedRowContext) {
+				return;
+			}
+
+			// reset the rank property and update the model to refresh the bindings
+			this.oProductsModel.setProperty("Rank", this.config.initialRank, oDraggedRowContext);
+			this.oProductsModel.refresh(true);
+		},
+
+		moveToTable1: function () {
+			this.getSelectedRowContext("turnosTable", function (oSelectedRowContext, iSelectedRowIndex, oTable2) {
+				// reset the rank property and update the model to refresh the bindings
+				this.oProductsModel.setProperty("Rank", this.config.initialRank, oSelectedRowContext);
+				this.oProductsModel.refresh(true);
+
+				// select the previous row when there is no row to select
+				const oNextContext = oTable2.getContextByIndex(iSelectedRowIndex + 1);
+				if (!oNextContext) {
+					oTable2.setSelectedIndex(iSelectedRowIndex - 1);
+				}
+			});
+		},
+
+		onDropTable2: function (oEvent) {
+			const oDragSession = oEvent.getParameter("dragSession");
+			const oDraggedRowContext = oDragSession.getComplexData("draggedRowContext");
+			if (!oDraggedRowContext) {
+				return;
+			}
+
+			const oConfig = this.config;
+			let iNewRank = oConfig.defaultRank;
+			const oDroppedRow = oEvent.getParameter("droppedControl");
+
+			if (oDroppedRow && oDroppedRow instanceof TableRow) {
+				// get the dropped row data
+				const sDropPosition = oEvent.getParameter("dropPosition");
+				const oDroppedRowContext = oDroppedRow.getBindingContext();
+				const iDroppedRowRank = oDroppedRowContext.getProperty("Rank");
+				const iDroppedRowIndex = oDroppedRow.getIndex();
+				const oDroppedTable = oDroppedRow.getParent();
+
+				// find the new index of the dragged row depending on the drop position
+				const iNewRowIndex = iDroppedRowIndex + (sDropPosition === "After" ? 1 : -1);
+				const oNewRowContext = oDroppedTable.getContextByIndex(iNewRowIndex);
+				if (!oNewRowContext) {
+					// dropped before the first row or after the last row
+					iNewRank = oConfig.rankAlgorithm[sDropPosition](iDroppedRowRank);
+				} else {
+					// dropped between first and the last row
+					iNewRank = oConfig.rankAlgorithm.Between(iDroppedRowRank, oNewRowContext.getProperty("Rank"));
+				}
+			}
+
+			// set the rank property and update the model to refresh the bindings
+			this.oProductsModel.setProperty("Rank", iNewRank, oDraggedRowContext);
+			this.oProductsModel.refresh(true);
+		},
+
+		moveToTable2: function () {
+			this.getSelectedRowContext("turnosTable", function (oSelectedRowContext) {
+				const oTable2 = this.byId("turnosTable");
+				const oFirstRowContext = oTable2.getContextByIndex(0);
+
+				// insert always as a first row
+				let iNewRank = this.config.defaultRank;
+				if (oFirstRowContext) {
+					iNewRank = this.config.rankAlgorithm.Before(oFirstRowContext.getProperty("Rank"));
+				}
+
+				this.oProductsModel.setProperty("Rank", iNewRank, oSelectedRowContext);
+				this.oProductsModel.refresh(true);
+
+				// select the inserted row
+				oTable2.setSelectedIndex(0);
+			});
+		},
+
+		moveSelectedRow: function (sDirection) {
+			this.getSelectedRowContext("turnosTable", function (oSelectedRowContext, iSelectedRowIndex, oTable2) {
+				const iSiblingRowIndex = iSelectedRowIndex + (sDirection === "Up" ? -1 : 1);
+				const oSiblingRowContext = oTable2.getContextByIndex(iSiblingRowIndex);
+				if (!oSiblingRowContext) {
+					return;
+				}
+
+				// swap the selected and the siblings rank
+				const iSiblingRowRank = oSiblingRowContext.getProperty("Rank");
+				const iSelectedRowRank = oSelectedRowContext.getProperty("Rank");
+				this.oProductsModel.setProperty("Rank", iSiblingRowRank, oSelectedRowContext);
+				this.oProductsModel.setProperty("Rank", iSelectedRowRank, oSiblingRowContext);
+				this.oProductsModel.refresh(true);
+
+				// after move select the sibling
+				oTable2.setSelectedIndex(iSiblingRowIndex);
+			});
+		},
+
+		moveUp: function () {
+			this.moveSelectedRow("Up");
+		},
+
+		moveDown: function () {
+			this.moveSelectedRow("Down");
 		},
 
 	});

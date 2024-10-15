@@ -1,5 +1,5 @@
 <mvc:View controllerName="transener.sistemadeturnos.controller.Main" xmlns:core="sap.ui.core" xmlns:mvc="sap.ui.core.mvc"
-	displayBlock="true" xmlns:t="sap.ui.table" xmlns="sap.m">
+	displayBlock="true" xmlns:t="sap.ui.table" xmlns="sap.m" xmlns:dnd="sap.ui.core.dnd">
 	<Shell id="shell">
 		<App id="app">
 			<pages>
@@ -34,7 +34,6 @@
 										<core:Item key="{HardCodeModel>key}" text="{HardCodeModel>value}"/>
 									</ComboBox>
 								</HBox>
-								
 							</VBox>
 							<VBox width="50%" alignItems="End">
 								<HBox alignItems="Center">
@@ -53,7 +52,7 @@
 										<core:Item key="{HardCodeModel>key}" text="{HardCodeModel>value}"/>
 									</ComboBox>
 								</HBox>
-									<Button icon="sap-icon://add-filter" text="Filtros Avanzados" press="openAdvancedFilters"/>
+								<Button icon="sap-icon://add-filter" text="Filtros Avanzados" press="openAdvancedFilters"/>
 							</VBox>
 						</FlexBox>
 					</Panel>
@@ -92,6 +91,14 @@
 					</FlexBox>
 					<t:Table id="turnosTable" class="customTable" rows='{path:"LicencesListJsonModel>/"}' selectionMode="None" visibleRowCount='12'
 						enableCellFilter="true">
+						<t:extension>
+							<OverflowToolbar style="Clear">
+								<Title id="title2" text="Selected Products"/>
+								<ToolbarSpacer/>
+								<Button icon="sap-icon://navigation-up-arrow" tooltip="Move up" press="moveUp"/>
+								<Button icon="sap-icon://navigation-down-arrow" tooltip="Move down" press="moveDown"/>
+							</OverflowToolbar>
+						</t:extension>
 						<t:columns>
 							<t:Column>
 								<t:template>
@@ -166,6 +173,11 @@
 								</t:template>
 							</t:Column>
 						</t:columns>
+						<t:dragDropConfig>
+							<dnd:DragInfo groupName="moveToTable1" sourceAggregation="rows" dragStart="onDragStart"/>
+							<dnd:DropInfo groupName="moveToTable2" targetAggregation="rows" dropPosition="Between" drop="onDropTable2"/>
+							<dnd:DragDropInfo sourceAggregation="rows" targetAggregation="rows" dropPosition="Between" dragStart="onDragStart" drop="onDropTable2"/>
+						</t:dragDropConfig>
 					</t:Table>
 					<content/>
 					<footer>
