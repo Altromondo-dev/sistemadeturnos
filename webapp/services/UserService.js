@@ -94,21 +94,9 @@ sap.ui.define([
 			}
 		},
 		loadModel: function(callback) {
-
-			
-		//	debugger; 
-
 			var UserDataService = this;
 			this.callback = callback;
-			//reads user api
-			/* var path = this._servicePathPrefix + this._servicePath;
-			jQuery.ajax(path + "?multiValuesAsArrays=true", {
-				method: "GET",
-				success: jQuery.proxy(UserDataService.onReadUserApiSuccess, UserDataService),
-				error: jQuery.proxy(UserDataService.onReadUserApiError, UserDataService)
-			});
-			*/
-			 
+					 
 			const url =   sap.ui.getCore().getModel("appCurrentInfo").appUrl  + "/user-api/currentUser";
 			
             var oModel = new sap.ui.model.json.JSONModel() ;
@@ -165,7 +153,7 @@ sap.ui.define([
 								var oModelUser = new sap.ui.model.json.JSONModel();
 								oModelUser.setData(data.Resources);
 		
-								debugger;
+								// debugger;
 								var  aDatosUsuario = that.armarDatos(data.Resources);
 								this.onReadUserApiSuccess(aDatosUsuario)
 								oModel.setData(aDatosUsuario);
@@ -173,10 +161,11 @@ sap.ui.define([
 		
 							},
 							error:  (data, xhr, textStatus) =>{ 
+								this.onReadUserApiError()
 								console.log(data);
 								console.log(xhr);
 								console.log(textStatus);
-								debugger;
+								// debugger;
 								window.alert("error"); 
 							}
 						});
@@ -204,8 +193,6 @@ sap.ui.define([
 		},
 
 		armarDatos: function(datos) {
-
-			//debugger;
 
 			var aGroupsTemporal = datos[0].groups;
 

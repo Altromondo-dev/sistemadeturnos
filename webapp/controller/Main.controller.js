@@ -79,7 +79,7 @@ sap.ui.define([
 		},
 		onInit: function () {
 			//  cdr migracion
-			var jCond = LicenseService.getJobCond()
+			// var jCond = LicenseService.getJobCond()
 		
 			var cUrl = this.getBaseURL();
 			UserService.loadModel();
@@ -117,7 +117,7 @@ sap.ui.define([
 	
 		getBaseURL: function () {
 
-			debugger;
+			// debugger;
 
 			var appId = this.getOwnerComponent().getManifestEntry("/sap.app/id");
 
@@ -125,7 +125,7 @@ sap.ui.define([
 			var appPath = appId.replaceAll(".", "/");
 			var appModulePath = jQuery.sap.getModulePath(appPath);
 
-			var jsonModel = sap.ui.getCore().getModel("appCurrentInfo");
+						var jsonModel = sap.ui.getCore().getModel("appCurrentInfo");
 			//checks if the model exists
 			if (!jsonModel) {
 				jsonModel = new sap.ui.model.json.JSONModel();
@@ -1714,7 +1714,9 @@ sap.ui.define([
 			filtersEstaciones.push(new sap.ui.model.Filter({
 				path: "Rol",
 				operator: sap.ui.model.FilterOperator.EQ,
-				value1: roles.includes("Solicitante_Lic") ? "Solicitante_Lic" : roles[0]
+
+				///OJO CAMBIAR ESTO// roles[0]
+				value1: roles.includes("Solicitante_Lic") ? "Solicitante_Lic" : "SAP_Web_IDE_Developers"
 			}));
 
 			// fecha desde

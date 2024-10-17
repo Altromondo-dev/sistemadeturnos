@@ -18,7 +18,6 @@ sap.ui.define([
 	BatchOperationsHelper, LicenceHelper,
 	FileDownloadHelper, MailHelper, FormatterHelper, LibroGuardiasService, EtMailService, LegacyValidationHelper) {
 	"use strict";
-	var mBaseUrl = sap.ui.getCore().getModel('appCurrentIndo').appUrl;
 	return {
 		rolCoordinador: "Coordinador_Mantenimiento",
 		rolTramitador: "Tramitador",
@@ -3281,7 +3280,7 @@ sap.ui.define([
 
 		getMailsByRole: function (sRole) {
 
-var mBaseUrl = sap.ui.getCore().getModel('appCurrentInfo').appUrl;
+			var mBaseUrl = sap.ui.getCore().getModel('appCurrentInfo').appUrl;
 
 			return new Promise((resolve, reject) => {
 				if (sRole === "") {
