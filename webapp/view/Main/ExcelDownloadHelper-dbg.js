@@ -12,10 +12,7 @@ sap.ui.define([
 	"transener/sistemadeturnos/utils/MessageBoxHelper",
 	"transener/sistemadeturnos/utils/i18nTranslationHelper",
 	//model
-	//services
-	"transener/sistemadeturnos/services/UserDataService"
-], function(Export, ExportTypeCSV, NavigationHelper, BusyDialogHelper, FormatHelper, FioriHelper, FioriComponentHelper, ValidateHelper, MessageBoxHelper, i18nTranslationHelper,
-UserDataService) {
+], function(Export, ExportTypeCSV, NavigationHelper, BusyDialogHelper, FormatHelper, FioriHelper, FioriComponentHelper, ValidateHelper, MessageBoxHelper, i18nTranslationHelper) {
 	"use strict";
 	
 	return {

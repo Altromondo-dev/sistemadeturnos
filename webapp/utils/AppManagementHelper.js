@@ -11,17 +11,30 @@ sap.ui.define([
 			this._oApp = oApp;
 		},
 
-		getModel: function (sModelName) {
+		// getModel: function (sModelName) {
 
+		// 	var oComponent = FioriComponentHelper.getComponent()
+		// 	var oApp = oComponent.getAggregation("rootControl");
+		// 	var jsonModel = oApp.getModel(sModelName);
+		// 	if (!jsonModel) {
+		// 		jsonModel = new sap.ui.model.json.JSONModel();
+		// 		jsonModel.setSizeLimit(9999);
+		// 		oApp.setModel(jsonModel, sModelName);
+		// 	}
+		// 	return jsonModel;
+		// },
+
+		getModel: function (sModelName) {
+			var mBaseUrl = sap.ui.getCore().getModel("appCurrentInfo").appUrl;
 			var oComponent = FioriComponentHelper.getComponent()
 			var oApp = oComponent.getAggregation("rootControl");
 			var jsonModel = oApp.getModel(sModelName);
 			if (!jsonModel) {
 				jsonModel = new sap.ui.model.json.JSONModel();
-				jsonModel.setSizeLimit(9999);
+				jsonModel.setSizeLimit(999999);
 				oApp.setModel(jsonModel, sModelName);
 			}
-			return jsonModel;
+			return mBaseUrl, jsonModel;
 		},
 
 		getApp: function () {
@@ -30,6 +43,11 @@ sap.ui.define([
 
 		getAppRouter: function () {
 			return
+		},
+		getBaseUrl: function () {
+			//debugger;
+			var mBaseUrl = sap.ui.getCore().getModel("appCurrentInfo").appUrl;
+			return mBaseUrl;
 		},
 
 		getUser: function () {
@@ -94,5 +112,5 @@ sap.ui.define([
 			});
 		}
 
-};
+	};
 });

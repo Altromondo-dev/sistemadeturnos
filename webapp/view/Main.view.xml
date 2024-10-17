@@ -23,7 +23,7 @@
 								<HBox alignItems="Center">
 									<Label text="{i18n>equipmentCAM}:" class="sapUiTinyMarginEnd"/>
 									<ComboBox width="20rem" id="EquipCammesa"
-										enabled="{parts: ['EnabledFilterLicstat>/enabled', 'FilterSelectionJsonModel>/enabledComboEQUIPO'], formatter: '.FormatterHelper.enabledCombo'}"
+									
 										selectionChange="" items="{ path: 'EquiposJsonModel>/Equipos', templateShareable: true }">
 										<core:Item key="{EquiposJsonModel>CodigoEquipo}" text="{EquiposJsonModel>CodigoEquipo} - {EquiposJsonModel>DescEquipo}"/>
 									</ComboBox>
@@ -184,7 +184,7 @@
 						<OverflowToolbar>
 							<Button text="{i18n>reports}" press="onReportsPress"/>
 							<ToolbarSpacer/>
-							<Button icon="sap-icon://save" text="{i18n>saveTurno}" press="onSaveTurnoPress"/>
+							<!-- <Button icon="sap-icon://save" text="{i18n>saveTurno}" press="onSaveTurnoPress"/> -->
 							<Button icon="sap-icon://create-form" text="{i18n>createTurno}" press="onCreateShiftPress"/>
 							<Button icon="sap-icon://email" text="{i18n>sendEmail}" press="onSendEmailPress"/>
 						</OverflowToolbar>

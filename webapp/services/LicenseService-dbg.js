@@ -18,6 +18,7 @@ sap.ui.define([
 	BatchOperationsHelper, LicenceHelper,
 	FileDownloadHelper, MailHelper, FormatterHelper, LibroGuardiasService, EtMailService, LegacyValidationHelper) {
 	"use strict";
+	var mBaseUrl = sap.ui.getCore().getModel('appCurrentIndo').appUrl;
 	return {
 		rolCoordinador: "Coordinador_Mantenimiento",
 		rolTramitador: "Tramitador",
@@ -3279,12 +3280,15 @@ sap.ui.define([
 		},
 
 		getMailsByRole: function (sRole) {
+
+var mBaseUrl = sap.ui.getCore().getModel('appCurrentInfo').appUrl;
+
 			return new Promise((resolve, reject) => {
 				if (sRole === "") {
 					resolve([])
 				} else {
 					//var role = "Portal_Proveedores_Gestion";
-					var destination = "/destinations/Examinadores_PT15/";
+					var destination =  mBaseUrl + "/destinations/Examinadores_PT15/";
 					$.get(destination + "Users/?filter=groups eq '" + sRole + "'", function (res) {
 						var users = res.Resources;
 						var emails = users.map(function (user) {

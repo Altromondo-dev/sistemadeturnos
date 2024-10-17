@@ -78,8 +78,12 @@ sap.ui.define([
 			oTableBindingItems.filter(LicenseHelper.getFastSearchFilters(sValue, this));
 		},
 		onInit: function () {
+			//  cdr migracion
 			var jCond = LicenseService.getJobCond()
-			UserService.getUser();
+		
+			var cUrl = this.getBaseURL();
+			UserService.loadModel();
+			
 			//	var oRouter = this.getOwnerComponent().getRouter()
 			AppManagementHelper.getModel("OrderNumberJsonModel").setData({
 				Odering: "down"
@@ -105,9 +109,36 @@ sap.ui.define([
 				Bloqueo: false,
 				Rdisparo: false,
 			});
+	
+
 			this.setApplicationModels()
 
 		},
+	
+		getBaseURL: function () {
+
+			debugger;
+
+			var appId = this.getOwnerComponent().getManifestEntry("/sap.app/id");
+
+			//var appId = this.getManifestEntry("/sap.app/id");
+			var appPath = appId.replaceAll(".", "/");
+			var appModulePath = jQuery.sap.getModulePath(appPath);
+
+			var jsonModel = sap.ui.getCore().getModel("appCurrentInfo");
+			//checks if the model exists
+			if (!jsonModel) {
+				jsonModel = new sap.ui.model.json.JSONModel();
+				jsonModel.setSizeLimit(9999);
+				jsonModel.appUrl = appModulePath;
+				sap.ui.getCore().setModel(jsonModel, "appCurrentInfo");
+				//initilializing = appModulePath; 
+				jsonModel.setData({});
+			}
+			return appModulePath;
+
+		},
+
 		setApplicationModels: function () {
 
 			var sPath = FioriHelper.getAppPath();
@@ -252,8 +283,9 @@ sap.ui.define([
 			// se debe mostrar un error al usuario y salir de la app
 			//	var aRoles = AppManagementHelper.getModel("UserJsonModel").getData().roles;
 			var aRoles = AppManagementHelper.getModel("UserJsonModel").getProperty("/roles");
+
 			console.log(aRoles)
-				//No se debe validar Visualizadores
+			//No se debe validar Visualizadores
 			if (aRoles.indexOf("Visualizador") == -1) {
 				if (!this._oAlternativeLabelProm) {
 					this._oAlternativeLabelProm = checkAlternativeLabelService.getPromise();
@@ -383,22 +415,22 @@ sap.ui.define([
 
 			oDataModel.setUseBatch(false)
 			oDataModel.read('/LicenciaTrabajoSet', {
-					filters: aFilters,
-					success: (data) => {
-						AppManagementHelper.getModel("LicencesListJsonModel").setData(data.results)
-							// const nestedData = this.transformData(data.results)
-							// 	//		console.log("Nested", nestedData)
-							// this.onCountItems(data.results)
-							// this.rows(data.results)
-						oTable.setBusy(false)
-					},
-					error: (error) => {
-						console.log(error)
-					}
-				})
-				// LicenseService.GETWithFilters(aFilters)
+				filters: aFilters,
+				success: (data) => {
+					AppManagementHelper.getModel("LicencesListJsonModel").setData(data.results)
+					// const nestedData = this.transformData(data.results)
+					// 	//		console.log("Nested", nestedData)
+					// this.onCountItems(data.results)
+					// this.rows(data.results)
+					oTable.setBusy(false)
+				},
+				error: (error) => {
+					console.log(error)
+				}
+			})
+			// LicenseService.GETWithFilters(aFilters)
 			this.closeDialog()
-				//oView.setModel("LicencesListJsonModel", LiceneService.GET(filters))
+			//oView.setModel("LicencesListJsonModel", LiceneService.GET(filters))
 		},
 		rows: function (data) {
 			const oView = this.getView()
@@ -817,7 +849,7 @@ sap.ui.define([
 
 			var sTxtFlox = "Crear Licencia";
 			if (aUserRoles.includes("Solicitante_Lic") || aUserRoles.includes("Solicitante_Lic_S") || aUserRoles.includes(
-					"Solicitante_Lic_TBA")) {
+				"Solicitante_Lic_TBA")) {
 				sTxtFlox = "Crear Borrador de Licencia";
 			}
 			AppManagementHelper.getModel("FilterSelectionJsonModel").setProperty("/textFlow", sTxtFlox);
@@ -1434,16 +1466,16 @@ sap.ui.define([
 							// Si alguna de las licencias ya tiene tramitaciones, pregunta si quiere sobreescribir.
 							sap.m.MessageBox.show(
 								"Hay licencias con agentes cargados, desea sobrescribir?", {
-									icon: sap.m.MessageBox.Icon.INFORMATION,
-									title: "Alerta",
-									actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
-									onClose: function (oAction) {
-										if (oAction == 'YES') {
-											// Guarda con confirmacion
-											that._tramitarMasivamente(aLicenciasSelectedFull, aTramitaciones);
-										}
+								icon: sap.m.MessageBox.Icon.INFORMATION,
+								title: "Alerta",
+								actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
+								onClose: function (oAction) {
+									if (oAction == 'YES') {
+										// Guarda con confirmacion
+										that._tramitarMasivamente(aLicenciasSelectedFull, aTramitaciones);
 									}
-								});
+								}
+							});
 						} else {
 							// Guarda directo.
 							that._tramitarMasivamente(aLicenciasSelectedFull, aTramitaciones);
@@ -1458,11 +1490,11 @@ sap.ui.define([
 
 		getLicenseStatusByOperationType: function (sOperation) {
 			switch (sOperation) {
-			case "Observar":
-				return "02";
-			case "Anular":
-				return "03";
-			default:
+				case "Observar":
+					return "02";
+				case "Anular":
+					return "03";
+				default:
 			}
 		},
 
@@ -1690,7 +1722,7 @@ sap.ui.define([
 				path: "Solbeg",
 				operator: sap.ui.model.FilterOperator.GE,
 				value1: new Date(new Date().setDate(new Date().getDate() - 7))
-					//	value1: new Date(new Date().getFullYear(), 0, 1)
+				//	value1: new Date(new Date().getFullYear(), 0, 1)
 			}));
 			var oView = this.getView()
 			this.getView().getModel("LocalFilterJsonModel").setProperty("/Solbeg", new Date(new Date().setDate(new Date().getDate() - 7)));
@@ -1700,7 +1732,7 @@ sap.ui.define([
 				path: "Solend",
 				operator: sap.ui.model.FilterOperator.LE,
 				value1: new Date(new Date().setDate(new Date().getDate() + 7))
-					//value1: new Date(new Date().getFullYear(), 11, 31)
+				//value1: new Date(new Date().getFullYear(), 11, 31)
 			}));
 			this.getView().getModel("LocalFilterJsonModel").setProperty("/Solend", new Date(new Date().setDate(new Date().getDate() + 7)));
 			//this.getView().getModel("LocalFilterJsonModel").setProperty("/Solend", new Date(new Date().getFullYear(), 11, 31));
@@ -3215,7 +3247,7 @@ sap.ui.define([
 			this.createPDF(aData);
 		},
 
-		errorPDFReportDiaryPart: function (error) {},
+		errorPDFReportDiaryPart: function (error) { },
 
 		loadDeliveryDevolucionModelData: function (data) {
 			AppManagementHelper.getModel();
@@ -3558,30 +3590,30 @@ sap.ui.define([
 		getFilterObject: function (attribute, sValue) {
 			var oObject = {};
 			switch (sValue) {
-			case "0":
-				oObject.attribute = "Senalestados";
-				oObject.value = "X";
-				break;
-			case "1":
-				oObject.attribute = "Senalalarmas";
-				oObject.value = "X";
-				break;
-			case "2":
-				oObject.attribute = "Senalmedicion";
-				oObject.value = "X";
-				break;
-			case "3":
-				oObject.attribute = "Precauciones";
-				oObject.value = "X";
-				break;
-			case "4":
-				oObject.attribute = "Senalninguna";
-				oObject.value = "X";
-				break;
-			default:
-				oObject.attribute = attribute
-				oObject.value = sValue;
-				break;
+				case "0":
+					oObject.attribute = "Senalestados";
+					oObject.value = "X";
+					break;
+				case "1":
+					oObject.attribute = "Senalalarmas";
+					oObject.value = "X";
+					break;
+				case "2":
+					oObject.attribute = "Senalmedicion";
+					oObject.value = "X";
+					break;
+				case "3":
+					oObject.attribute = "Precauciones";
+					oObject.value = "X";
+					break;
+				case "4":
+					oObject.attribute = "Senalninguna";
+					oObject.value = "X";
+					break;
+				default:
+					oObject.attribute = attribute
+					oObject.value = sValue;
+					break;
 			}
 			return oObject;
 
@@ -3697,30 +3729,30 @@ sap.ui.define([
 
 		acceptEmptyValues: function (sAttribute, object) {
 			switch (sAttribute) {
-			case "Substatus":
-				var oFilterData = AppManagementHelper.getModel("FiltersJsonModel").getData();
-				var sKey = oFilterData.Licstat.value;
-				if (object.value === "" && sKey === "01") {
-					object.value = "Z";
-					return true
-				} else {
-					if (object.value !== "") {
+				case "Substatus":
+					var oFilterData = AppManagementHelper.getModel("FiltersJsonModel").getData();
+					var sKey = oFilterData.Licstat.value;
+					if (object.value === "" && sKey === "01") {
+						object.value = "Z";
 						return true
 					} else {
-						return false
-					}
+						if (object.value !== "") {
+							return true
+						} else {
+							return false
+						}
 
-				}
-				return true;
-			case "Equstatnocam":
-			case "Equstat":
-				return true;
-			case "Bloqueo":
-				return true;
-			case "Rdisparo":
-				return true;
-			default:
-				return object.value !== "";
+					}
+					return true;
+				case "Equstatnocam":
+				case "Equstat":
+					return true;
+				case "Bloqueo":
+					return true;
+				case "Rdisparo":
+					return true;
+				default:
+					return object.value !== "";
 			}
 		},
 		onClearFilter: function () {
@@ -4386,7 +4418,7 @@ sap.ui.define([
 		reportLicenseComparison: function () {
 			let selectedLicenses = this.getLicenseTable().getSelectedContexts()
 
-			.map(x => x.getObject());
+				.map(x => x.getObject());
 			if (selectedLicenses.length === 0) {
 				new sap.m.MessageToast.show('No ha seleccionado solicitudes/Licencias');
 				return
@@ -4663,7 +4695,7 @@ sap.ui.define([
 				Total: totalCount
 			};
 			console.log(counts)
-				// Asignar el modelo al View
+			// Asignar el modelo al View
 			const oModel = new sap.ui.model.json.JSONModel(counts);
 			this.getView().setModel(oModel, "countsModel");
 		},
