@@ -6,6 +6,9 @@ sap.ui.define([
 	"sap/ui/core/Fragment",
 	"sap/ui/model/Filter",
 	"sap/ui/model/FilterOperator",
+	"sap/ui/table/Row",
+	"sap/m/MessageToast",
+	"sap/ui/model/json/JSONModel",
 	//utils
 	"transener/sistemadeturnos/utils/NavigationHelper",
 	"transener/sistemadeturnos/utils/FormatHelper",
@@ -51,7 +54,9 @@ sap.ui.define([
 	"transener/sistemadeturnos/utils/UnifilarHelper",
 	"transener/sistemadeturnos/services/checkAlternativeLabelService",
 
-], function (Controller, Fragment, Filter, FilterOperator, NavigationHelper, FormatHelper, FioriComponentHelper, MailHelper,
+], function (Controller, Fragment, Filter, FilterOperator, TableRow, MessageToast, JSONModel, NavigationHelper, FormatHelper,
+	FioriComponentHelper,
+	MailHelper,
 	ValidateHelper,
 	MessageBoxHelper, i18nTranslationHelper, AppManagementHelper, DateHelper, ExportLicenseHelper, formatter, HardCodeModel, models,
 	LicenseService,
@@ -78,6 +83,7 @@ sap.ui.define([
 			oTableBindingItems.filter(LicenseHelper.getFastSearchFilters(sValue, this));
 		},
 		onInit: function () {
+
 			var jCond = LicenseService.getJobCond()
 			UserService.getUser();
 			//	var oRouter = this.getOwnerComponent().getRouter()
@@ -107,6 +113,26 @@ sap.ui.define([
 			});
 			this.setApplicationModels()
 
+		},
+		initSampleProductsModel: function () {
+			let oData;
+			jQuery.ajax({
+				async: false,
+				url: sap.ui.require.toUrl("transener/sistemadeturnos/mockdata/products.json"),
+				dataType: "json",
+				success: function (oResponse) {
+					oData = oResponse;
+				}
+			});
+
+			// prepare and initialize the rank property
+			oData.forEach(function (oProduct, index) {
+				oProduct.Rank = index + 1;
+			}, this);
+
+			const oModel = new JSONModel();
+			oModel.setData(oData);
+			return oModel;
 		},
 		setApplicationModels: function () {
 
@@ -385,11 +411,21 @@ sap.ui.define([
 			oDataModel.read('/LicenciaTrabajoSet', {
 					filters: aFilters,
 					success: (data) => {
-						AppManagementHelper.getModel("LicencesListJsonModel").setData(data.results)
-							// const nestedData = this.transformData(data.results)
-							// 	//		console.log("Nested", nestedData)
-							// this.onCountItems(data.results)
-							// this.rows(data.results)
+						console.log("Busqueda", data)
+						var oJSONModel = new sap.ui.model.json.JSONModel(data.results);
+						this.getView().setModel(oJSONModel, "LicensesJsonModel");
+
+						this.assignShiftsToLicenses(oJSONModel.getData());
+						oJSONModel.refresh();
+						// this.rows(data.results)
+						// this.transformData(data.results)
+						// 	// const nestedData = this.transformData(data.results)
+						// 	// 	//		console.log("Nested", nestedData)
+						// this.onCountItems(data.results)
+						var oTurnosModel = new sap.ui.model.json.JSONModel();
+						oTurnosModel = this.assignShiftsToLicenses(data.results);
+						oView.setModel(oTurnosModel);
+
 						oTable.setBusy(false)
 					},
 					error: (error) => {
@@ -400,6 +436,7 @@ sap.ui.define([
 			this.closeDialog()
 				//oView.setModel("LicencesListJsonModel", LiceneService.GET(filters))
 		},
+
 		rows: function (data) {
 			const oView = this.getView()
 			var startTime = new Date();
@@ -409,13 +446,10 @@ sap.ui.define([
 
 			data.forEach(function (row, index) {
 				row["TurnoAsignado"] = timeSlots[index];
-				row["Rank"] = index + 1;
 			});
 
-			console.log(data)
-			var oLicencesListJsonModel = new sap.ui.model.json.JSONModel(data);
+			AppManagementHelper.getModel("LicencesListJsonModel").setData(data);
 
-			oView.setModel(oLicencesListJsonModel, "LicencesListJsonModel");
 		},
 		formatTime: function (dDate) {
 			if (dDate) {
@@ -524,8 +558,8 @@ sap.ui.define([
 
 		onShowDetailsPress: function (oEvent) {
 			const oButton = oEvent.getSource();
-			const oContext = oButton.getBindingContext("LicencesListJsonModel");
-			const oModel = this.getView().getModel("LicencesListJsonModel");
+			const oContext = oButton.getBindingContext();
+			const oModel = this.getView().getModel();
 			const oData = oContext.getObject();
 			const aData = oModel.getProperty("/");
 			const iIndex = aData.indexOf(oData);
@@ -670,7 +704,7 @@ sap.ui.define([
 			oFilterSelectionModel.setProperty("/visible", true);
 
 			var oItem = bManualPress ? oEvent : oEvent.getSource().getParent();
-			var oLicense = $.extend(true, {}, bManualPress ? oItem : oItem.getBindingContext("LicencesListJsonModel").getObject());
+			var oLicense = $.extend(true, {}, bManualPress ? oItem : oItem.getBindingContext().getObject());
 			oFilterSelectionModel.setProperty("/textFlow", this.getLicenseButtonText(oLicense.Tipolicencia, oLicense.Licstat));
 			oFilterSelectionModel.setProperty("/annulateCreatedStatus", !!oLicense.Id);
 			var isLicense = oLicense.Tipo === "L";
@@ -864,7 +898,7 @@ sap.ui.define([
 		duplicateLicense: function (evt) {
 			BusyDialogHelper.open();
 			var oItem = evt.getSource().getParent();
-			let oldLicense = oItem.getBindingContext("LicencesListJsonModel").getObject();
+			let oldLicense = oItem.getBindingContext().getObject();
 			LicenseService.getPromise(oldLicense, "HorariosPorLicencia_nav").then(license => {
 				if (oldLicense.Tipo === "L") {
 					localStorage.setItem("type", "Licencia");
@@ -1171,7 +1205,7 @@ sap.ui.define([
 
 		handleItemPress: function (oEvent) {
 			AppManagementHelper.getModel("FilterSelectionJsonModel").setProperty("/busyData", true);
-			LicenseService.FIND(oEvent.getParameter("listItem").getBindingContext("LicencesListJsonModel").getObject());
+			LicenseService.FIND(oEvent.getParameter("listItem").getBindingContext().getObject());
 			/*var aItemDays = oEvent.getParameter("listItem").getBindingContext("LicencesListJsonModel").getObject()["HorariosPorLicencia_nav"];
 			AppManagementHelper.getModel("LicenseDaysJsonModel").setData({
 				Days: aItemDays
@@ -1467,8 +1501,8 @@ sap.ui.define([
 		},
 
 		onSelect: function (evt) {
-			this.formatAndShowData(evt.getSource().getBindingContext("LicencesListJsonModel").getObject());
-			var selectedLicId = evt.getSource().getBindingContext("LicencesListJsonModel").getObject().Id;
+			this.formatAndShowData(evt.getSource().getBindingContext().getObject());
+			var selectedLicId = evt.getSource().getBindingContext().getObject().Id;
 
 			var data = {
 				Id: selectedLicId
@@ -1819,7 +1853,7 @@ sap.ui.define([
 
 		generateSolicitudAcuerdoData: function (aLicenses, aData) {
 			for (var oLicenseContext of aLicenses) {
-				aData.push(oLicenseContext.getBindingContext("LicencesListJsonModel").getObject())
+				aData.push(oLicenseContext.getBindingContext().getObject())
 			}
 			return aData;
 		},
@@ -4668,27 +4702,52 @@ sap.ui.define([
 			this.getView().setModel(oModel, "countsModel");
 		},
 
-		generateTimeSlots: function (startTime, rowsData) {
-			var timeSlots = [];
-			var time = new Date(startTime);
+		// generateTimeSlots: function (startTime, rowsData) {
+		// 	var timeSlots = [];
+		// 	var time = new Date(startTime);
 
+		// 	rowsData.forEach(function (row) {
+		// 		// Verificar el valor de condTrabajo y sumar 30 o 45 minutos
+		// 		var increment = row.Jobcond === "04" ? 45 : 30; // Ajusta "valorX" al valor de la condición específica
+		// 		var hours = time.getHours().toString().padStart(2, '0');
+		// 		var minutes = time.getMinutes().toString().padStart(2, '0');
+		// 		timeSlots.push(hours + ":" + minutes);
+
+		// 		// Sumar los minutos correspondientes (30 o 45)
+		// 		time.setMinutes(time.getMinutes() + increment);
+		// 	});
+
+		// 	return timeSlots;
+		// },
+		generateTimeSlots: function (startTime, rowsData) {
+			var time = new Date(startTime); // Hora inicial a partir del parámetro
+			var timeSlots = [];
+
+			// Recorrer los datos de las filas (rowsData) y recalcular el TurnoAsignado
 			rowsData.forEach(function (row) {
-				// Verificar el valor de condTrabajo y sumar 30 o 45 minutos
-				var increment = row.Jobcond === "04" ? 45 : 30; // Ajusta "valorX" al valor de la condición específica
+				// Formatear la hora actual (hh:mm)
 				var hours = time.getHours().toString().padStart(2, '0');
 				var minutes = time.getMinutes().toString().padStart(2, '0');
-				timeSlots.push(hours + ":" + minutes);
 
-				// Sumar los minutos correspondientes (30 o 45)
+				// Guardar el turno formateado en la propiedad TurnoAsignado
+				row.TurnoAsignado = hours + ":" + minutes;
+
+				// Verificar el valor de Jobcond y sumar 30 o 45 minutos
+				var increment = row.Jobcond === "04" ? 45 : 30;
+
+				// Sumar los minutos al tiempo actual
 				time.setMinutes(time.getMinutes() + increment);
+
+				// Agregar el turno asignado a timeSlots (opcional, si quieres devolver este array)
+				timeSlots.push(row.TurnoAsignado);
 			});
 
-			return timeSlots;
+			return timeSlots; // Si no necesitas devolver timeSlots, puedes omitir esta línea
 		},
 
 		onAddMinutesPress: function (oEvent) {
 			// Get the row context explicitly if needed
-			var oContext = oEvent.getSource().getBindingContext("LicencesListJsonModel");
+			var oContext = oEvent.getSource().getBindingContext();
 			if (!oContext) {
 				jQuery.sap.log.error("No se puede obtener el contexto de la fila.");
 				return;
@@ -4705,7 +4764,7 @@ sap.ui.define([
 
 			aRows.forEach(function (oRow) {
 				// Accede al contexto de cada fila (a través del modelo asociado)
-				const oContext = oRow.getBindingContext("LicencesListJsonModel");
+				const oContext = oRow.getBindingContext();
 				if (oContext) {
 					// Obtén los datos de la fila a través del contexto
 					const oRowData = oContext.getObject();
@@ -4813,12 +4872,15 @@ sap.ui.define([
 			this.oMinuteDialog.open();
 		},
 		_applyMinuteChange: function (oContext, iMinutesToAdd) {
-			console.log(oContext)
+			console.log(oContext.getPath())
 			var oTable = this.byId("turnosTable");
-			var oModel = oTable.getModel("LicencesListJsonModel");
+			var oModel = oTable.getModel();
 
 			// Use the provided context
 			var sPath = oContext.getPath();
+
+			console.log(sPath)
+
 			var oData = oModel.getProperty(sPath);
 
 			// Extract index from the path
@@ -4924,155 +4986,289 @@ sap.ui.define([
 		clearAdvancedFilters: function () {
 			models.createFiltersModel();
 		},
-		config: {
-			initialRank: 0,
-			defaultRank: 1024,
-			rankAlgorithm: {
-				Before: function (iRank) {
-					return iRank + 1024;
-				},
-				Between: function (iRank1, iRank2) {
-					// limited to 53 rows
-					return (iRank1 + iRank2) / 2;
-				},
-				After: function (iRank) {
-					return iRank / 2;
-				}
-			}
-		},
-		getSelectedRowContext: function (sTableId, fnCallback) {
-			const oTable = this.byId(sTableId);
-			const iSelectedIndex = oTable.getSelectedIndex();
 
-			if (iSelectedIndex === -1) {
-				MessageToast.show("Please select a row!");
-				return;
-			}
+		// onLoadInfo: function () {
 
-			const oSelectedContext = oTable.getContextByIndex(iSelectedIndex);
-			if (oSelectedContext && fnCallback) {
-				fnCallback.call(this, oSelectedContext, iSelectedIndex, oTable);
-			}
+		// 	var oJSONModel = new sap.ui.model.json.JSONModel(oData);
+		// 	this.getView().setModel(oJSONModel, "LicensesJsonModel");
 
-			return oSelectedContext;
+		// 	this.assignShiftsToLicenses(oJSONModel.getData());
+		// 	oJSONModel.refresh(); // Refresh the model to update the assigned shifts
+		// },
+
+		// assignShiftsToLicenses: function (licenses) {
+		// 	var currentTime = 7 * 60; // Start time at 7:00 AM (in minutes)
+
+		// 	licenses.forEach(
+		// 		function (license) {
+		// 			var shiftDuration = license.workgroup === "Group A -30" ? 30 : 15; // 30 mins for Group A, 15 mins for Group B
+
+		// 			license.TurnoAsignado = this._formatTime(currentTime);
+		// 			currentTime += shiftDuration;
+		// 		}.bind(this)
+		// 	);
+		// },
+		assignShiftsToLicenses: function (licenses) {
+			// Ordenar empleados por el campo 'workgroup', excluyendo los grupos individuales "Desacoplado"
+			licenses.sort(function (a, b) {
+				if (a.Equnr.startsWith("_")) return 1; // Los desacoplados siempre al final
+				if (b.Equnr.startsWith("_")) return -1; // Los desacoplados siempre al final
+				return a.Equnr.localeCompare(b.Equnr); // Ordenar normalmente por grupo
+			});
+
+			var currentTime = 7 * 60; // Hora inicial 7:00 AM (en minutos)
+			var previousEquipo = ""; // Guardar el grupo de trabajo anterior
+			var firstShiftInGroup = ""; // Guardar el primer turno asignado en el grupo
+
+			// Asignar turnos por grupo de trabajo
+			licenses.forEach(
+				function (license) {
+					// Saltar empleados desacoplados
+					if (license.Equnr.startsWith("_")) {
+						return;
+					}
+
+					// Si el grupo de trabajo es diferente al anterior, asignar un nuevo turno y guardar el primero
+					if (license.Equnr !== previousEquipo) {
+						previousEquipo = license.Equnr;
+
+						// Determinar la duración del turno en función del workgroup
+						var shiftDuration = license.Jobcond === "04" ? 30 : 15; // 30 mins para Group A, 15 mins para otros
+						license.TurnoAsignado = this._formatTime(currentTime);
+						firstShiftInGroup = license.TurnoAsignado; // Guardar el primer turno del grupo
+						currentTime += shiftDuration;
+					} else {
+						// Si es el mismo grupo, asignar el mismo turno que al primer empleado del grupo
+						license.TurnoAsignado = firstShiftInGroup;
+					}
+				}.bind(this)
+			);
+
+			// Asignar turnos a los licencias desacoplados tomando el último turno disponible
+			licenses.forEach(
+				function (license) {
+					if (license.Equnr.startsWith("_")) {
+						license.TurnoAsignado = this._formatTime(currentTime);
+						currentTime += 15; // Asignar 15 minutos como duración estándar para desacoplados
+					}
+				}.bind(this)
+			);
 		},
 
 		onDragStart: function (oEvent) {
 			const oDraggedRow = oEvent.getParameter("target");
 			const oDragSession = oEvent.getParameter("dragSession");
-
-			// keep the dragged row context for the drop action
-			oDragSession.setComplexData("draggedRowContext", oDraggedRow.getBindingContext());
-		},
-
-		onDropTable1: function (oEvent) {
-			const oDragSession = oEvent.getParameter("dragSession");
-			const oDraggedRowContext = oDragSession.getComplexData("draggedRowContext");
-			if (!oDraggedRowContext) {
-				return;
-			}
-
-			// reset the rank property and update the model to refresh the bindings
-			this.oProductsModel.setProperty("Rank", this.config.initialRank, oDraggedRowContext);
-			this.oProductsModel.refresh(true);
-		},
-
-		moveToTable1: function () {
-			this.getSelectedRowContext("turnosTable", function (oSelectedRowContext, iSelectedRowIndex, oTable2) {
-				// reset the rank property and update the model to refresh the bindings
-				this.oProductsModel.setProperty("Rank", this.config.initialRank, oSelectedRowContext);
-				this.oProductsModel.refresh(true);
-
-				// select the previous row when there is no row to select
-				const oNextContext = oTable2.getContextByIndex(iSelectedRowIndex + 1);
-				if (!oNextContext) {
-					oTable2.setSelectedIndex(iSelectedRowIndex - 1);
-				}
-			});
+			// Keep the dragged row context for the drop action
+			oDragSession.setComplexData("draggedRowContext", oDraggedRow.getBindingContext("LicensesJsonModel"));
 		},
 
 		onDropTable2: function (oEvent) {
 			const oDragSession = oEvent.getParameter("dragSession");
 			const oDraggedRowContext = oDragSession.getComplexData("draggedRowContext");
 			if (!oDraggedRowContext) {
-				return;
+				return; // Exit if there's no valid dragged row context
 			}
 
-			const oConfig = this.config;
-			let iNewRank = oConfig.defaultRank;
 			const oDroppedRow = oEvent.getParameter("droppedControl");
+			const sDropPosition = oEvent.getParameter("dropPosition");
 
 			if (oDroppedRow && oDroppedRow instanceof TableRow) {
-				// get the dropped row data
-				const sDropPosition = oEvent.getParameter("dropPosition");
-				const oDroppedRowContext = oDroppedRow.getBindingContext();
-				const iDroppedRowRank = oDroppedRowContext.getProperty("Rank");
 				const iDroppedRowIndex = oDroppedRow.getIndex();
-				const oDroppedTable = oDroppedRow.getParent();
+				const oTable = oDroppedRow.getParent();
+				const aLicenses = oTable.getModel("LicensesJsonModel").getProperty("/");
 
-				// find the new index of the dragged row depending on the drop position
-				const iNewRowIndex = iDroppedRowIndex + (sDropPosition === "After" ? 1 : -1);
-				const oNewRowContext = oDroppedTable.getContextByIndex(iNewRowIndex);
-				if (!oNewRowContext) {
-					// dropped before the first row or after the last row
-					iNewRank = oConfig.rankAlgorithm[sDropPosition](iDroppedRowRank);
-				} else {
-					// dropped between first and the last row
-					iNewRank = oConfig.rankAlgorithm.Between(iDroppedRowRank, oNewRowContext.getProperty("Rank"));
+				// Get the index of the dragged row
+				const iDraggedRowIndex = oDraggedRowContext.getPath().split("/").pop();
+				const oDraggedLicense = aLicenses[iDraggedRowIndex];
+
+				// Remove the dragged employee from the current position
+				aLicenses.splice(iDraggedRowIndex, 1);
+
+				// Insert the dragged employee at the new position
+				const iNewRowIndex = sDropPosition === "After" ? iDroppedRowIndex + 1 : iDroppedRowIndex;
+				aLicenses.splice(iNewRowIndex, 0, oDraggedLicense);
+
+				// Update the model with the new array
+				oTable.getModel("LicensesJsonModel").setProperty("/", aLicenses);
+
+				// Optionally, reassign shifts if needed
+				this.assignShiftsToLicenses(aLicenses);
+				oTable.getModel("LicensesJsonModel").refresh(true); // Refresh the bindings
+			}
+		},
+
+		_adjustShiftForLicense: function (aLicenses, iLicenseIndex, minutesToAdd) {
+			// Obtener el turno actual en minutos del empleado seleccionado
+			var currentTime = this._convertShiftToMinutes(aLicenses[iLicenseIndex].TurnoAsignado);
+			// Asignar el turno actual sin cambiarlo, ya que no se suma al grupo desde el cual se aprieta
+			aLicenses[iLicenseIndex].TurnoAsignado = this._formatTime(currentTime);
+
+			// Reasignar turnos para los empleados siguientes
+			for (var i = iLicenseIndex + 1; i < aLicenses.length; i++) {
+				// Si el grupo de trabajo cambia, agregar x minutos al tiempo actual
+				if (aLicenses[i].Equnr !== aLicenses[i - 1].Equnr) {
+					var currentTime = this._convertShiftToMinutes(aLicenses[i].TurnoAsignado);
+					currentTime += minutesToAdd; // Agregar x minutos al tiempo actual
 				}
+
+				// Asignar el turno al empl.aseado
+				aLicenses[i].TurnoAsignado = this._formatTime(currentTime);
 			}
 
-			// set the rank property and update the model to refresh the bindings
-			this.oProductsModel.setProperty("Rank", iNewRank, oDraggedRowContext);
-			this.oProductsModel.refresh(true);
+			// Actualizar el modelo con los cambios
+			var oModel = this.getView().getModel("LicensesJsonModel");
+			oModel.setProperty("/", aLicenses); // Reemplazar el array con el actualizado
+			oModel.refresh(true); // Refrescar el modelo para que los cambios se vean en la vista
 		},
 
-		moveToTable2: function () {
-			this.getSelectedRowContext("turnosTable", function (oSelectedRowContext) {
-				const oTable2 = this.byId("turnosTable");
-				const oFirstRowContext = oTable2.getContextByIndex(0);
+		_convertShiftToMinutes: function (shift) {
+			var [hours, minutes] = shift.split(":").map(Number);
+			return hours * 60 + minutes;
+		},
 
-				// insert always as a first row
-				let iNewRank = this.config.defaultRank;
-				if (oFirstRowContext) {
-					iNewRank = this.config.rankAlgorithm.Before(oFirstRowContext.getProperty("Rank"));
-				}
+		_formatTime: function (minutes) {
+			var hours = Math.floor(minutes / 60);
+			var mins = minutes % 60;
+			return hours.toString().padStart(2, "0") + ":" + mins.toString().padStart(2, "0");
+		},
+		onDeletePress: function (oEvent) {
 
-				this.oProductsModel.setProperty("Rank", iNewRank, oSelectedRowContext);
-				this.oProductsModel.refresh(true);
+			var oButton = oEvent.getSource();
 
-				// select the inserted row
-				oTable2.setSelectedIndex(0);
+			// Obtener el valor de CustomData (id del empleado)
+			var sLicenseId = oButton.data("LicenseId");
+
+			var oModel = this.getView().getModel("LicensesJsonModel");
+			var aLicenses = oModel.getData();
+
+			// Buscar el índice del empleado a eliminar
+			var iLicenseIndex = aLicenses.findIndex(function (license) {
+				return license.Id === sLicenseId;
 			});
+
+			if (iLicenseIndex !== -1) {
+				// Eliminar el empleado de la lista
+				aLicenses.splice(iLicenseIndex, 1);
+
+				// Actualizar el modelo con la lista modificada
+				oModel.setProperty("/", aLicenses);
+				oModel.refresh(true);
+
+				MessageToast.show("La licencia ha sido eliminada.");
+			}
 		},
+		onDetachLicense: function (oEvent) {
+			// Obtener el botón que fue presionado
+			var oButton = oEvent.getSource();
 
-		moveSelectedRow: function (sDirection) {
-			this.getSelectedRowContext("turnosTable", function (oSelectedRowContext, iSelectedRowIndex, oTable2) {
-				const iSiblingRowIndex = iSelectedRowIndex + (sDirection === "Up" ? -1 : 1);
-				const oSiblingRowContext = oTable2.getContextByIndex(iSiblingRowIndex);
-				if (!oSiblingRowContext) {
-					return;
-				}
+			// Obtener el valor de CustomData (id del empleado)
+			var sLicenseId = oButton.data("LicenseId");
 
-				// swap the selected and the siblings rank
-				const iSiblingRowRank = oSiblingRowContext.getProperty("Rank");
-				const iSelectedRowRank = oSelectedRowContext.getProperty("Rank");
-				this.oProductsModel.setProperty("Rank", iSiblingRowRank, oSelectedRowContext);
-				this.oProductsModel.setProperty("Rank", iSelectedRowRank, oSiblingRowContext);
-				this.oProductsModel.refresh(true);
+			// Acceder al modelo y obtener los empleados
+			var oModel = this.getView().getModel("LicensesJsonModel");
+			var aLicenses = oModel.getData();
 
-				// after move select the sibling
-				oTable2.setSelectedIndex(iSiblingRowIndex);
+			// Encontrar el índice del empleado a desacoplar
+			var iLicenseIndex = aLicenses.findIndex((license) => license.Id === sLicenseId);
+			if (iLicenseIndex === -1) {
+				return; // Si el empleado no se encuentra, salir de la función
+			}
+
+			// Remover al empleado del arreglo original
+			var oDetachedLicense = aLicenses.splice(iLicenseIndex, 1)[0];
+
+			// Obtener el turno del último empleado en la lista
+			var oLastLicense = aLicenses[aLicenses.length - 1];
+			var currentTime = this._convertShiftToMinutes(oLastLicense.TurnoAsignado);
+			var shiftDuration = oDetachedLicense.Jobcond === "04" ? 30 : 15;
+
+			// Ajustar el turno del empleado desacoplado tomando en cuenta el último turno
+			currentTime += shiftDuration;
+			oDetachedLicense.TurnoAsignado = this._formatTime(currentTime);
+
+			// Asignar al empleado un grupo individual "Desacoplado_<EmployeeID>"
+			oDetachedLicense.Equnr = "_" + oDetachedLicense.Equnr + iLicenseIndex;
+
+			// Añadir al empleado desacoplado al final de la lista
+			aLicenses.push(oDetachedLicense);
+
+			// Actualizar el modelo con el nuevo arreglo
+			oModel.setProperty("/", aLicenses);
+			oModel.refresh(true); // Refrescar la vista
+			MessageToast.show("Licencia desacoplada, asignada al final con nuevo turno y grupo individual.");
+		},
+		openMinuteDialog: function (oEvent) {
+			// Obtener el botón que fue presionado
+			var oButton = oEvent.getSource();
+
+			// Obtener el valor de CustomData (id del empleado)
+			var sLicenseId = oButton.data("LicenseId");
+			this._selectedLicenseId = sLicenseId; // Guardar el ID del empleado seleccionado
+
+			// Crear el diálogo
+			this._oDialog = new sap.m.Dialog({
+				title: "Seleccionar Minutos",
+				content: [
+					new sap.m.Select("minuteSelect", {
+						items: [
+							new sap.ui.core.Item({
+								key: "15",
+								text: "15 minutos"
+							}),
+							new sap.ui.core.Item({
+								key: "30",
+								text: "30 minutos"
+							}),
+							new sap.ui.core.Item({
+								key: "45",
+								text: "45 minutos"
+							}),
+							new sap.ui.core.Item({
+								key: "60",
+								text: "60 minutos"
+							}),
+						],
+					}),
+				],
+				beginButton: new sap.m.Button({
+					text: "Agregar",
+					press: this.onAddMinutes.bind(this), // Enlazar el método
+				}),
+				endButton: new sap.m.Button({
+					text: "Cancelar",
+					press: function () {
+						this._oDialog.close(); // Cerrar el diálogo al cancelar
+					}.bind(this), // Asegúrate de que 'this' se refiere al controlador
+				}),
+				afterClose: function () {
+					this._oDialog.destroy(); // Destruir el diálogo después de cerrarlo
+				}.bind(this), // Asegúrate de que 'this' se refiere al controlador
 			});
-		},
 
-		moveUp: function () {
-			this.moveSelectedRow("Up");
+			// Abrir el diálogo
+			this._oDialog.open();
 		},
+		onAddMinutes: function () {
+			// Obtener el valor seleccionado del desplegable
+			var oSelect = this._oDialog.getContent()[0]; // Obtener el Select del contenido del diálogo
+			var iMinutesToAdd = parseInt(oSelect.getSelectedKey());
 
-		moveDown: function () {
-			this.moveSelectedRow("Down");
+			// Acceder al modelo y actualizar el turno del empleado
+			var oModel = this.getView().getModel("LicensesJsonModel");
+			var aLicenses = oModel.getData();
+
+			var iLicenseIndex = aLicenses.findIndex((license) => license.Id === this._selectedLicenseId);
+			if (iLicenseIndex !== -1) {
+				// Sumar los minutos seleccionados al turno del empleado
+				this._adjustShiftForLicense(aLicenses, iLicenseIndex, iMinutesToAdd);
+
+				// Refrescar el modelo
+				oModel.refresh(true);
+				MessageToast.show("Se ha ajustado el turno de la licencia y los turnos siguientes.");
+			}
+
+			// Cerrar el diálogo
+			this._oDialog.close();
 		},
-
 	});
 });
