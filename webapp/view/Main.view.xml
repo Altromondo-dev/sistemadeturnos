@@ -98,7 +98,7 @@
 							<dnd:DragDropInfo sourceAggregation="rows" targetAggregation="rows" dropPosition="Between" dragStart="onDragStart" drop="onDropTable2"/>
 						</t:dragDropConfig>
 						<t:columns>
-							<!-- <t:Column width="100px" >
+							<t:Column width="100px" >
 								<Label text="Acciones"/>
 								<t:template>
 									<HBox justifyContent="SpaceBetween">
@@ -128,7 +128,7 @@
                         </List>
 									</HBox>
 								</t:template>
-							</t:Column> -->
+							</t:Column>
 							<t:Column id="equipment" width="100px" class="customColumnBackground" hAlign="Center" sortProperty="equipment" filterProperty="equipment">
 								<Label text="{i18n>equipment}"/>
 								<t:template>
