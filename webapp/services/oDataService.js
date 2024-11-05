@@ -38,9 +38,9 @@ sap.ui.define([
 			if (!this._models[name]) {
 				var sessionLanguage = this._getSessionLanguage();
 				var baseurl = sap.ui.getCore().getModel("appCurrentInfo")
-				console.log(baseurl)
+			
 				var url = baseurl.appUrl + this._services[name];
-				console.log(url)
+			
 				this._models[name] = new sap.ui.model.odata.v2.ODataModel(url, {
 					json: true,
 					useBatch: false,

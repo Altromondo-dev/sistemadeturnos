@@ -6,6 +6,8 @@ sap.ui.define([
 	"sap/ui/core/Fragment",
 	"sap/ui/model/Filter",
 	"sap/ui/model/FilterOperator",
+	"sap/ui/table/Row",
+	"sap/m/MessageToast",
 	//utils
 	"transener/sistemadeturnos/utils/NavigationHelper",
 	"transener/sistemadeturnos/utils/FormatHelper",
@@ -51,7 +53,7 @@ sap.ui.define([
 	"transener/sistemadeturnos/utils/UnifilarHelper",
 	"transener/sistemadeturnos/services/checkAlternativeLabelService",
 
-], function (Controller, Fragment, Filter, FilterOperator, NavigationHelper, FormatHelper, FioriComponentHelper, MailHelper,
+], function (Controller, Fragment, Filter, FilterOperator, TableRow, MessageToast, NavigationHelper, FormatHelper, FioriComponentHelper, MailHelper,
 	ValidateHelper,
 	MessageBoxHelper, i18nTranslationHelper, AppManagementHelper, DateHelper, ExportLicenseHelper, formatter, HardCodeModel, models,
 	LicenseService,
@@ -80,10 +82,9 @@ sap.ui.define([
 		onInit: function () {
 			//  cdr migracion
 			// var jCond = LicenseService.getJobCond()
-		
+
 			var cUrl = this.getBaseURL();
-			UserService.loadModel();
-			
+
 			//	var oRouter = this.getOwnerComponent().getRouter()
 			AppManagementHelper.getModel("OrderNumberJsonModel").setData({
 				Odering: "down"
@@ -109,15 +110,15 @@ sap.ui.define([
 				Bloqueo: false,
 				Rdisparo: false,
 			});
-	
+			UserService.loadModel();
 
 			this.setApplicationModels()
 
 		},
-	
+
 		getBaseURL: function () {
 
-			// debugger;
+
 
 			var appId = this.getOwnerComponent().getManifestEntry("/sap.app/id");
 
@@ -125,7 +126,7 @@ sap.ui.define([
 			var appPath = appId.replaceAll(".", "/");
 			var appModulePath = jQuery.sap.getModulePath(appPath);
 
-						var jsonModel = sap.ui.getCore().getModel("appCurrentInfo");
+			var jsonModel = sap.ui.getCore().getModel("appCurrentInfo");
 			//checks if the model exists
 			if (!jsonModel) {
 				jsonModel = new sap.ui.model.json.JSONModel();
@@ -144,8 +145,6 @@ sap.ui.define([
 			var sPath = FioriHelper.getAppPath();
 
 			AppManagementHelper.getModel("consolasModel").loadData(sPath + "model/ConsolasModel.json", "", false);
-			console.log(AppManagementHelper.getModel("consolasModel").getData())
-
 			var permisosModel = AppManagementHelper.getModel("permisosModel");
 			permisosModel.loadData(sPath + "conf/permisos.json", "", false);
 
@@ -376,11 +375,12 @@ sap.ui.define([
 			oLicenseTableItems.filter(oFilter);
 		},
 		onSearch: function () {
-
+			AppManagementHelper.getModel("LicencesJsonModel").setData([])
 			var oTable = this.byId('turnosTable')
-			oTable.setBusy(true)
+
 			var oView = this.getView()
 			var aFilters = []
+			var oDataModel = oDataService.getModel('TransenerOperaciones')
 
 			var dateInitPicker = this.byId('initDate')
 			var dateEndPicker = this.byId('endDate')
@@ -388,9 +388,15 @@ sap.ui.define([
 			var sFromDate = dateInitPicker.getDateValue()
 			var sToDate = dateEndPicker.getDateValue()
 
-			console.log(sFromDate)
+			if (!sFromDate || !sToDate) {
+				MessageBoxHelper.showAlert("Alerta", "Debe completar los campos de fecha")
+				return
+			}
 
-			var oDataModel = oView.getModel('Operaciones')
+			oTable.setBusy(true)
+
+
+
 
 			if (sFromDate && sToDate) {
 
@@ -417,20 +423,27 @@ sap.ui.define([
 			oDataModel.read('/LicenciaTrabajoSet', {
 				filters: aFilters,
 				success: (data) => {
-					AppManagementHelper.getModel("LicencesListJsonModel").setData(data.results)
-					// const nestedData = this.transformData(data.results)
-					// 	//		console.log("Nested", nestedData)
-					// this.onCountItems(data.results)
-					// this.rows(data.results)
+
+					this.onCountItems(data.results)
+					//AppManagementHelper.getModel("LicencesJsonModel").setData(data.results)
+
+					AppManagementHelper.getModel("LicencesJsonModel").loadData("../../model/data.json");
+				
+					//var oTurnosModel = new sap.ui.model.json.JSONModel();
+					var oTurnosModel = this.assignShiftsToLicences(data.results);
+					oView.setModel(oTurnosModel);
+
 					oTable.setBusy(false)
 				},
 				error: (error) => {
 					console.log(error)
+					MessageBoxHelper.showAlert("Alerta", "No se encontraron datos en las fechas seleccionadas")
+					oTable.setBusy(false)
 				}
 			})
-			// LicenseService.GETWithFilters(aFilters)
+
 			this.closeDialog()
-			//oView.setModel("LicencesListJsonModel", LiceneService.GET(filters))
+
 		},
 		rows: function (data) {
 			const oView = this.getView()
@@ -1710,13 +1723,13 @@ sap.ui.define([
 			filters.push(filterEmpresa);
 			filtersEstaciones.push(filterEmpresa);
 			let roles = AppManagementHelper.getModel("UserJsonModel").getProperty("/roles");
-
+			console.log(roles)
 			filtersEstaciones.push(new sap.ui.model.Filter({
 				path: "Rol",
 				operator: sap.ui.model.FilterOperator.EQ,
 
-				///OJO CAMBIAR ESTO// roles[0]
-				value1: roles.includes("Solicitante_Lic") ? "Solicitante_Lic" : "SAP_Web_IDE_Developers"
+
+				value1: roles.includes("Solicitante_Lic") ? "Solicitante_Lic" : roles[0]
 			}));
 
 			// fecha desde
@@ -4784,20 +4797,21 @@ sap.ui.define([
 			var sSelectedDate = oDatePicker.getDateValue();
 			var sFormattedDate = this._formatDate(sSelectedDate);
 
-			AppManagementHelper.getModel("LicencesJsonModel").setProperty("/FechaTurno", sFormattedDate);
+			AppManagementHelper.getModel("LicencesTurnoJsonModel").setProperty("/FechaTurno", sFormattedDate);
 			var filters = [];
 			filters.push(new Filter("Dateturno", FilterOperator.EQ, "2024-10-08"));
 			filters.push(new Filter("Empresa", FilterOperator.EQ, "100"));
 			var entity = "/TurnosLicenciasSet";
-			oDataService.getModel("TransenerOperaciones").read(entity, {
-				filters: filters,
-				success: (oData) => {
-					this.successSelectTurno(oData)
-				},
-				error: (Error) => {
-					console.log(Error);
-				},
-			});
+			// oDataService.getModel("TransenerOperaciones").read(entity, {
+			// 	filters: filters,
+			// 	success: (oData) => {
+			// 		this.successSelectTurno(oData)
+			// 	},
+			// 	error: (Error) => {
+			// 		console.log(Error);
+			// 	},
+			// });
+			LicenseService.GETLicense("L202400039")
 		},
 
 		successSelectTurno: function (data) {
@@ -4811,40 +4825,76 @@ sap.ui.define([
 
 			AppManagementHelper.getModel('LicencesListJsonModel').setData(TurnoLicencias)
 		},
-		_openMinuteDialog: function (oContext) {
-			console.log(oContext)
-			if (!this.oMinuteDialog) {
-				this.oMinuteDialog = new sap.m.Dialog({
-					title: "Agregar Minutos",
-					content: [
-						new sap.m.StepInput("minuteInput", {
-							min: 1,
-							max: 120,
-							step: 5,
-							value: 30,
-							width: "60px",
-							justifyContent: "Center"
-						})
-					],
-					beginButton: new sap.m.Button({
-						text: "Aceptar",
-						press: function () {
-							var iMinutesToAdd = sap.ui.getCore().byId("minuteInput").getValue();
-							this._applyMinuteChange(oContext, iMinutesToAdd); // Pass the context here
-							this.oMinuteDialog.close();
-						}.bind(this)
-					}),
-					endButton: new sap.m.Button({
-						text: "Cancelar",
-						press: function () {
-							this.oMinuteDialog.close();
-						}.bind(this)
-					})
-				});
+		// _openMinuteDialog: function (oContext) {
+		// 	console.log(oContext)
+		// 	if (!this.oMinuteDialog) {
+		// 		this.oMinuteDialog = new sap.m.Dialog({
+		// 			title: "Agregar Minutos",
+		// 			content: [
+		// 				new sap.m.StepInput("minuteInput", {
+		// 					min: 1,
+		// 					max: 120,
+		// 					step: 5,
+		// 					value: 30,
+		// 					width: "60px",
+		// 					justifyContent: "Center"
+		// 				})
+		// 			],
+		// 			beginButton: new sap.m.Button({
+		// 				text: "Aceptar",
+		// 				press: function () {
+		// 					var iMinutesToAdd = sap.ui.getCore().byId("minuteInput").getValue();
+		// 					this._applyMinuteChange(oContext, iMinutesToAdd); // Pass the context here
+		// 					this.oMinuteDialog.close();
+		// 				}.bind(this)
+		// 			}),
+		// 			endButton: new sap.m.Button({
+		// 				text: "Cancelar",
+		// 				press: function () {
+		// 					this.oMinuteDialog.close();
+		// 				}.bind(this)
+		// 			})
+		// 		});
 
-				this.getView().addDependent(this.oMinuteDialog);
-			}
-			this.oMinuteDialog.open();
+		// 		this.getView().addDependent(this.oMinuteDialog);
+		// 	}
+		// 	this.oMinuteDialog.open();
+		// },
+		
+		openMinuteDialog: function (oEvent) {
+			// Obtener el botón que fue presionado
+			var oButton = oEvent.getSource();
+		
+			// Obtener el valor de CustomData (id del empleado)
+			var sLicenseId = oButton.data("LicenseId");
+			this._selectedLicenseId = sLicenseId; // Guardar el ID del empleado seleccionado
+		
+			// Crear el diálogo
+			this._oDialog = new sap.m.Dialog({
+				title: "Seleccionar Minutos",
+				content: [
+					new sap.m.Input("minuteInput", {
+						placeholder: "Ingrese minutos",
+						type: "Number" // Asegúrate de que el campo solo acepte números
+					}),
+				],
+				beginButton: new sap.m.Button({
+					text: "Agregar",
+					press: this.onAddMinutes.bind(this), // Enlazar el método
+				}),
+				endButton: new sap.m.Button({
+					text: "Cancelar",
+					press: function () {
+						this._oDialog.close(); // Cerrar el diálogo al cancelar
+					}.bind(this), // Asegúrate de que 'this' se refiere al controlador
+				}),
+				afterClose: function () {
+					this._oDialog.destroy(); // Destruir el diálogo después de cerrarlo
+				}.bind(this), // Asegúrate de que 'this' se refiere al controlador
+			});
+		
+			// Abrir el diálogo
+			this._oDialog.open();
 		},
 		_applyMinuteChange: function (oContext, iMinutesToAdd) {
 			console.log(oContext)
@@ -4958,128 +5008,261 @@ sap.ui.define([
 		clearAdvancedFilters: function () {
 			models.createFiltersModel();
 		},
-		config: {
-			initialRank: 0,
-			defaultRank: 1024,
-			rankAlgorithm: {
-				Before: function (iRank) {
-					return iRank + 1024;
-				},
-				Between: function (iRank1, iRank2) {
-					// limited to 53 rows
-					return (iRank1 + iRank2) / 2;
-				},
-				After: function (iRank) {
-					return iRank / 2;
-				}
-			}
+
+		assignShiftsToLicences: function (licences) {
+			// Asignar el valor de Equnr al nuevo campo Grupo para cada licencia
+			licences.forEach(function (license) {
+				if (license.Grupo) return
+				license.Grupo = license.Equnr; // Asignar el valor de Equnr a Grupo
+			});
+
+			// Ordenar empleados por el campo 'Grupo', excluyendo los grupos individuales "Desacoplado"
+			licences.sort(function (a, b) {
+				if (a.Grupo.startsWith("_")) return 1; // Los desacoplados siempre al final
+				if (b.Grupo.startsWith("_")) return -1; // Los desacoplados siempre al final
+				return a.Grupo.localeCompare(b.Grupo); // Ordenar normalmente por grupo
+			});
+
+			var currentTime = 7 * 60; // Hora inicial 7:00 AM (en minutos)
+			var previousGrupo = ""; // Guardar el grupo de trabajo anterior
+			var firstShiftInGroup = ""; // Guardar el primer turno asignado en el grupo
+
+			// Asignar turnos por Grupo
+			licences.forEach(
+				function (license) {
+					// Saltar empleados desacoplados
+					license.Consola = this.encontrarGrupo(license.Tplnr);
+					if (license.Grupo.startsWith("_")) {
+						return;
+					}
+
+					// Si el Grupo es diferente al anterior, asignar un nuevo turno y guardar el primero
+					if (license.Grupo !== previousGrupo) {
+						previousGrupo = license.Grupo;
+
+						// Determinar la duración del turno en función del Grupo
+						var shiftDuration = license.Jobcond === "04" ? 30 : 15; // 30 mins para Group A, 15 mins para otros
+						license.TurnoAsignado = this._formatTime(currentTime);
+						firstShiftInGroup = license.TurnoAsignado; // Guardar el primer turno del grupo
+						currentTime += shiftDuration;
+					} else {
+						// Si es el mismo Grupo, asignar el mismo turno que al primer empleado del grupo
+						license.TurnoAsignado = firstShiftInGroup;
+					}
+				}.bind(this)
+			);
+
+			// Asignar turnos a los licencias desacoplados tomando el último turno disponible
+			licences.forEach(
+				function (license) {
+					if (license.Grupo.startsWith("_")) {
+						license.TurnoAsignado = this._formatTime(currentTime);
+						currentTime += 15; // Asignar 15 minutos como duración estándar para desacoplados
+					}
+				}.bind(this)
+			);
 		},
-		getSelectedRowContext: function (sTableId, fnCallback) {
-			const oTable = this.byId(sTableId);
-			const iSelectedIndex = oTable.getSelectedIndex();
-
-			if (iSelectedIndex === -1) {
-				MessageToast.show("Please select a row!");
-				return;
-			}
-
-			const oSelectedContext = oTable.getContextByIndex(iSelectedIndex);
-			if (oSelectedContext && fnCallback) {
-				fnCallback.call(this, oSelectedContext, iSelectedIndex, oTable);
-			}
-
-			return oSelectedContext;
-		},
-
 		onDragStart: function (oEvent) {
 			const oDraggedRow = oEvent.getParameter("target");
 			const oDragSession = oEvent.getParameter("dragSession");
+			const oDraggedRowContext = oDraggedRow.getBindingContext("LicencesJsonModel");
+			const sDraggedGroup = oDraggedRowContext.getProperty("Grupo");
+	  
+			// Obtener todos los elementos del mismo grupo de trabajo
+			const aLicences = this.getView().getModel("LicencesJsonModel").getData();
+			const aGroupedlicences = aLicences.filter(license => license.Grupo === sDraggedGroup);
+	  
+			// Guardar en la sesión todos los elementos del grupo
+			oDragSession.setComplexData("draggedGroup", aGroupedlicences);
+			oDragSession.setComplexData("originalData", aLicences);
+		  },
 
-			// keep the dragged row context for the drop action
-			oDragSession.setComplexData("draggedRowContext", oDraggedRow.getBindingContext());
-		},
-
-		onDropTable1: function (oEvent) {
-			const oDragSession = oEvent.getParameter("dragSession");
-			const oDraggedRowContext = oDragSession.getComplexData("draggedRowContext");
-			if (!oDraggedRowContext) {
-				return;
-			}
-
-			// reset the rank property and update the model to refresh the bindings
-			this.oProductsModel.setProperty("Rank", this.config.initialRank, oDraggedRowContext);
-			this.oProductsModel.refresh(true);
-		},
-
-		moveToTable1: function () {
-			this.getSelectedRowContext("turnosTable", function (oSelectedRowContext, iSelectedRowIndex, oTable2) {
-				// reset the rank property and update the model to refresh the bindings
-				this.oProductsModel.setProperty("Rank", this.config.initialRank, oSelectedRowContext);
-				this.oProductsModel.refresh(true);
-
-				// select the previous row when there is no row to select
-				const oNextContext = oTable2.getContextByIndex(iSelectedRowIndex + 1);
-				if (!oNextContext) {
-					oTable2.setSelectedIndex(iSelectedRowIndex - 1);
-				}
-			});
-		},
-
+		
 		onDropTable2: function (oEvent) {
 			const oDragSession = oEvent.getParameter("dragSession");
-			const oDraggedRowContext = oDragSession.getComplexData("draggedRowContext");
-			if (!oDraggedRowContext) {
-				return;
+			const aDraggedGroup = oDragSession.getComplexData("draggedGroup");
+			const aOriginalData = oDragSession.getComplexData("originalData");
+	  
+			if (!aDraggedGroup || !aOriginalData) {
+			  return;
 			}
-
-			const oConfig = this.config;
-			let iNewRank = oConfig.defaultRank;
+	  
 			const oDroppedRow = oEvent.getParameter("droppedControl");
-
+			const sDropPosition = oEvent.getParameter("dropPosition");
+	  
 			if (oDroppedRow && oDroppedRow instanceof TableRow) {
-				// get the dropped row data
-				const sDropPosition = oEvent.getParameter("dropPosition");
-				const oDroppedRowContext = oDroppedRow.getBindingContext();
-				const iDroppedRowRank = oDroppedRowContext.getProperty("Rank");
-				const iDroppedRowIndex = oDroppedRow.getIndex();
-				const oDroppedTable = oDroppedRow.getParent();
+			  const iDroppedRowIndex = oDroppedRow.getIndex();
+			  const oTable = oDroppedRow.getParent();
+	  
+			  // Remover el grupo arrastrado de la data original
+			  const aFilteredData = aOriginalData.filter(license => !aDraggedGroup.includes(license));
+	  
+			  // Insertar el grupo arrastrado en la nueva posición
+			  const iNewRowIndex = sDropPosition === "After" ? iDroppedRowIndex + 1 : iDroppedRowIndex;
+			  Array.prototype.splice.apply(aFilteredData, [iNewRowIndex, 0].concat(aDraggedGroup));
+	  
+			  // Actualizar el modelo
+			 AppManagementHelper.getModel("LicencesJsonModel").setData(aFilteredData)
+			  oTable.getModel("LicencesJsonModel").refresh(true);
+	  
+			  // Reasignar turnos si es necesario
+			//  this.assignShiftsToLicences(aFilteredData);
+			}
+		  },
+		 
+		_adjustShiftForLicense: function (aLicences, iLicenseIndex, minutesToAdd) {
+			// Obtener el turno actual en minutos de la licencia seleccionada
+			var currentTime = this._convertShiftToMinutes(aLicences[iLicenseIndex].TurnoAsignado);
 
-				// find the new index of the dragged row depending on the drop position
-				const iNewRowIndex = iDroppedRowIndex + (sDropPosition === "After" ? 1 : -1);
-				const oNewRowContext = oDroppedTable.getContextByIndex(iNewRowIndex);
-				if (!oNewRowContext) {
-					// dropped before the first row or after the last row
-					iNewRank = oConfig.rankAlgorithm[sDropPosition](iDroppedRowRank);
-				} else {
-					// dropped between first and the last row
-					iNewRank = oConfig.rankAlgorithm.Between(iDroppedRowRank, oNewRowContext.getProperty("Rank"));
+			// Asignar el turno actual sin cambiarlo para la licencia seleccionada
+			aLicences[iLicenseIndex].TurnoAsignado = this._formatTime(currentTime);
+
+			// Reasignar turnos para las licencias siguientes
+			for (var i = iLicenseIndex + 1; i < aLicences.length; i++) {
+				// Si el grupo cambia, agregar minutos al tiempo actual
+				if (aLicences[i].Grupo !== aLicences[i - 1].Grupo) {
+					currentTime = this._convertShiftToMinutes(aLicences[i].TurnoAsignado);
+					currentTime += minutesToAdd; // Agregar los minutos especificados al tiempo actual
 				}
+
+				// Asignar el turno a la licencia actual
+				aLicences[i].TurnoAsignado = this._formatTime(currentTime);
 			}
 
-			// set the rank property and update the model to refresh the bindings
-			this.oProductsModel.setProperty("Rank", iNewRank, oDraggedRowContext);
-			this.oProductsModel.refresh(true);
+			// Actualizar el modelo con los cambios
+			var oModel = this.getView().getModel("LicencesJsonModel");
+			oModel.setProperty("/", aLicences); // Reemplazar el array con la versión actualizada
+			oModel.refresh(true); // Refrescar el modelo para reflejar los cambios en la vista
 		},
 
-		moveToTable2: function () {
-			this.getSelectedRowContext("turnosTable", function (oSelectedRowContext) {
-				const oTable2 = this.byId("turnosTable");
-				const oFirstRowContext = oTable2.getContextByIndex(0);
+		_convertShiftToMinutes: function (shift) {
+			var [hours, minutes] = shift.split(":").map(Number);
+			return hours * 60 + minutes;
+		},
 
-				// insert always as a first row
-				let iNewRank = this.config.defaultRank;
-				if (oFirstRowContext) {
-					iNewRank = this.config.rankAlgorithm.Before(oFirstRowContext.getProperty("Rank"));
-				}
+		_formatTime: function (minutes) {
+			var hours = Math.floor(minutes / 60);
+			var mins = minutes % 60;
+			return hours.toString().padStart(2, "0") + ":" + mins.toString().padStart(2, "0");
+		},
+		onDeletePress: function (oEvent) {
 
-				this.oProductsModel.setProperty("Rank", iNewRank, oSelectedRowContext);
-				this.oProductsModel.refresh(true);
+			var oButton = oEvent.getSource();
 
-				// select the inserted row
-				oTable2.setSelectedIndex(0);
+			// Obtener el valor de CustomData (id del empleado)
+			var sLicenseId = oButton.data("LicenseId");
+
+			var oModel = this.getView().getModel("LicencesJsonModel");
+			var aLicenses = oModel.getData();
+
+			// Buscar el índice del empleado a eliminar
+			var iLicenseIndex = aLicenses.findIndex(function (license) {
+				return license.Id === sLicenseId;
 			});
+
+			if (iLicenseIndex !== -1) {
+				// Eliminar el empleado de la lista
+				aLicenses.splice(iLicenseIndex, 1);
+
+				// Actualizar el modelo con la lista modificada
+				oModel.setProperty("/", aLicenses);
+				oModel.refresh(true);
+
+				MessageToast.show("La licencia ha sido eliminada.");
+			}
+		},
+		onDetachLicense: function (oEvent) {
+			// Obtener el botón que fue presionado
+			var oButton = oEvent.getSource();
+
+			// Obtener el valor de CustomData (id del empleado)
+			var sLicenseId = oButton.data("LicenseId");
+
+			// Acceder al modelo y obtener las licencias
+			var oModel = this.getView().getModel("LicencesJsonModel");
+			var aLicences = oModel.getData();
+
+			// Encontrar el índice de la licencia a desacoplar
+			var iLicenseIndex = aLicences.findIndex((license) => license.Id === sLicenseId);
+			if (iLicenseIndex === -1) {
+				return; // Si la licencia no se encuentra, salir de la función
+			}
+
+			// Remover la licencia del arreglo original
+			var oDetachedLicense = aLicences.splice(iLicenseIndex, 1)[0];
+
+			// Obtener el turno del último empleado en la lista
+			var oLastLicense = aLicences[aLicences.length - 1];
+			var currentTime = this._convertShiftToMinutes(oLastLicense.TurnoAsignado);
+			var shiftDuration = oDetachedLicense.Jobcond === "04" ? 30 : 15;
+
+			// Ajustar el turno de la licencia desacoplada tomando en cuenta el último turno
+			currentTime += shiftDuration;
+			oDetachedLicense.TurnoAsignado = this._formatTime(currentTime);
+
+			// Asignar a la licencia desacoplada un grupo individual "Desacoplado_<LicenseID>"
+			oDetachedLicense.Grupo = "_Desacoplado_" + oDetachedLicense.Id;
+
+			// Añadir la licencia desacoplada al final de la lista
+			aLicences.push(oDetachedLicense);
+
+			// Actualizar el modelo con el nuevo arreglo
+			oModel.setProperty("/", aLicences);
+			oModel.refresh(true); // Refrescar la vista
+			MessageToast.show("Licencia desacoplada, asignada al final con nuevo turno y grupo individual.");
 		},
 
+	
+		// onAddMinutes: function () {
+		// 	// Obtener el valor seleccionado del desplegable
+		// 	var oSelect = this._oDialog.getContent()[0]; // Obtener el Select del contenido del diálogo
+		// 	var iMinutesToAdd = parseInt(oSelect.getSelectedKey());
+
+		// 	// Acceder al modelo y actualizar el turno del empleado
+		// 	var oModel = this.getView().getModel("LicencesJsonModel");
+		// 	var aLicenses = oModel.getData();
+
+		// 	var iLicenseIndex = aLicenses.findIndex((license) => license.Id === this._selectedLicenseId);
+		// 	if (iLicenseIndex !== -1) {
+		// 		// Sumar los minutos seleccionados al turno del empleado
+		// 		this._adjustShiftForLicense(aLicenses, iLicenseIndex, iMinutesToAdd);
+
+		// 		// Refrescar el modelo
+		// 		oModel.refresh(true);
+		// 		MessageToast.show("Se ha ajustado el turno de la licencia y los turnos siguientes.");
+		// 	}
+
+		// 	// Cerrar el diálogo
+		// 	this._oDialog.close();
+		// },
+		onAddMinutes: function () {
+			// Obtener el valor del input
+			var oInput = this._oDialog.getContent()[0]; // Obtener el Input del contenido del diálogo
+			var iMinutesToAdd = parseInt(oInput.getValue(), 10); // Convertir el valor a un entero
+		
+			// Validar el valor ingresado
+			if (isNaN(iMinutesToAdd) || iMinutesToAdd <= 0) {
+				sap.m.MessageToast.show("Por favor, ingrese un valor válido en minutos."); // Mensaje de error si no es válido
+				return; // Salir de la función si el valor no es válido
+			}
+		
+			// Acceder al modelo y actualizar el turno del empleado
+			var oModel = this.getView().getModel("LicencesJsonModel");
+			var aLicenses = oModel.getData();
+		
+			var iLicenseIndex = aLicenses.findIndex((license) => license.Id === this._selectedLicenseId);
+			if (iLicenseIndex !== -1) {
+				// Sumar los minutos seleccionados al turno del empleado
+				this._adjustShiftForLicense(aLicenses, iLicenseIndex, iMinutesToAdd);
+		
+				// Refrescar el modelo
+				oModel.refresh(true);
+				sap.m.MessageToast.show("Se ha ajustado el turno de la licencia y los turnos siguientes.");
+			}
+		
+			// Cerrar el diálogo
+			this._oDialog.close();
+		},
 		moveSelectedRow: function (sDirection) {
 			this.getSelectedRowContext("turnosTable", function (oSelectedRowContext, iSelectedRowIndex, oTable2) {
 				const iSiblingRowIndex = iSelectedRowIndex + (sDirection === "Up" ? -1 : 1);
@@ -5108,5 +5291,181 @@ sap.ui.define([
 			this.moveSelectedRow("Down");
 		},
 
+		onOpenComboPopover: function(oEvent) {
+			// Obtener el contexto de la fila desde el botón que abre el popover
+			this._oRowContext = oEvent.getSource().getBindingContext("LicencesJsonModel");
+		
+			// Obtener el modelo y el path de la fila seleccionada
+			var oModel = this.getView().getModel("LicencesJsonModel");
+			var sPath = this._oRowContext.getPath();
+		
+			// Obtener el array de accionesEntregas del modelo
+			var aAccionesEntregas = oModel.getProperty(sPath + "/accionesEntregas") || [];
+		
+			// Abrir el popover
+			if (!this._oComboPopover) {
+				// Crear el popover si no existe
+				this._oComboPopover = sap.ui.xmlfragment("transener.sistemadeturnos.fragments.ComboPopover", this);
+				this.getView().addDependent(this._oComboPopover);
+			}
+		
+			// Inicializar el estado de los checkboxes
+			this._initializeCheckBoxes(aAccionesEntregas);
+		
+			// Mostrar el popover
+			this._oComboPopover.openBy(oEvent.getSource());
+		},
+		
+		_initializeCheckBoxes: function(aAccionesEntregas) {
+			// Obtener el fragmento del popover
+			var oFragment = this._oComboPopover;
+		
+			// Lista de checkboxes con sus respectivos keys
+			var aCheckBoxes = [
+				{ id: "checkboxSOL_COC", key: "SOL COC" },
+				{ id: "checkboxSOL_TEC", key: "SOL TEC" },
+				{ id: "checkboxAUT_COC", key: "AUT COC" }
+				// Agrega más checkboxes según sea necesario
+			];
+		
+			aCheckBoxes.forEach(function(oCheckBox) {
+				// Usar Fragment.byId para obtener el checkbox dentro del contexto del fragmento
+				var oCheckBoxControl = sap.ui.core.Fragment.byId("transener.sistemadeturnos.fragments.ComboPopover", oCheckBox.id);
+				
+				// Desmarcar todos los checkboxes al inicio
+				if (oCheckBoxControl) {
+					oCheckBoxControl.setSelected(false); // Limpiar selección
+				}
+			});
+		
+			// Marcar los checkboxes que estén en el array `aAccionesEntregas`
+			aAccionesEntregas.forEach(function(oEntry) {
+				var oCheckBoxControl = aCheckBoxes.find(function(oCheckBox) {
+					return oCheckBox.key === oEntry.nombre;
+				});
+		
+				// Si se encuentra el checkbox en la lista, marcarlo
+				if (oCheckBoxControl) {
+					var oCheckBoxUIControl = sap.ui.core.Fragment.byId("transener.sistemadeturnos.fragments.ComboPopover", oCheckBoxControl.id);
+					if (oCheckBoxUIControl) {
+						oCheckBoxUIControl.setSelected(true);
+					}
+				}
+			});
+		},
+		
+		// onSelectionChange: function (oEvent) {
+		// 	var oSelectedItem = oEvent.getParameter("selectedItem");
+		// 	if (!oSelectedItem) {
+		// 		sap.m.MessageToast.show("Por favor selecciona una opción válida.");
+		// 		return; // Sale de la función si no hay un elemento seleccionado
+		// 	}
+
+		// 	var sSelectedKey = oSelectedItem.getKey(); // Obtener el key del item seleccionado
+		// 	sap.m.MessageToast.show("Opción seleccionada: " + sSelectedKey);
+
+		// 	// Obtener el modelo 'LicencesJsonModel'
+		// 	var oModel = this.getView().getModel("LicencesJsonModel");
+
+		// 	// Utilizar el contexto almacenado de la fila
+		// 	if (!this._oRowContext) {
+		// 		sap.m.MessageToast.show("No se pudo obtener el contexto de la fila.");
+		// 		return; // Sal de la función si no hay contexto
+		// 	}
+
+		// 	// Obtener el path de la fila seleccionada
+		// 	var sPath = this._oRowContext.getPath(); // Este es el path de la fila correspondiente
+
+		// 	// Obtener el array actual de 'accionesEntregas' o inicializarlo si está vacío
+		// 	var aAccionesEntregas = oModel.getProperty(sPath + "/accionesEntregas") || [];
+
+		// 	// Crear el nuevo objeto que se va a agregar
+		// 	var oNewEntry = {
+		// 		nombre: sSelectedKey,
+		// 		descripcion: "Descripción para " + sSelectedKey
+		// 	};
+
+		// 	// Agregar el nuevo elemento al array
+		// 	aAccionesEntregas.push(oNewEntry);
+
+		// 	// Actualizar el modelo con el array modificado
+		// 	oModel.setProperty(sPath + "/accionesEntregas", aAccionesEntregas);
+
+		// 	// Cierra el Popover después de seleccionar
+		// 	this._oComboPopover.close();
+		// },
+
+
+		_addRowToTable: function (sSelectedKey) {
+
+			console.log(sSelectedKey)
+			// Obtener el modelo de la tabla
+			var oTable = this.getView().byId("turnosTable"); // Reemplaza 'yourTableId' con el ID de tu tabla
+			var oModel = oTable.getModel('LicencesJsonModel');
+
+			// Obtener datos actuales del modelo
+			var aData = oModel.getProperty("/"); // Ajusta "/rows" si la ruta de tus datos es diferente
+
+			// Crear una nueva fila con el valor seleccionado
+			var oNewRow = {
+				// Completa las propiedades de tu nueva fila aquí
+				column2: sSelectedKey, // Asigna el valor seleccionado a la columna correspondiente                    // ...
+			};
+
+			// Agregar la nueva fila a los datos existentes
+			aData.push(oNewRow);
+
+			// Actualizar el modelo con los nuevos datos
+			oModel.setProperty("/", aData);
+		},
+
+		onClosePopover: function () {
+			this._oComboPopover.close();
+		},
+		formatCheckBoxSelected: function (aAccionesEntregas, sCheckBoxKey) {
+			// Verifica si el key del checkbox está en el array de accionesEntregas
+			return aAccionesEntregas && aAccionesEntregas.some(function (oEntry) {
+				return oEntry.nombre === sCheckBoxKey; // Ajusta el campo según tu modelo
+			});
+		},
+
+		onCheckBoxSelect: function(oEvent) {
+			// Obtener el checkbox que fue seleccionado o deseleccionado
+			var oCheckBox = oEvent.getSource();
+			var sKey = oCheckBox.getText(); // Obtiene el texto del checkbox
+		
+			// Utilizar el contexto almacenado de la fila
+			if (!this._oRowContext) {
+				sap.m.MessageToast.show("No se pudo obtener el contexto de la fila.");
+				return; // Sal de la función si no hay contexto
+			}
+		
+			// Obtener el modelo 'LicencesJsonModel'
+			var oModel = this.getView().getModel("LicencesJsonModel");
+		
+			// Obtener el path de la fila seleccionada
+			var sPath = this._oRowContext.getPath(); // Este es el path de la fila correspondiente
+		
+			// Obtener el array actual de 'accionesEntregas' o inicializarlo si está vacío
+			var aAccionesEntregas = oModel.getProperty(sPath + "/accionesEntregas") || [];
+		
+			if (oCheckBox.getSelected()) {
+				// Si el checkbox se selecciona, agregarlo al array
+				aAccionesEntregas.push({
+					nombre: sKey,
+					descripcion: "Descripción para " + sKey // Ajusta según tus necesidades
+				});
+			} else {
+				// Si se deselecciona, eliminarlo del array
+				aAccionesEntregas = aAccionesEntregas.filter(function(oEntry) {
+					return oEntry.nombre !== sKey; // Elimina el elemento del array
+				});
+			}
+		
+			// Actualizar el modelo con el nuevo array
+			oModel.setProperty(sPath + "/accionesEntregas", aAccionesEntregas);
+		},
+		
 	});
 });
+

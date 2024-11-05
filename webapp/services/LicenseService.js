@@ -1,18 +1,3674 @@
-sap.ui.define(["transener/sistemadeturnos/services/oDataService","transener/sistemadeturnos/utils/MessageBoxHelper","transener/sistemadeturnos/utils/FormatHelper","transener/sistemadeturnos/utils/AppManagementHelper","transener/sistemadeturnos/utils/BusyDialogHelper","transener/sistemadeturnos/utils/BatchOperationsHelper","transener/sistemadeturnos/utils/LicenseHelper","transener/sistemadeturnos/utils/FileDownloadHelper","transener/sistemadeturnos/utils/MailHelper","transener/sistemadeturnos/utils/FormatterHelper","transener/sistemadeturnos/services/LibroGuardiasService","transener/sistemadeturnos/services/EtMailService","transener/sistemadeturnos/utils/LegacyValidationHelper"],function(r,a,o,t,i,s,n,l,c,u,d,p,T){"use strict";return{rolCoordinador:"Coordinador_Mantenimiento",rolTramitador:"Tramitador",nullId:"0000000000",nullLegajo:"00000000",_expandProperties:"HorariosPorLicencia_nav,CoordinacionesLicencia_nav,ObservacionesLicencia_nav,TramitacionesLicencia_nav,"+"SuspensionLicencia_nav,ReanudacionLicencia_nav,TransferenciaJefeTrabajo_nav,DevolucionLicencia_nav,EntregasLicencia_nav,AttachmentXLicencia_nav,EsquemaUnifilar_nav",PostDaysLicence:function(e){return new Promise((a,o)=>{var t="/LicenciaTrabajoSet";r.getModel("TransenerOperaciones").create(t,e,{success:function(){a()},error:function(){o()}})})},deleteNavProperties:function(e){delete e.HorariosPorLicencia_nav;delete e.CoordinacionesLicencia_nav;delete e.ObservacionesLicencia_nav;delete e.TramitacionesLicencia_nav;delete e.SuspensionLicencia_nav;delete e.TransferenciaJefeTrabajo_nav;delete e.DevolucionLicencia_nav;delete e.EntregasLicencia_nav;delete e.ReanudacionLicencia_nav;delete e.AttachmentXLicencia_nav;delete e.EsquemaUnifilar_nav},getDiccionarioClase:function(e){return new Promise((r,a)=>{let o=[];o.push(new sap.ui.model.Filter("Empresa",sap.ui.model.FilterOperator.EQ,e));t.getModel("SelectModel").read("/DiccionarioCategoriasSet",{filters:o,success:function(e){r(e.results)},error:function(e){a(e)}})})},getPropiedadesEquipos:function(e,r){let a=[];a.push(new sap.ui.model.Filter("Empresa",sap.ui.model.FilterOperator.EQ,e));return new Promise((e,r)=>{t.getModel("SelectModel").read("/ParteDiarioSemanalSet",{filters:a,success:function(r){e(r.results)},error:function(e){r(e)}})})},getEstacionCode:function(e){return new Promise((r,a)=>{t.getModel("SelectModel").read("/EstacionesSet",{success:function(a){var o=a.results.find(function(r){return r.Codigo===e});r(o)},error:function(e){a(e)}})})},getEstacionesCodes:function(e){let r=[];for(let a of e){r.push(this.getEstacionCode(a))}return new Promise((e,a)=>{Promise.all(r).then(r=>{e(r)}).catch(e=>{a(e)})})},getJobCond:function(){return new Promise((e,a)=>{let o=[new sap.ui.model.Filter("Tabname",sap.ui.model.FilterOperator.EQ,"ZTAB_LICENCIAS"),new sap.ui.model.Filter("Fieldname",sap.ui.model.FilterOperator.EQ,"JOBCOND")];r.getModel("TransenerOperaciones").read("/FixedValuesSet",{filters:o,success:function(r){e(r.results)},error:function(e){a()}})})},GETTipoLicenciaCatalog:function(){var e=t.getModel("EnviarCoordModel");e.setProperty("/visibleEnviarCoord",true);e.setProperty("/visibleTipoLicencia",false);var r=t.getModel("UserJsonModel").getData().roles;var a=t.getModel("TipoLicenciaCatalogModel");var o=[];var i=r.find(e=>e==="Jefe_Turno_COT"||e==="Jefe_Turno_COTDT");var s=r.find(e=>e==="Programacion_COT"||e==="Programacion_COTDT");var n=r.find(e=>e==="Operador_COT"||e==="Operador_COTDT");var l=r.find(e=>e==="Solicitante_Lic_TBA");if(i){e.setProperty("/visibleEnviarCoord",false);e.setProperty("/visibleTipoLicencia",true);o=[{key:"N",descripcion:"Licencia Programada"},{key:"EM",descripcion:"Licencia de emergencia"},{key:"TE",descripcion:"Licencia de terceros"}]}if(s||n){e.setProperty("/visibleEnviarCoord",false);e.setProperty("/visibleTipoLicencia",true);o=[{key:"N",descripcion:"Licencia Programada"},{key:"TE",descripcion:"Licencia de terceros"},{key:"EM",descripcion:"Licencia de emergencia"}]}if(l){e.setProperty("/visibleTipoLicencia",true);o=[{key:"N",descripcion:"Licencia Programada"},{key:"EM",descripcion:"Licencia de emergencia"},{key:"TE",descripcion:"Licencia de terceros"}]}var c=t.getModel("TipoLicFiltersModel");var u=[{key:"N",descripcion:"Licencia Programada"},{key:"EM",descripcion:"Licencia de emergencia"},{key:"TE",descripcion:"Licencia de terceros"}];c.setData({TipoLic:u});a.setData({TipoLic:o});return o&&o[0]&&o[0].key},POSTUnifilarSchema:function(e){var a="/EsquemaUnifilarSet";r.getModel("TransenerOperaciones").create(a,e,{success:$.proxy(this.successPOSTUnifilar,this),error:$.proxy(this.errorPOSTUnifilar,this)})},successPOSTUnifilar:function(){this.PUT(false);
-//	MessageBoxHelper.showAlert("Alerta", "Esquema unifilar guardado con exito", $.proxy(this.refreshLicense, this))
-},refreshLicense:function(){i.close();var e=t.getModel("LicenseJsonModel").getData();this.FIND(e)},errorPOSTUnifilar:function(){a.showAlert("Error","Se ha producido un error al guardar el esquema unifilar")},PUTDayPromise:function(e){return new Promise((a,t)=>{let i="/HorariosLicenciaSet";e.Horainicio=o.getTimeStringSAPFormat(e.Horainicio);e.Horafin=o.getTimeStringSAPFormat(e.Horafin);r.getModel("TransenerOperaciones").update(i+"(Id='"+e.Id+"',Modif='"+e.Modif+"')",e,{success:function(){a()},error:function(e){t(e)}})})},PUTDay:function(e){this.PUTDayPromise(e).then($.proxy(this.onSuccessPutDay,this)).catch($.proxy(this.onErrorPutDay,this))},onSuccessPutDay:function(){var e=t.getModel("LicenseJsonModel").getProperty("/Id");var r=t.getModel("LicenseJsonModel").getData();i.close();a.showAlert("Alert","Se ha realizado el estado diario para este dia de manera correcta",$.proxy(this.FIND,this,r))},onErrorPutDay:function(e){i.close();a.showAlert("Alert","Se ha producido un error al realizar el estado diario")},deliveryHasBeenMade:function(){let e=t.getModel("DeliveryTableJsonModel").getData().Deliveries;return e.some(e=>e.Entindex&&e.Entindex!==""&&e.Motivono==="")},deliveryLicence:function(e){var r=t.getModel("LicenseJsonModel").getData();var a=n.cloneLicense(r);this.bMotivoNo=e.Motivono!=="";a.Substatus=e.Motivono!==""?"":"E";if(this.bMotivoNo&&a.Period==="C"){if(this.deliveryHasBeenMade()){a.Licstat="11"}else{a.Licstat="01";a.Substatus=""}}this.updateLicense(a,{success:$.proxy(this.successPUTLicenceDelivery,this,e),error:$.proxy(this.errorPUTLicenceDelivery,this)})},
-//Warning this method modifies the license
-updateLicense:function(e,a){var t="/LicenciaTrabajoSet";o.formatTimes(e);this.deleteNavProperties(e);if(e.Rdisparo==="Y")e.Rdisparo="";if(e.Equstat==="Y")e.Equstat="";r.getModel("TransenerOperaciones").update(t+"(Empresa='"+e.Empresa+"',Id='"+e.Id+"',Tipo='"+e.Tipo+"',Anio='"+e.Anio+"')",e,a)},updateLicenciaPromise:function(e){return new Promise((a,t)=>{o.formatTimes(e);this.deleteNavProperties(e);if(e.Rdisparo==="Y")e.Rdisparo="";if(e.Equstat==="Y")e.Equstat="";let i="/LicenciaTrabajoSet";let s="(Empresa='"+e.Empresa+"',Id='"+e.Id+"',Tipo='"+e.Tipo+"',Anio='"+e.Anio+"')";r.getModel("TransenerOperaciones").update(i+s,e,{success:()=>{a()},error:e=>{t()}})})},successPUTLicenceDelivery:function(e,a){var t="/EntregasLicenciaSet";e.Datelicencia=o.getUTCdate(e.Datelicencia);r.getModel("TransenerOperaciones").create(t,e,{success:$.proxy(this.successPOSTDelivery,this),error:$.proxy(this.errorPOSTDelivery,this)})},successPOSTDelivery:function(e){var r=t.getModel("LicenseJsonModel").getData();var s=o.formatDatesGMT(e.Datelicencia);s.setHours(e.Time.getHours());s.setMinutes(e.Time.getMinutes());console.log(s);var n=this.bMotivoNo?"NE":"E";if(!this.bMotivoNo){var l=`Numero de licencia ${r.Id}, Trabajo a realizar: ${r.Descripcion}`}else{var c=t.getModel("HardCodeModel").getProperty("/Motivono").filter(r=>r.key===e.Motivono)[0].value;l=`Numero de licencia ${r.Id}, Trabajo a realizar: ${r.Descripcion}, Motivo: ${c}, Comentario: ${e.Commen} `}var p={Fechahora:s,Equipo:r.Equnr,Lugar:r.Tplnr,Novedad:l,Tiponovedad:u.getNovedadType(n),Empresa:r.Empresa};
-// 	var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
-// 	var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
-// 		this.FIND, this, license));
-d.POSTLibroGuardia(p).then(()=>{i.close();var e=t.getModel("LicenseJsonModel").getProperty("/Id");var r=t.getModel("LicenseJsonModel").getData();a.showAlert("Alert",`Se ha realizado la ${this.bMotivoNo?"NO Entrega":"Entrega"} de manera exitosa`,$.proxy(this.FIND,this,r))}).catch(e=>{i.close();console.error(e);a.showAlert("Alerta","Se ha producido un error al crear guardia")})},errorPOSTDelivery:function(e){i.close();a.showAlert("Alert","Se ha producido un error al crear el registro de entrega")},errorPUTLicenceDelivery:function(e){i.close();a.showAlert("Alert","Se ha producido un error al modificar la licencia para la entrega")},cancelacionDefinitivaLicence:function(e){var r=t.getModel("LicenseJsonModel").getData();var a=n.cloneLicense(r);this.statGuardBook="CC";a.Licstat="11";a.Substatus="";this.updateLicense(a,{success:$.proxy(this.successPUTLicenceCancelacion,this,e),error:$.proxy(this.errorPUTLicenceCancelacion,this)})},successPUTLicenceCancelacion:function(e){var r=t.getModel("LicenseJsonModel").getData();var o=e.Datelicencia;o.setHours(e.Time.getHours());o.setMinutes(e.Time.getMinutes());console.log(o);var s={Fechahora:o,Equipo:r.Equnr,Lugar:r.Tplnr,Novedad:`Numero de licencia ${r.Id}, Trabajo a realizar: ${r.Descripcion}, TE/JT/JTG: ${e.Tejt} - ${u.getPersonalHabilitadoName(e.Tejt)}`,Tiponovedad:u.getNovedadType(this.statGuardBook),Empresa:r.Empresa};d.POSTLibroGuardia(s).then(()=>{this.postCancelacionDefinitiva(e).then(()=>{let e=[this.getPermisos(r)];e.push(p.getPromise(r.Empresa,r.Tplnr,this.getSelectionArea(r.Tipo,"01")));Promise.all(e).then(e=>{var o=t.getModel("CurrentUser").getData();let s=[];let n={};let l=e[0];var u=t.getModel("UserJsonModel").getData();var d=u.email;var p=u.nombre+", "+u.apellido;l.forEach(e=>{n[e.Rol]=e});s=[n["CREADOR"],n["SOLICITANTE"],n["SOLICITANTE_SUPLENTE"],n["JEFE_TRABAJO"],n["JEFE_TRABAJO_SUPLENTE"],n["SOLICITANTE_SUPLENTE_AUXILIAR"]].map(e=>e&&e.Mail||"nurrestarazu@inclusion.cloud");let T={Coordinador:o.Legajo+", "+p,Creador:n["CREADOR"]?n["CREADOR"].Legajo+", "+n["CREADOR"].Nombre:"",Solicitante:n["SOLICITANTE"]?n["SOLICITANTE"].Legajo+", "+n["SOLICITANTE"].Nombre:"",SolicitanteSuplente:n["SOLICITANTE_SUPLENTE"]?n["SOLICITANTE_SUPLENTE"].Legajo+", "+n["SOLICITANTE_SUPLENTE"].Nombre:"",Jefe:n["JEFE_TRABAJO"]?n["JEFE_TRABAJO"].Legajo+", "+n["JEFE_TRABAJO"].Nombre:"",JefeSuplente:n["JEFE_TRABAJO_SUPLENTE"]?n["JEFE_TRABAJO_SUPLENTE"].Legajo+", "+n["JEFE_TRABAJO_SUPLENTE"].Nombre:"",SolSuplenteAux:n["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo+", "+n["SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre};let m=e[1].results&&e[1].results!==0?e[1].results.map(e=>e.Mail).join(","):"";let h=s.join(",");var g="";var E=false;var v="";var L="";var A="";var f=false;var S=false;var P="";var M="";var O=false;var I=true;var N=this.getLastCoordinator();var D=r.Tramitador;var C="";var J="";var R="";var F="";c.sendEmail(r,T,h,m,g,E,v,L,A,f,S,P,M,O,I,N,D,C,J,R,F).then(()=>{i.close();var e=t.getModel("LicenseJsonModel").getProperty("/Id");var r=t.getModel("LicenseJsonModel").getData();a.showAlert("Alert","Se ha realizado la cancelación definitiva de manera exitosa",$.proxy(this.FIND,this,r))}).catch(e=>{console.error(e);a.showAlert("Alerta","Se ha producido un error al enviar mail.",$.proxy(this.goToHome,this))})}).catch(e=>{i.close();console.error(e);a.showAlert("Alerta","Se ha producido un error al crear guardia")})}).catch(e=>{i.close();a.showAlert("Alerta","Se ha producido un error al crear la cancelacion definitiva.")})}).catch(e=>{i.close();a.showAlert("Alerta","Se ha producido un error al crear guardia")})},errorPUTLicenceCancelacion:function(){i.close();a.showAlert("Alert","Se ha producido un error al modificar la licencia para la cancelación definitiva")},postCancelacionDefinitiva:function(e){return new Promise((a,o)=>{let i=t.getModel("LicenseJsonModel").getData();let s=e.Datelicencia;s.setHours(e.Time.getHours());s.setMinutes(e.Time.getMinutes());let n=sap.ui.core.format.DateFormat.getDateInstance({pattern:"PThh'H'mm'M'ss'S'"});let l={Empresa:i.Empresa,Id:i.Id,Tipo:i.Tipo,Anio:i.Anio,CancFecha:s,CancHora:n.format(e.Time),CotCotdt:t.getUserLegacy().Legajo,JefeTrab:e.Tejt,Tecet:e.TecET};r.getModel("TransenerOperaciones").create("/CancelacionDefinitivaSet",l,{success:a,error:o,async:true})})},devolutionLicence:function(e){var r=t.getModel("LicenseJsonModel").getData();var a=n.cloneLicense(r);this.statGuardBook="D";a.Licstat="01";a.Substatus="";this.updateLicense(a,{success:$.proxy(this.successPUTLicenceDevolution,this,e),error:$.proxy(this.errorPUTLicenceDevolution,this)})},successPUTLicenceDevolution:function(e){var a="/DevolucionLicenciaSet";e.Datelicencia=o.getUTCdate(e.Datelicencia);r.getModel("TransenerOperaciones").create(a,e,{success:$.proxy(this.successPOSTDevolution,this),error:$.proxy(this.errorPOSTDevolution,this)})},successPOSTDevolution:function(e){var r=t.getModel("LicenseJsonModel").getData();var s=o.formatDatesGMT(e.Datelicencia);s.setHours(e.Time.getHours());s.setMinutes(e.Time.getMinutes());console.log(s);var n={Fechahora:s,Equipo:r.Equnr,Lugar:r.Tplnr,Novedad:`Numero de licencia ${r.Id}, Trabajo a realizar: ${r.Descripcion}`,Tiponovedad:u.getNovedadType(this.statGuardBook),Empresa:r.Empresa};d.POSTLibroGuardia(n).then(()=>{i.close();var e=t.getModel("LicenseJsonModel").getProperty("/Id");var r=t.getModel("LicenseJsonModel").getData();a.showAlert("Alert","Se ha realizado la devolución de manera exitosa",$.proxy(this.FIND,this,r))}).catch(e=>{console.error(e);a.showAlert("Alerta","Se ha producido un error al crear guardia")})},errorPOSTDevolution:function(){i.close();a.showAlert("Alert","Se ha producido un error al crear el registro de devolucion")},errorPUTLicenceDevolution:function(){i.close();a.showAlert("Alert","Se ha producido un error al modificar la licencia para la devolucion")},transferLicence:function(e){
-// var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
-// var licenseClone = LicenceHelper.cloneLicense(oLicence);
-// licenseClone.Jefe = oTransfer.Jefetra;
-// this.updateLicense(licenseClone, {
-this.successPUTLicenceTransfer(e)},successPUTLicenceTransfer:function(e){var a="/TransferenciaJefeTrabajoSet";r.getModel("TransenerOperaciones").create(a,e,{success:$.proxy(this.successPOSTTransfer,this),error:$.proxy(this.errorPOSTTransfer,this)})},successPOSTTransfer:function(e){var r=t.getModel("UserJsonModel").getData();var o=r.email;var s=r.nombre+", "+r.apellido;var n=t.getModel("LicenseJsonModel").getData();var l=t.getModel("LicenseJsonModel").getProperty("/Id");var c=t.getModel("LicenseJsonModel").getProperty("/Anio");var d=[];var p=this.PostPromesa(c,"L",l,n.Jefe,u.getJefeName(n.Jefe),"",n.Empresa,"JEFE_TRABAJO");d.push(p);Promise.all(d).then(()=>{i.close();var e=t.getModel("LicenseJsonModel").getProperty("/Id");var r=t.getModel("LicenseJsonModel").getData();a.showAlert("Alert","Se ha transferido al jefe de trabajo de manera exitosa",$.proxy(this.FIND,this,r))}).catch(e=>{console.error(e);a.showAlert("Alert","Error al transferir al jefe de trabajo",$.proxy(this.goToHome,this));i.close()})},errorPOSTTransfer:function(e){i.close();a.showAlert("Alert","Se ha producido un error al realizar el registro de transferencia")},errorPUTLicenceTransfer:function(){i.close();a.showAlert("Alert","Se ha producido un error al realizar la modificacion para la transferencia")},coordinateLicence:function(e){var r=t.getModel("LicenseJsonModel").getData();var a=n.cloneLicense(r);a.Licstat="07";this.updateLicense(a,{success:$.proxy(this.successPUTLicenceCoord,this,e,a),error:$.proxy(this.errorPUTLicenceCoord,this)})},successPUTLicenceCoord:function(e,a){var o="/CoordinacionesLicenciaSet";r.getModel("TransenerOperaciones").create(o,e,{success:$.proxy(this.successPOSTCoordination,this,e,a),error:$.proxy(this.errorPOSTCoordination,this)})},getSolicitantesEmails:function(e){var r=[];var a=e.find(e=>e.Rol==="SOLICITANTE");if(a)r.push(a.Mail);var o=e.find(e=>e.Rol==="SOLICITANTE_SUPLENTE");if(o)r.push(o.Mail);var t=e.find(e=>e.Rol==="SOLICITANTE_SUPLENTE_AUXILIAR");if(t)r.push(t.Mail);return r},successPOSTCoordination:function(e,r){var o=r;this.getPermisos(o).then(r=>{var{Anio:s,Id:n,Empresa:l,Tipo:u}=o;var d=[];var T=r.find(e=>e.Rol==="CREADOR");var m={};r.forEach(e=>{m[e.Rol]=e});if(u==="L"){d=[m["CREADOR"],m["SOLICITANTE"],m["SOLICITANTE_SUPLENTE"],m["JEFE_TRABAJO"],m["JEFE_TRABAJO_SUPLENTE"],m["SOLICITANTE_SUPLENTE_AUXILIAR"]].map(e=>e&&e.Mail||"nurrestarazu@inclusion.cloud")}else{d=[m["CREADOR"],m["SOLICITANTE"]].map(e=>e&&e.Mail||"nurrestarazu@inclusion.cloud")}var h=d.join(",");var g=e.Coordination;var E=t.getModel("UserJsonModel").getData();var v=E.email;var L=E.nombre+", "+E.apellido;var A=t.getModel("CurrentUser").getData();var f={Coordinador:A.Legajo+", "+L,Creador:T.Legajo+", "+T.Nombre};f.Solicitante=m["SOLICITANTE"].Legajo+", "+m["SOLICITANTE"].Nombre;f.SolicitanteSuplente=m["SOLICITANTE_SUPLENTE"].Legajo+", "+m["SOLICITANTE_SUPLENTE"].Nombre;f.Jefe=m["JEFE_TRABAJO"].Legajo+", "+m["JEFE_TRABAJO"].Nombre;f.JefeSuplente=m["JEFE_TRABAJO_SUPLENTE"].Legajo+", "+m["JEFE_TRABAJO_SUPLENTE"].Nombre;f.SolSuplenteAux=m["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo+", "+m["SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre;var S=[];S.push(p.getPromise(l,o.Tplnr));Promise.all(S).then(r=>{var s=o.Tipo==="S"?"Solicitud":"Licencia";let n=r[0].results&&r[0].results!==0?r[0].results.map(e=>e.Mail).join(","):"";var l=false;var p="";var T="";var m="";var E=false;var v=false;var L="";var A="";var S=true;var P=false;var M=e.Coouser;var O="";var I="";var N="";var D="";var C="";if(u!=="L"&&r[0].results){var J=r[0].results.filter(e=>e.Area==="COORD");if(J.length)d.push(...J.map(e=>e.Mail))}c.sendEmail(o,f,h,n,g,l,p,T,m,E,v,L,A,S,P,M,O,I,N,D,C).then(()=>{i.close();var e=t.getModel("LicenseJsonModel").getProperty("/Id");var r=t.getModel("LicenseJsonModel").getData();a.showAlert("Alert","Se ha coordinado la "+s+" de manera correcta",$.proxy(this.handleCoordinationSuccess,this,r))}).catch(e=>{console.error(e);a.showAlert("Alerta","Se ha producido un error al enviar mail para la coordinacion.",$.proxy(this.goToHome,this))})}).catch(e=>{console.error(e);a.showAlert("Alerta","Se ha producido un error al enviar mail para la coordinacion.",$.proxy(this.goToHome,this))})}).catch(e=>{console.error(e);a.showAlert("Alerta","Se ha producido un error al obtener permisos",$.proxy(this.goToHome,this))})},handleCoordinationSuccess:function(e){this.FIND(e);var r=t.getModel("UserJsonModel").getData().roles;var a=r.find(e=>e==="Supervisor_Mantenimiento");if(a){t.getAppRouter().navTo("Licencias")}},errorPOSTCoordination:function(){i.close();a.showAlert("Alert","Se ha producido un error al agregar coordinacion")},errorPUTLicenceCoord:function(){i.close();a.showAlert("Alerta","Se ha producido un error al modificar esta licencia")},successPUTLicence:function(){i.close();var e=t.getModel("LicenceJsonModel").getProperty("/Id");a.showAlert("Alerta","Licencia Coordinada con Exito",$.proxy(this.FIND,this,e))},handleUploadFile:function(e){this.aSuccessFiles=[];this.aErrorFiles=[];this.aFilesToUpload=e;this.uploadRecursiveFiles()},removeSelectedFile:function(e,a,o,t){return new Promise((i,s)=>{var n="/AttachmentLicenciasSet(Id='"+a+"',Attindex='"+e+"',Empresa='"+o+"',Anio='"+t+"')";r.getModel("TransenerOperaciones").remove(n,{success:function(e){i(e)},error:function(e){s(e)}})})},uploadFilePromise:function(e){return new Promise((a,o)=>{let t="/AttachmentLicenciasSet";r.getModel("TransenerOperaciones").create(t,e,{success:function(e){a()},error:function(e){o(e)}})})},findFilePromise:function(e,a,o,t){return new Promise((i,s)=>{var n="/AttachmentLicenciasSet(Id='"+a+"',Attindex='"+e+"',Empresa='"+o+"',Anio='"+t+"')";r.getModel("TransenerOperaciones").read(n,{success:function(e){i(e)},error:function(e){s(e)}})})},diaryPartReport:function(e,a){var o=[];o.push(new sap.ui.model.Filter("Solbeg",sap.ui.model.FilterOperator.LE,e));o.push(new sap.ui.model.Filter("Solend",sap.ui.model.FilterOperator.GE,e));o.push(new sap.ui.model.Filter("Empresa",sap.ui.model.FilterOperator.EQ,a));return new Promise((e,a)=>{var t="/ReporteLTAutorizadasSet";r.getModel("TransenerOperaciones").read(t,{filters:o,success:function(r){e(r.results)},error:function(e){a(e)}})})},GETTramitaciones:function(e){var a=[];a.push(new sap.ui.model.Filter("Bukrs",sap.ui.model.FilterOperator.EQ,e));var o="/CatalogoTramitacionSet";r.getModel("TransenerOperaciones").read(o,{filters:a,success:function(e){var r=t.getModel("TramitacionesCatalogoJsonModel");r.setData({Tramitaciones:e.results})},error:function(e){console.log(e)}})},getPuestoTrabajo:function(e){return new Promise((a,o)=>{if(e){let t=[new sap.ui.model.Filter("Werks",sap.ui.model.FilterOperator.EQ,e)];r.getModel("TransenerOperaciones").read("/PuestoTrabajoSet",{filters:t,success:function(e){a(e.results)},error:function(e){o()}})}else{a([])}})},findLicenseFile:function(e,r,a,o){this.findFilePromise(e,r,a,o).then($.proxy(this.successFindFile,this)).catch($.proxy(this.errorFindFile,this))},successFindFile:function(e){var r=atob(e.Attachment);l.saveBinaryFile(r,e.Doctype,e.Filename)},errorFindFile:function(e){},uploadRecursiveFiles:function(){if(this.aFilesToUpload.length!==0){var e=this.aFilesToUpload.shift();var r={Anio:t.getModel("LicenseJsonModel").getProperty("/Anio"),Doctype:e.type,Id:t.getModel("LicenseJsonModel").getProperty("/Id"),Empresa:t.getModel("LicenseJsonModel").getProperty("/Empresa"),Attindex:"",Filename:e.name};var o=new FileReader;o.onloadend=()=>{r.Attachment=btoa(o.result);this.uploadFilePromise(r).then($.proxy(this.successUploadDocument,this)).catch($.proxy(this.errorUploadDocument,this))};o.readAsBinaryString(e)}else{var i=t.getModel("LicenseJsonModel").getProperty("/Id");var s=t.getModel("LicenseJsonModel").getData();var n=this.aSuccessFiles.length;var l=this.aErrorFiles.length;var c=t.getModel("commentsTEMP");c.setData({Comments:s.Comments,Tdtcomments:s.Tdtcomments,Prgcomments:s.Prgcomments});a.showAlert("Alerta","Archivos subidos de manera exitosa: "+n+"\n"+"Archivos con error: "+l,$.proxy(this.FIND,this,s))}},successUploadDocument:function(){this.aSuccessFiles.push({});this.uploadRecursiveFiles()},errorUploadDocument:function(e){console.log(e);this.aErrorFiles.push({});this.uploadRecursiveFiles()},observateLicence:function(e){var r=t.getModel("LicenseJsonModel").getData();var a=n.cloneLicense(r);a.Licstat="02";this.updateLicense(a,{success:$.proxy(this.successPUTLicenceObs,this,e,a),error:$.proxy(this.errorPUTLicenceObs,this)})},successPUTLicenceObs:function(e,a){var o="/ObservacionesLicenciaSet";r.getModel("TransenerOperaciones").create(o,e,{success:$.proxy(this.successPOSTObservation,this,e,a),error:$.proxy(this.errorPOSTObservation,this)})},successPOSTObservation:function(e,r){var o=r;let i=[this.getPermisos(o)];var s=t.getModel("UserJsonModel").getData();var n=s.email;var l=s.nombre+", "+s.apellido;var u=t.getModel("CurrentUser").getData();var d=o.Id;var T=o.Anio;i.push(this.PostPromesa(T,"L",d,u.Legajo,l,n,u.Empresa,"COORDINADOR"));i.push(p.getPromise(o.Empresa,o.Tplnr,this.getSelectionArea(o.Tipo,"02")));Promise.all(i).then(r=>{let i=[];let s={};let n=r[0];n.forEach(e=>{s[e.Rol]=e});var d="";if(r[1].Legajo){var p=t.getModel("PersonalHabilitadoModel").getData().Todos;var T=p.find(e=>e.Legajo===r[1].Legajo);if(T){d=`${T.Legajo} - ${T.Nombre} `}}var m="";if(o.Tipo==="S"){i=[s["CREADOR"],s["SOLICITANTE"]].map(e=>e&&e.Mail||"nurrestarazu@inclusion.cloud");m=""}else{i=[s["CREADOR"],s["SOLICITANTE"],s["SOLICITANTE_SUPLENTE"],s["JEFE_TRABAJO"],s["JEFE_TRABAJO_SUPLENTE"],s["SOLICITANTE_SUPLENTE_AUXILIAR"]].map(e=>e&&e.Mail||"nurrestarazu@inclusion.cloud");m=r[2].results&&r[2].results!==0?r[2].results.map(e=>e.Mail).join(","):""}let h={Coordinador:u.Legajo+", "+l,Creador:s["CREADOR"]?s["CREADOR"].Legajo+", "+s["CREADOR"].Nombre:"",Solicitante:s["SOLICITANTE"]?s["SOLICITANTE"].Legajo+", "+s["SOLICITANTE"].Nombre:"",SolicitanteSuplente:s["SOLICITANTE_SUPLENTE"]?s["SOLICITANTE_SUPLENTE"].Legajo+", "+s["SOLICITANTE_SUPLENTE"].Nombre:"",Jefe:s["JEFE_TRABAJO"]?s["JEFE_TRABAJO"].Legajo+", "+s["JEFE_TRABAJO"].Nombre:"",JefeSuplente:s["JEFE_TRABAJO_SUPLENTE"]?s["JEFE_TRABAJO_SUPLENTE"].Legajo+", "+s["JEFE_TRABAJO_SUPLENTE"].Nombre:"",SolSuplenteAux:s["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo+", "+s["SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre};if(e){if(e.Observation){var g=" / Comentario: "+e.Observation}else{var g=""}if(e.Obscause){if(e.Obscause==="MSEG"){var E="Modificación de medidas de seguridad"}else if(e.Obscause==="FECH"){var E="Modificación de las fechas y horarios"}else if(e.Obscause==="CAMP"){var E="Modificación de otros campos"}else{var E=e.Obscause}var v="Motivo: "+E}else{var v=""}var L=v+g}else{var L=""}let A=i.join(",");var f=false;var S="";var P="";var M="";var O=false;var I=true;var N=e.Observation;var d=e.Obsuser;var D=false;var C=false;var J="";var R="";var F=E;var b="";var U="";var y="";c.sendEmail(o,h,A,m,L,f,S,P,M,O,I,N,d,D,C,J,R,F,b,U,y).then(()=>{var e=t.getModel("LicenseJsonModel").getProperty("/Id");var r=t.getModel("LicenseJsonModel").getData();var o=r.Tipo==="S"?"Solicitud":"Licencia";a.showAlert("Alerta","Se ha observado la "+o+" de manera correcta",$.proxy(this.handleSuccesObservation,this))}).catch(e=>{console.error(e);a.showAlert("Alerta","Se ha producido un error al enviar mail.",$.proxy(this.goToHome,this))})},e=>{a.showAlert("Alerta","Se ha producido un error al enviar mail.",$.proxy(this.goToHome,this))})},handleSuccesObservation:function(){this.goToHome()},errorPOSTObservation:function(){i.close();a.showAlert("Alerta","Se ha producido un error al observar esta licencia")},errorPUTLicenceObs:function(){i.close();a.showAlert("Alerta","Se ha producido un error al modificar esta licencia para la observacion")},annulateLicense:function(e){var r=t.getModel("LicenseJsonModel").getData();this.sMessageAnnulate=r.Tipo==="S"?`Se ha anulado la solicitud de manera exitosa`:`Se ha anulado la licencia de manera exitosa`;var a=n.cloneLicense(r);a.Licstat="03";a.Anulador=t.getStringUserLegacy();a.Causaanulado=e.Causaanulado;e.Anulador=t.getStringUserLegacy();a.Obscausa=e.Obscausa;this.updateLicense(a,{success:$.proxy(this.successPUTLicenseAnnul,this,e,a),error:$.proxy(this.errorPUTLicenseAnnul,this)})},errorPUTLicenseAnnul:function(){i.close();a.showAlert("Alerta","Se ha producido un error al modificar esta licencia para la anulación")},successPUTLicenseAnnul:function(e,r){this.successPOSTAnnul(e,r)},successPOSTAnnul:function(e,r){var s=t.getModel("LicenseJsonModel").getProperty("/Id");var n=t.getModel("LicenseJsonModel").getData();n.Licstat=r.Licstat;n.Anulador=r.Anulador;let l=[];l.push(this.getPermisos(n));l.push(p.getPromise(n.Empresa,n.Tplnr));Promise.all(l).then(r=>{let t=r[1].results&&r[1].results!==0?r[1].results.map(e=>e.Mail).join(","):"";let s=r[0];let l={};s.forEach(e=>{l[e.Rol]=e});let d=u.getMotivoAnulDesc(n.Causaanulado);let p=d+"\n"+n.Obscausa;let T="";T=[l["CREADOR"],l["SOLICITANTE"]].map(e=>e&&e.Mail||"nurrestarazu@inclusion.cloud").join(",");var m={Coordinador:l["COORDINADOR"]?l["COORDINADOR"].Legajo+", "+l["COORDINADOR"].Nombre:"",Creador:l["CREADOR"]?l["CREADOR"].Legajo+", "+l["CREADOR"].Nombre:"",Solicitante:l["SOLICITANTE"].Legajo+", "+l["SOLICITANTE"].Nombre,SolicitanteSuplente:l["SOLICITANTE_SUPLENTE"].Legajo+", "+l["SOLICITANTE_SUPLENTE"].Nombre,Jefe:l["JEFE_TRABAJO"].Legajo+", "+l["JEFE_TRABAJO"].Nombre,JefeSuplente:l["JEFE_TRABAJO_SUPLENTE"].Legajo+", "+l["JEFE_TRABAJO_SUPLENTE"].Nombre,SolSuplenteAux:l["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo+", "+l["SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre};var h=true;var g=e.Obscausa;var E=u.getMotivoAnulacionText(e.Causaanulado);var v=o.formatDateLicenseWithoutUtc(new Date);var L=false;var A=false;var f="";var S="";var P=false;var M=false;var O=this.getLastCoordinator();var I=n.Tramitador;var N="";var D="";var C="";var J="";c.sendEmail(n,m,T,t,p,h,g,E,v,L,A,f,S,P,M,O,I,N,D,C,J).then(()=>{i.close();a.showAlert("Alerta",this.sMessageAnnulate,$.proxy(this.goToHome,this,n))},()=>{i.close();a.showAlert("Alerta","Error al enviar email al usuario",$.proxy(this.goToHome,this,n))})})},getFechaAnulacion:function(){var e=new Date;var r=e.getDate()<10?"0"+e.getDate():e.getDate();var a=e.getMonth()+1<10?"0"+(e.getMonth()+1):e.getMonth()+1;var o=e.getFullYear();var t=e.getMinutes()<10?"0"+e.getMinutes():e.getMinutes();var i=e.getHours()<10?"0"+e.getHours():e.getHours();return r+"-"+a+"-"+o+" "+i+":"+t},errorPOSTAnul:function(){i.close();a.showAlert("Alerta","Se ha producido un error al anular esta licencia")},errorPUTLicenseAnul:function(){i.close();a.showAlert("Alerta","Se ha producido un error al modificar esta licencia para la anulación")},reanudateLicence:function(e){var r=t.getModel("LicenseJsonModel").getData();var a=n.cloneLicense(r);a.Licstat="01";a.Substatus="E";this.updateLicense(a,{success:$.proxy(this.successPUTLicenceReanudation,this,e),error:$.proxy(this.errorPUTLicenceReanudation,this)})},successPUTLicenceReanudation:function(e,a){var o="/ReanudacionLicenciaSet";r.getModel("TransenerOperaciones").create(o,e,{success:$.proxy(this.successPOSTReanudation,this),error:$.proxy(this.errorPOSTTReanudation,this)})},successPOSTReanudation:function(e){var r=t.getModel("LicenseJsonModel").getData();var s=o.formatDatesGMT(e.Datelicencia);s.setHours(e.Time.getHours());s.setMinutes(e.Time.getMinutes());console.log(s);var n={Fechahora:s,Equipo:r.Equnr,Lugar:r.Tplnr,Novedad:`Numero de licencia ${r.Id}, Trabajo a realizar: ${r.Descripcion}`,Tiponovedad:u.getNovedadType("R"),Empresa:r.Empresa};d.POSTLibroGuardia(n).then(()=>{i.close();var e=t.getModel("LicenseJsonModel").getProperty("/Id");var r=t.getModel("LicenseJsonModel").getData();a.showAlert("Alerta","Se ha reanudado la licencia de manera correcta",$.proxy(this.FIND,this,r))}).catch(e=>{console.error(e);i.close();a.showAlert("Alerta","Se ha producido un error al crear guardia")})},errorPOSTTReanudation:function(e){i.close();a.showAlert("Alerta","Se ha producido un error al crear el registro de reanudacion")},errorPUTLicenceReanudation:function(){a.showAlert("Alerta","Se ha producido un error al modificar esta licencia para la observacion")},cancelTramitacion:function(){var e=t.getModel("LicenseJsonModel").getData();var r=n.cloneLicense(e);r.Licstat="07";r.LastTramiteAvisoprog=t.getStringUserLegacy();r.LastTramiteFecha=o.customFormat("yyyy-MM-ddTHH:mm:ss",new Date);r.LastTramiteHora=o.customFormat("PTHH'H'mm'M'ss'S'",new Date);this.updateLicense(r,{success:$.proxy(this.successCancelTramitacion,this),error:$.proxy(this.errorCancelTramitacion,this)})},successCancelTramitacion:function(){var e=t.getModel("LicenseJsonModel").getData();this.getPermisos(e).then(r=>{let o="";let s=[];let n={};r.forEach(e=>{n[e.Rol]=e});n["COORDINADOR"]=n["COORDINADOR"]||"";s=[n["CREADOR"],n["SOLICITANTE"],n["SOLICITANTE_SUPLENTE"],n["SOLICITANTE_SUPLENTE_AUXILIAR"],n["TRAMITADOR"],n["JEFE_TRABAJO"],n["JEFE_TRABAJO_SUPLENTE"],n["COORDINADOR"]].map(e=>e&&e.Mail||"pgotelli@inclusion.cloud");var l=t.getModel("UserJsonModel").getData();var u=l.email;var d=l.nombre+", "+l.apellido;var T=t.getModel("CurrentUser").getData();var m=t.getModel("LicenseJsonModel").getProperty("/Id");var h=t.getModel("LicenseJsonModel").getProperty("/Anio");var g=[];let E=r.map(e=>{n[e.Rol]=e;return e.Mail}).join(",");var v={Coordinador:n["COORDINADOR"]?n["COORDINADOR"].Legajo+", "+n["COORDINADOR"].Nombre:"",Creador:n["CREADOR"]?n["CREADOR"].Legajo+", "+n["CREADOR"].Nombre:"",Solicitante:n["SOLICITANTE"]?n["SOLICITANTE"].Legajo+", "+n["SOLICITANTE"].Nombre:"",SolicitanteSuplente:n["SOLICITANTE_SUPLENTE"]?n["SOLICITANTE_SUPLENTE"].Legajo+", "+n["SOLICITANTE_SUPLENTE"].Nombre:"",Jefe:n["JEFE_TRABAJO"]?n["JEFE_TRABAJO"].Legajo+", "+n["JEFE_TRABAJO"].Nombre:"",JefeSuplente:n["JEFE_TRABAJO_SUPLENTE"]?n["JEFE_TRABAJO_SUPLENTE"].Legajo+", "+n["JEFE_TRABAJO_SUPLENTE"].Nombre:"",SolSuplenteAux:n["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo+", "+n["SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre,Tramitador:n["TRAMITADOR"].Legajo+", "+n["TRAMITADOR"].Nombre};g.push(p.getPromise(e.Empresa,e.Tplnr));Promise.all(g).then(r=>{let t=r[0].results[0]&&r[0].results[0].Mail;var s=false;var n=false;var l="";var u="";var d="";e.Licstat="07";c.sendEmail(e,v,E,t,o,n,l,u,d,s).then(()=>{a.showAlert("Alerta","Se ha cancelado la tramitación de manera exitosa",$.proxy(this.goToHome,this))}).catch(e=>{i.close();console.error(e);a.showAlert("Alerta","Se ha producido un error al enviar mail para la coordinacion.",$.proxy(this.goToHome,this))})}).catch(e=>{i.close();console.error(e);a.showAlert("Alerta","Se ha producido un error al enviar mail para la coordinacion.",$.proxy(this.goToHome,this))})}).catch(e=>{i.close();console.error(e);a.showAlert("Alerta","Se ha producido un error al obtener permisos",$.proxy(this.goToHome,this))})},errorCancelTramitacion:function(){a.showAlert("Alerta","se ha producido un error al cancelar la tramitacion",$.proxy(this.goToHome,this))},tramitLicence:function(e,r,a,i){var s=t.getModel("LicenseJsonModel").getData();s.Tramitador=t.getStringUserLegacy();var l=n.cloneLicense(s);var c="";if(!a){var u=n.getIsFinish(s.Licstat);if(u){c=n.getTramitStatus(e)}if(r===false){}else{l.Licstat=r?n.getTramitStatus(e):"07"}}else{if(i==="TA"){l.Licstat="01"}else{l.Licstat="06"}}var d=r?"Se ha realizado la tramitación de manera exitosa":"Se ha guardado la tramitación de manera exitosa";this.stateOfTramit=l.Licstat;l.Tramitador=t.getStringUserLegacy();l.LastTramiteAvisoprog=t.getStringUserLegacy();l.LastTramiteFecha=o.customFormat("yyyy-MM-ddTHH:mm:ss",new Date);l.LastTramiteHora=o.customFormat("PTHH'H'mm'M'ss'S'",new Date);this.updateLicense(l,{success:$.proxy(this.successPUTLicenceTramit,this,r,d,e,l),error:$.proxy(this.errorPUTLicenceTramit,this)})},successPUTLicenceTramit:function(e,r,o,t){var s=o.map(e=>e.CalendarDates);var n=this.handleTramitePromises(o);Promise.all(n).then(a=>{var i=this.getCalendarDatesPromises(a,s,o);Promise.all(i).then(()=>{this.successPOSTTramitacion(e,r,t)})}).catch(e=>{console.error(e);i.close();a.showAlert("Alerta","Se ha producido un error tramitar",$.proxy(this.goToHome,this))})},toggleIncludeCammesa:function(){i.open();var e=t.getModel("LicenseJsonModel").getData();var r=n.cloneLicense(e);this.updateLicense(r,{success:$.proxy(this.successPUTLicenceIncludeCammesa,this),error:$.proxy(this.errorPUTLicenceIncludeCammesa,this)})},getTramitePromise:function(e){delete e.CalendarDates;if(e.Traindex===""){return new Promise((a,o)=>{var t="/TramitacionesSet";r.getModel("TransenerOperaciones").create(t,e,{success:a,error:o})})}else{delete e.LicenciaEstadoDiarioSet;return new Promise((a,o)=>{var t="/TramitacionesSet";r.getModel("TransenerOperaciones").update(t+"(Anio='"+e.Anio+"',Empresa='"+e.Empresa+"',Id='"+e.Id+"',Traindex='"+e.Traindex+"')",e,{success:a,error:o})})}},getCalendarPostTramitacion:function(e,a,o){var i={Anio:t.getModel("LicenseJsonModel").getProperty("/Anio"),Id:t.getModel("LicenseJsonModel").getProperty("/Id"),Empresa:e.Empresa,Traindex:e.Traindex,Fecha:o,Estado:a.Estado,Observaciones:a.Observaciones};return new Promise((e,a)=>{var o="/LicenciaEstadoDiarioSet";r.getModel("TransenerOperaciones").create(o,i,{success:e,error:a})})},postCalendarTramitationDate:function(e){return new Promise((a,o)=>{var t="/LicenciaEstadoDiarioSet";r.getModel("TransenerOperaciones").create(t,e,{success:a,error:o})})},getCalendarDatesPromises:function(e,r,a){var o=[];for(var t=0;t<e.length;t++){for(var i of r[t]){if(!e[t]){o.push(this.getCalendarPostTramitacion(a[t],i,i.Fecha))}else{o.push(this.getCalendarPostTramitacion(e[t],i,i.Fecha))}}}return o},handleTramitePromises:function(e){var r=[];for(var a of e){r.push(this.getTramitePromise(a))}return r},getDatesFromTramitacion:function(e){var a=t.getModel("LicenseJsonModel").getProperty("/Id");return new Promise((o,t)=>{r.getModel("TransenerOperaciones").read("/TramitacionesSet"+"(Anio='"+e.Anio+"',Empresa='"+e.Empresa+"',Id='"+a+"',Traindex='"+e.Traindex+"')/LicenciaEstadoDiarioSet",{success:o,error:t})})},errorPOSTTramitacion:function(e){i.close();a.showAlert("Alerta","Se ha producido un error al tramitar esta licencia")},successPUTLicenceIncludeCammesa:function(e,r,o){i.close();a.showAlert("Alerta","Se ha guardado el cambio correctamente");this.goToHome.bind(this)()},errorPUTLicenceIncludeCammesa:function(e){i.close();a.showAlert("Alerta","Se ha producido un error al incluir la solicitud en el reporte cammesa");this.goToHome.bind(this)()},getLastCoordinator:function(){var e=t.getModel("CoordinationTableJsonModel").getData().Coordinations;var r=e.filter(e=>e.Cooindex!=="");if(r.length>0){return r[r.length-1].Coouser}return""},sendLicenciaEmail:function(e){return new Promise((r,a)=>{this.getPermisos(e).then(o=>{let i="";let s=[];let n={};o.forEach(e=>{n[e.Rol]=e});n["COORDINADOR"]=n["COORDINADOR"]||"";s=[n["CREADOR"],n["SOLICITANTE"],n["SOLICITANTE_SUPLENTE"],n["SOLICITANTE_SUPLENTE_AUXILIAR"],n["JEFE_TRABAJO"],n["JEFE_TRABAJO_SUPLENTE"]].map(e=>e&&e.Mail||"nurrestarazu@inclusion.cloud").join(",");var l=t.getModel("UserJsonModel").getData();var u=l.email;var d=l.nombre+", "+l.apellido;var T=t.getModel("CurrentUser").getData();var m=e.Id;var h=e.Anio;var g=[];var E=this.PostPromesa(h,"L",m,T.Legajo,d,u,T.Empresa,"TRAMITADOR");g.push(E);var v={Coordinador:n["COORDINADOR"]?n["COORDINADOR"].Legajo+", "+n["COORDINADOR"].Nombre:"",Creador:n["CREADOR"]?n["CREADOR"].Legajo+", "+n["CREADOR"].Nombre:"",Solicitante:n["SOLICITANTE"]?n["SOLICITANTE"].Legajo+", "+n["SOLICITANTE"].Nombre:"",SolicitanteSuplente:n["SOLICITANTE_SUPLENTE"]?n["SOLICITANTE_SUPLENTE"].Legajo+", "+n["SOLICITANTE_SUPLENTE"].Nombre:"",Jefe:n["JEFE_TRABAJO"]?n["JEFE_TRABAJO"].Legajo+", "+n["JEFE_TRABAJO"].Nombre:"",JefeSuplente:n["JEFE_TRABAJO_SUPLENTE"]?n["JEFE_TRABAJO_SUPLENTE"].Legajo+", "+n["JEFE_TRABAJO_SUPLENTE"].Nombre:"",SolSuplenteAux:n["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo+", "+n["SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre};g.push(p.getPromise(e.Empresa,e.Tplnr,this.getSelectionArea(e.Tipo,"01")));Promise.all(g).then(o=>{var t="";t=t=o[1].results&&o[1].results!==0?o[1].results.map(e=>e.Mail).join(","):"";var n=false;var l="";var u="";var d="";var p=false;var T=false;var m="";var h="";var g=false;var E=false;var L=this.getLastCoordinator();var A=e.Tramitador;var f="";var S="";var P="";var M="";c.sendEmail(e,v,s,t,i,n,l,u,d,p,T,m,h,g,E,L,A,f,S,P,M).then(()=>{r()}).catch(e=>{console.error(e);a()})})})})},successPOSTTramitacion:function(e,r,o){var s=o;this.getPermisos(s).then(o=>{let n="";let l=[];let u={};o.forEach(e=>{u[e.Rol]=e});u["COORDINADOR"]=u["COORDINADOR"]||"";l=[u["CREADOR"],u["SOLICITANTE"],u["SOLICITANTE_SUPLENTE"],u["SOLICITANTE_SUPLENTE_AUXILIAR"],u["JEFE_TRABAJO"],u["JEFE_TRABAJO_SUPLENTE"]].map(e=>e&&e.Mail||"nurrestarazu@inclusion.cloud").join(",");var d=t.getModel("UserJsonModel").getData();var T=d.email;var m=d.nombre+", "+d.apellido;var h=t.getModel("CurrentUser").getData();var g=t.getModel("LicenseJsonModel").getProperty("/Id");var E=t.getModel("LicenseJsonModel").getProperty("/Anio");var v=[];var L=this.PostPromesa(E,"L",g,h.Legajo,m,T,h.Empresa,"TRAMITADOR");v.push(L);var A={Coordinador:u["COORDINADOR"]?u["COORDINADOR"].Legajo+", "+u["COORDINADOR"].Nombre:"",Creador:u["CREADOR"]?u["CREADOR"].Legajo+", "+u["CREADOR"].Nombre:"",Solicitante:u["SOLICITANTE"]?u["SOLICITANTE"].Legajo+", "+u["SOLICITANTE"].Nombre:"",SolicitanteSuplente:u["SOLICITANTE_SUPLENTE"]?u["SOLICITANTE_SUPLENTE"].Legajo+", "+u["SOLICITANTE_SUPLENTE"].Nombre:"",Jefe:u["JEFE_TRABAJO"]?u["JEFE_TRABAJO"].Legajo+", "+u["JEFE_TRABAJO"].Nombre:"",JefeSuplente:u["JEFE_TRABAJO_SUPLENTE"]?u["JEFE_TRABAJO_SUPLENTE"].Legajo+", "+u["JEFE_TRABAJO_SUPLENTE"].Nombre:"",SolSuplenteAux:u["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo+", "+u["SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre};v.push(p.getPromise(s.Empresa,s.Tplnr,this.getSelectionArea(s.Tipo,"01")));Promise.all(v).then(o=>{var u="";u=o[1].results&&o[1].results!==0?o[1].results.map(e=>e.Mail).join(","):"";var d=false;var p="";var T="";var h="";var g=true;var E=false;var v="";var L="";var f=false;var S=false;var P=this.getLastCoordinator();var M=s.Tramitador;var O="";var I="";var N="";var D="";if(!e){this.logTramitationChange(m).then(()=>{i.close();var e=t.getModel("LicenseJsonModel").getProperty("/Id");var o=t.getModel("LicenseJsonModel").getData();a.showAlert("Alerta",r,$.proxy(this.goToHome,this))}).catch(e=>{i.close();console.error(e);a.showAlert("Alerta","Se ha guardado correctamente los cambios, pero ha habido un error en el logueo.",$.proxy(this.goToHome,this))})}else{if(this.stateOfTramit==="23"){this.logTramitationChange(m).then(()=>{i.close();var e=t.getModel("LicenseJsonModel").getProperty("/Id");var o=t.getModel("LicenseJsonModel").getData();a.showAlert("Alerta",r,$.proxy(this.goToHome,this))}).catch(e=>{i.close();console.error(e);a.showAlert("Alerta","Se ha guardado correctamente los cambios, pero ha habido un error en el logueo.",$.proxy(this.goToHome,this))})}else{c.sendEmail(s,A,l,u,n,d,p,T,h,g,E,v,L,f,S,P,M,O,I,N,D).then(()=>{this.logTramitationChange(m).then(()=>{i.close();var e=t.getModel("LicenseJsonModel").getProperty("/Id");var o=t.getModel("LicenseJsonModel").getData();a.showAlert("Alerta",r,$.proxy(this.goToHome,this))}).catch(e=>{i.close();console.error(e);a.showAlert("Alerta","Se ha guardado correctamente los cambios, pero ha habido un error en el logueo.",$.proxy(this.goToHome,this))})}).catch(e=>{i.close();console.error(e);a.showAlert("Alerta","Se ha producido un error al enviar mail para la coordinacion.",$.proxy(this.goToHome,this))})}}}).catch(e=>{i.close();console.error(e);a.showAlert("Alerta","Se ha producido un error al enviar mail para la coordinacion.",$.proxy(this.goToHome,this))})}).catch(e=>{i.close();console.error(e);a.showAlert("Alerta","Se ha producido un error al obtener permisos",$.proxy(this.goToHome,this))})},errorPUTLicenceTramit:function(e){i.close();a.showAlert("Alerta","Se ha producido un error al modificar esta licencia para la tramitacion")},suspendLicence:function(e){var r=t.getModel("LicenseJsonModel").getData();var a=n.cloneLicense(r);a.Substatus="S";this.updateLicense(a,{success:$.proxy(this.successPUTLicenceSuspend,this,e),error:$.proxy(this.errorPUTLicenceSuspend,this)})},errorPUTLicenceSuspend:function(e){i.close();a.showAlert("Alerta","Se ha producido un error al modificar esta licencia para la suspension")},successPUTLicenceSuspend:function(e,a){var o="/SuspensionLicenciaSet";r.getModel("TransenerOperaciones").create(o,e,{success:$.proxy(this.successPOSTSuspention,this,e),error:$.proxy(this.errorPOSTSuspention,this)})},successPOSTSuspention:function(e,r){var s=t.getModel("LicenseJsonModel").getData();var n=o.formatDatesGMT(r.Datelicencia);n.setHours(r.Time.getHours());n.setMinutes(r.Time.getMinutes());console.log(n);var l={Fechahora:n,Equipo:s.Equnr,Lugar:s.Tplnr,Novedad:`Numero de licencia ${s.Id}, Trabajo a realizar: ${s.Descripcion}`,Tiponovedad:u.getNovedadType("S"),Empresa:s.Empresa};d.POSTLibroGuardia(l).then(()=>{i.close();var e=t.getModel("LicenseJsonModel").getProperty("/Id");var r=t.getModel("LicenseJsonModel").getData();a.showAlert("Alerta","Se ha suspendido la licencia de manera correcta",$.proxy(this.FIND,this,r))}).catch(e=>{console.error(e);a.showAlert("Alerta","Se ha producido un error al crear guardia")})},errorPOSTSuspention:function(e){i.close();a.showAlert("Alerta","Se ha producido un error al crear el registro de suspension")},checkFilterLogic:function(e){var r=$.extend([],true,e);let a=_.remove(r,e=>{if(e.sPath==="Equstat"||e.sPath==="Equstatnocam"){if(e.oValue1==="N"){return false}if(e.oValue1===""){e.oValue1="N";return true}}return true});return a},formatLicstatValues:function(e){switch(e){case"90":return"1E";case"10":return"1S";default:return e}},validateLicStatFilters:function(e){var r=e.find(e=>e._bMultiFilter&&e.aFilters.length>0&&e.aFilters[0].sPath==="Licstat");if(r){r.aFilters.forEach(e=>{e.oValue1=this.formatLicstatValues(e.oValue1)})}},validateAroBloqueoRdisparoFilters:function(e){var r=$.extend([],true,e);let a=_.remove(r,e=>{if(e.sPath==="Rdisparo"||e.sPath==="Bloqueo"){if(e.oValue1==="N"){return false}return true}if(e.sPath==="Aro"){if(e.oValue1==="Z"){return false}return true}return true});return a},GETWithFilters:function(e,a){console.log("Pase",e);var o=this.checkFilterLogic(e);this.validateChecks(o);this.validateLicStatFilters(o);var t=this.validateAroBloqueoRdisparoFilters(o);i.open("","");var s="/LicenciaTrabajoSet";r.getModel("TransenerOperaciones").read(s,{filters:t,urlParameters:{$top:60},success:function(e,r){sap.m.MessageToast.show("Se han recuperado las ultimas 60 licencias/solicitudes, las demas estaran disponibles en breve");this.successGET(e,r)}.bind(this,a),error:$.proxy(this.errorGET,this)})},GETLicenses:function(e){let a="/LicenciaTrabajoSet";r.getModel("TransenerOperaciones").read(a,{filters:e,sorter:[{path:"Anio",descending:false},{path:"Id",descending:false}],urlParameters:{$top:60},success:e=>{sap.m.MessageToast.show("Se han recuperado todas las licencias/solicitudes");this.successGET(false,e)},error:e=>{this.errorGET(e)}});return new Promise((o,t)=>{r.getModel("TransenerOperaciones").read(a,{filters:e,sorter:[{path:"Anio",descending:false},{path:"Id",descending:false}],urlParameters:{$top:60},success:function(e){sap.m.MessageToast.show("Se han recuperado las ultimas 60 licencias/solicitudes, las demas estaran disponibles en breve");o(e)},error:function(e){t(e)}})})},getCammesaComments:function(e){let a=[];let o="";let i="";i=e.Tipo;o=e.Id;a.push(new sap.ui.model.Filter("Id",sap.ui.model.FilterOperator.EQ,o));a.push(new sap.ui.model.Filter("Tipo",sap.ui.model.FilterOperator.EQ,i));a.push(new sap.ui.model.Filter("Anio",sap.ui.model.FilterOperator.EQ,e.Anio));a.push(new sap.ui.model.Filter("Empresa",sap.ui.model.FilterOperator.EQ,e.Empresa));
-//aFilters.push(new sap.ui.model.Filter("Semana", sap.ui.model.FilterOperator.EQ, oLicense.Semana));
-r.getModel("TransenerOperaciones").read("/LTComentariosCammesaSet",{filters:a,success:e=>{e.results.forEach(e=>{e.EstadoSemanal=this.getEstadoSemanal(e.EstadoSemanal)});let r=t.getModel("CammesaCommentsModel");r.setData({Comments:e.results})},error:e=>{console.log(e)}})},getEval:function(e){var r=e;var a=t.getModel("LocalFilterJsonModel").getData();var o=[];for(var i in r){if(i==="Tplnr"&&r["Tplnr"].values!==undefined){o.push({attribute:i,value:r[i].values[0]})}o.push({attribute:i,value:r[i].value})}for(var i in a){o.push({attribute:i,value:a[i]})}var s=o.some(function(e){if(e.attribute==="Equstat"||e.attribute==="Equstatnocam"){return e.value===""||e.value==="X"}else if(e.attribute==="Aro"){return e.value!=="Z"}else{return e.value!==undefined&&e.value!==null&&e.value!==""&&e.value!==" "&&e.value.length!==0&&e.value!=="N"}});if(s){return true}else{return false}},getEstadoSemanal:function(e){var r=t.getModel("EstadosModel").getData().estados;var a=r.find(r=>r.DomvalueL===e);return a?a.Ddtext:""},validateColor:function(){var e=t.getModel("FiltersJsonModel").getData();var r=e.Werks.value!=="";var a=$.extend({},t.getModel("FiltersJsonModel").getData());delete a.Werks;if(r&&!this.getEval(a)){return"yellow"}if(!r&&this.getEval(a)){return"red"}if(r&&this.getEval(a)){return"red"}if(!r&&!this.getEval(a));{return"white"}return"white"},GET:function(e){t.getModel("OrderNumberJsonModel").setData({Odering:"down"});this.validateChecks(e);i.open("","");this.GETLicenses(e).then(this.successGET.bind(this,false)).catch($.proxy(this.errorGET,this))},FIND:function(e,a,o){this.fnCallbackSuccess=a;this.fnCallbackError=o;var t="/LicenciaTrabajoSet";var i=t+"(Empresa='"+e.Empresa+"',Id='"+e.Id+"',Tipo='"+e.Tipo+"',Anio='"+e.Anio+"')";let s={};if(e.Tipo==="L"){s.$expand=this._expandProperties}else{s.$expand="HorariosPorLicencia_nav,CoordinacionesLicencia_nav,ObservacionesLicencia_nav"}r.getModel("TransenerOperaciones").read(i,{urlParameters:s,success:$.proxy(this.successFIND,this),error:$.proxy(this.errorFIND,this)})},getPromise:function(e,a){return new Promise((o,t)=>{var i="/LicenciaTrabajoSet";var s=i+"(Empresa='"+e.Empresa+"',Id='"+e.Id+"',Tipo='"+e.Tipo+"',Anio='"+e.Anio+"')";let n={};if(a){n.$expand=a}r.getModel("TransenerOperaciones").read(s,{urlParameters:n,success:o,error:t})})},deleteUnifilar:function(e){return new Promise((a,o)=>{var i=t.getModel("LicenseJsonModel").getData();var s="/EsquemaUnifilarMarcadorSet(Idunifilar='"+e+"',Numerolicencia='"+i.Idunifilar+"',Empresa='"+i.Empresa+"',Anio='"+i.Anio+"')";r.getModel("TransenerOperaciones").remove(s,{success:()=>{a()},error:()=>{o()}})})},getIndividualUnifilar:function(e,a,o,i,s){var n=s?s:"";return new Promise((s,l)=>{var c=t.getModel("LicenseJsonModel").getData();var u="/EsquemaUnifilarMarcadorSet(Idunifilar='"+o+"',Numerolicencia='"+i+"',Empresa='"+a+"',Anio='"+e+"')"+n;r.getModel("TransenerOperaciones").read(u,{success:function(e){s(e)},error:function(e){console.log(e);l()}})})},getUnifilarCount:function(e){return new Promise((a,o)=>{var t=[new sap.ui.model.Filter({path:"Empresa",operator:sap.ui.model.FilterOperator.EQ,value1:e.Empresa}),new sap.ui.model.Filter({path:"Anio",operator:sap.ui.model.FilterOperator.EQ,value1:e.Anio}),new sap.ui.model.Filter({path:"Numerolicencia",operator:sap.ui.model.FilterOperator.EQ,value1:e.Idunifilar})];var i="/EsquemaUnifilarMarcadorSet/$count";r.getModel("TransenerOperaciones").read(i,{filters:t,success:e=>{a(parseInt(e))},error:e=>{o(e)}})})},checkUnifilarByJobCond:function(e){return new Promise((a,o)=>{if(e.Tipo==="L"){if(e.Jobcond==="01"){var t=[new sap.ui.model.Filter({path:"Empresa",operator:sap.ui.model.FilterOperator.EQ,value1:e.Empresa}),new sap.ui.model.Filter({path:"Anio",operator:sap.ui.model.FilterOperator.EQ,value1:e.Anio}),new sap.ui.model.Filter({path:"Numerolicencia",operator:sap.ui.model.FilterOperator.EQ,value1:e.Idunifilar})];var i="/EsquemaUnifilarMarcadorSet/$count";r.getModel("TransenerOperaciones").read(i,{filters:t,success:e=>{if(e){var r=parseInt(e)!==0;a(r)}o()},error:e=>{o(e)}})}else{a(true)}}else{a(true)}})},getUnifilarVersion:function(e){return new Promise((a,o)=>{var t=[];var i=new sap.ui.model.Filter({path:"Centro",operator:sap.ui.model.FilterOperator.EQ,value1:e.Region});var s=new sap.ui.model.Filter({path:"Et",operator:sap.ui.model.FilterOperator.EQ,value1:e.Et});var n=new sap.ui.model.Filter({path:"TipoUnifilar",operator:sap.ui.model.FilterOperator.EQ,value1:e.TipoUnifilar});var l=new sap.ui.model.Filter({path:"Estado",operator:sap.ui.model.FilterOperator.EQ,value1:"1"});t.push(l);t.push(i);t.push(s);t.push(n);var c=r.getModel("TransenerOperaciones");c.read("/LTUnifilaresFileSet",{filters:t,success:e=>{a(e)},error:e=>{o(e)}})})},createUnifilar:function(e){return new Promise((a,o)=>{r.getModel("TransenerOperaciones").create("/EsquemaUnifilarMarcadorSet",e,{success:e=>{a(e)},error:e=>{o(e)}})})},getUnifilares:function(e,a,o,t){var i=[new sap.ui.model.Filter({path:"Empresa",operator:sap.ui.model.FilterOperator.EQ,value1:e.Empresa}),new sap.ui.model.Filter({path:"Anio",operator:sap.ui.model.FilterOperator.EQ,value1:e.Anio}),new sap.ui.model.Filter({path:"Numerolicencia",operator:sap.ui.model.FilterOperator.EQ,value1:e.Idunifilar})];var s="/EsquemaUnifilarMarcadorSet";r.getModel("TransenerOperaciones").read(s,{filters:i,urlParameters:t?t:{$select:"Nombre,Idunifilar,NumVersion,Region,TipoUnifilar,Et,Empresa,Anio,Region,IntAbLe,SecAbBt,SecPatCr,PatAdic,Numerolicencia"},success:a,error:o})},getUnifilarFiles:function(e){return new Promise((a,o)=>{r.getModel("TransenerOperaciones").read("/LTUnifilaresFileSet",{filters:e,urlParameters:{$select:"Et,Descripcion,TipoUnifilar,IdUnifilar"},success:e=>{a(e)},error:e=>{o(e)}})})},postDay:function(e){return new Promise((a,o)=>{r.getModel("TransenerOperaciones").create("/HorariosLicenciaSet",e,{success:a,error:o})})},putDayHorarios:function(e){return new Promise((a,o)=>{r.getModel("TransenerOperaciones").update("/HorariosLicenciaSet"+"(Tipo='"+e.Tipo+"',Empresa='"+e.Empresa+"',Id='"+e.Id+"',Modif='"+e.Modif+"',Anio='"+e.Anio+"')",e,{success:a,error:o})})},findHorarios:function(e){var a=[];a.push(new sap.ui.model.Filter("Id",sap.ui.model.FilterOperator.EQ,e.Id));a.push(new sap.ui.model.Filter("Empresa",sap.ui.model.FilterOperator.EQ,e.Empresa));a.push(new sap.ui.model.Filter("Tipo",sap.ui.model.FilterOperator.EQ,e.Tipo));a.push(new sap.ui.model.Filter("Anio",sap.ui.model.FilterOperator.EQ,e.Anio));return new Promise((e,o)=>{r.getModel("TransenerOperaciones").read("/HorariosLicenciaSet",{success:e,filters:a,error:o})})},deleteDay:function(e){return new Promise((a,o)=>{r.getModel("TransenerOperaciones").remove("/HorariosLicenciaSet"+"(Tipo='"+e.Tipo+"',Empresa='"+e.Empresa+"',Id='"+e.Id+"',Modif='"+e.Modif+"',Anio='"+e.Anio+"')",{success:a,error:o})})},removeTramitacion:function(e){return new Promise((a,o)=>{r.getModel("TransenerOperaciones").remove("/TramitacionesSet"+"(Empresa='"+e.Empresa+"',Id='"+e.Id+"',Traindex='"+e.Traindex+"',Anio='"+e.Anio+"')",{success:a,error:o})})},refreshLicenceList:function(){var e=this.generateAdvancedFilters();e.push(new sap.ui.model.Filter({path:"Empresa",operator:sap.ui.model.FilterOperator.EQ,value1:t.getModel("LicenseJsonModel").getProperty("/Empresa")}));this.GETWithFilters(e)},getDeleteDatePromise:function(e,a){var o=[];for(var t of a){var i=t.Fecha.toISOString().split("T")[0]+"T00:00:00";o.push(new Promise((a,o)=>{r.getModel("TransenerOperaciones").remove("/LicenciaEstadoDiarioSet"+"(Anio='"+e.Anio+"',Empresa='"+e.Empresa+"',Id='"+e.Id+"',Traindex='"+e.Traindex+"',Fecha=datetime'"+i+"')",{success:a,error:o})}))}return o},removeDates:function(e,r){var a=this.getDeleteDatePromise(e,r);return Promise.all(a)},getPermisos:function(e){var a=[];a.push(new sap.ui.model.Filter("Id",sap.ui.model.FilterOperator.EQ,e.Id));a.push(new sap.ui.model.Filter("Empresa",sap.ui.model.FilterOperator.EQ,e.Empresa));a.push(new sap.ui.model.Filter("Tipo",sap.ui.model.FilterOperator.EQ,e.Tipo));a.push(new sap.ui.model.Filter("Anio",sap.ui.model.FilterOperator.EQ,e.Anio));return new Promise((e,o)=>{var t="/PermisosLicenciaSet";r.getModel("TransenerOperaciones").read(t,{filters:a,success:function(r){e(r.results)},error:function(e){o(e)}})})},handleUserPermission:function(e,r,a){var o=["CREADOR","JEFE_TRABAJO","JEFE_TRABAJO_SUPLENTE","SOLICITANTE","SOLICITANTE_SUPLENTE"];var i=["COORDINADOR"];var s=["TRAMITADOR"];var n=t.getModel("PermisosJsonModel");var l=t.getModel("CurrentUser").getData().Legajo;if(l==="")l=this.nullLegajo;var c=[];switch(a){case"02":case"30":c=o;break;case"07":c=s;break;case"09":c=i;break}var u=e.some(e=>{if(c.includes(e.Rol)){return e.Legajo===l}else{return false}});if(!u){var d=e.map(e=>e.Rol);u=!d.some(e=>c.includes(e))}var n=t.getModel("PermisosJsonModel").setProperty("/UsuarioEncontrado",u)},findEquipoById:function(e){let r=t.getModel("EstacionesJsonModel").getProperty("/Estaciones");var a=r.find(r=>r.Codigo===e);if(a!==undefined){var o=t.getModel("DescripcionETJsonModel");o.setData({Descripcion:a.Descripcion})}},getStatusTramitacion:function(e){if(e==="01"){return"TA"}if(e==="06"){return"TN"}if(e==="23"){return"ET"}return""},loadSpecialDatesTramitacion:function(e,a,o,s){var l=[];l.push(new sap.ui.model.Filter("Empresa",sap.ui.model.FilterOperator.EQ,o));l.push(new sap.ui.model.Filter("Id",sap.ui.model.FilterOperator.EQ,a));l.push(new sap.ui.model.Filter("Anio",sap.ui.model.FilterOperator.EQ,e));var c="/LicenciaEstadoDiarioSet";r.getModel("TransenerOperaciones").read(c,{filters:l,success:function(e){var r=s==="D"?n.handleSpecialDatesTramitacion(e.results):{Fechas:[]};var r=n.handleSpecialDatesTramitacion(e.results);r=n.getOrderSpecialDate(r);var a=t.getModel("EspecialDatesTramitacion");a.setData(r);i.close()},error:function(e){console.log(e)}})},successFIND:function(e){var r=o.removeResults(e);var s=r;this.findEquipoById(s.Tplnr);this._observedStatus=s.Licstat==="02";var l=s.Tipo;this.getPermisos(s).then(e=>{var a=t.getModel("LicenseJsonModel");this.loadSpecialDatesTramitacion(s.Anio,s.Id,s.Empresa,s.Period);this.handleUserPermission(e,l,s.Licstat);var c=[];c.push(r);i.close();t.getModel("FilterSelectionJsonModel").setProperty("/visible",true);var d=t.getModel("TramitacionStatusModel");d.setProperty("/Status",this.getStatusTramitacion(s.Licstat));d.setProperty("/StatusText",u.getStatusTramitacionText(s.Licstat));o.formatTimesFromGetLicenses(c);s.Timbeg=o.formaTimesToShow(s.Timbeg);s.Timend=o.formaTimesToShow(s.Timend);var p=s.HorariosPorLicencia_nav;var m=(new Date).getTimezoneOffset()*60*1e3;p.forEach(function(e){e.Fecha=new Date(e.Fecha.getTime()+m)});s.Solbeg=o.formatDatesGMT(s.Solbeg);s.Solend=o.formatDatesGMT(s.Solend);s.SolSuplente=s.SolSuplente===this.nullLegajo?"":s.SolSuplente;s.Jefe=s.Jefe===this.nullLegajo?"":s.Jefe;s.JefeSuplente=s.JefeSuplente===this.nullLegajo?"":s.JefeSuplente;if(s.AttachmentXLicencia_nav.length){t.getModel("FilterSelectionJsonModel").setProperty("/visibleFiles",true)}else{t.getModel("FilterSelectionJsonModel").setProperty("/visibleFiles",false)}t.setNavigationProperties(s);n.generateDeliveryDevolution(s);n.setPersonalHabilitadoParaCboEntraga(s);n.setPersonalHabilitadoParaCboDevolucion(s);n.setPersonalHabilitadoParaCboCancelacion(s);n.generateSuspentionReanudation(s);if(s.Rdisparo==="")s.Rdisparo="Y";n.setComments(s);a.setData(s);this.handleCoordinationTableDataByUserRole();this.handleObservationTableDataByUserRole();this.handleTransfers();this.enableSpecifyBarraControl(s.Barrafs);i.close();t.getModel("FilterSelectionJsonModel").setProperty("/busyData",false);T.checkLegacies();if(t.getModel("LicenseJsonModel").getProperty("/Period")==="C"){t.getModel("DisableControlsJsonModel").setProperty("/enabled",true);t.getModel("DisableControlsJsonModel").setProperty("/HorariosSemanaEnabled",false)}if(this.fnCallbackSuccess){this.fnCallbackSuccess(s)}this.getFullTramitacionesWithCalendarDates()}).catch(e=>{console.error(e);i.close();a.showAlert("Alerta","Se ha producido un error al obtener permisos")})},enableSpecifyBarraControl:function(e){var r=t.getModel("LicenseJsonModel");var a=t.getModel("FilterSelectionJsonModel");if(e==="N"){a.setProperty("/enabledEspecifyBarra",false);r.setProperty("/Barrafstx","")}else{a.setProperty("/enabledEspecifyBarra",true)}},handleTransfers:function(){var e=t.getModel("LicenseJsonModel").getData();var r=t.getModel("UtilsJsonModel").getProperty("/empresa");var a=t.getModel("LicenseJsonModel").getProperty("/Tipo");var o=a==="L"?t.getModel("TransferListJsonModel").getData().Transfers:[];T.validateLegaciesTransfer(e,o);o.push({Anio:t.getModel("LicenseJsonModel").getProperty("/Anio"),Id:t.getModel("LicenseJsonModel").getProperty("/Id"),Empresa:r,Jefetra:"",Time:new Date,Autcot:"",Teinformo:"",TeinformoValueState:"Success",TeinformoValueStateText:"",JefetraValueState:"Success",JefetraValueStateText:""});o.forEach(e=>{e.enabledCombo=e.Trjindex===undefined||e.Trjindex===""});t.getModel("TransferListJsonModel").refresh(true)},handleCoordinationTableDataByUserRole:function(){var e=t.getModel("UtilsJsonModel").getProperty("/empresa");var r=t.getModel("UserJsonModel").getData().roles;var a=t.getModel("LicenseJsonModel").getProperty("/Licstat")==="09";var o=t.getModel("LicenseJsonModel").getProperty("/Tipo");var i=t.getModel("CoordinationTableJsonModel").getData().Coordinations;i.push({Id:t.getModel("LicenseJsonModel").getProperty("/Id"),Anio:t.getModel("LicenseJsonModel").getProperty("/Anio"),Tipo:t.getModel("LicenseJsonModel").getProperty("/Tipo"),Empresa:e,Cooindex:"",CreationDate:new Date,CreationTime:"PT00H00M00S",Coouser:t.getStringUserLegacy(),Coordination:""});t.getModel("CoordinationTableJsonModel").refresh(true)},handleObservationTableDataByUserRole:function(){var e=t.getModel("UtilsJsonModel").getProperty("/empresa");var r=t.getModel("UserJsonModel").getData().roles;var a=t.getModel("LicenseJsonModel").getProperty("/Licstat")==="09";var o=t.getModel("LicenseJsonModel").getProperty("/Tipo");var i=t.getModel("ObservationTableJsonModel").getData().Observations;i.push({Id:t.getModel("LicenseJsonModel").getProperty("/Id"),Anio:t.getModel("LicenseJsonModel").getProperty("/Anio"),Empresa:e,Obsindex:"",CreationDate:new Date,CreationTime:"PT00H00M00S",Obsuser:t.getStringUserLegacy(),Observation:""});t.getModel("ObservationTableJsonModel").refresh(true)},errorFIND:function(e){if(this.fnCallbackError)this.fnCallbackError(e)},getArbplDesc:function(e){var r=t.getModel("WorkPlacesJsonModel").getData().WorkPlaces;var a=r.find(r=>r.Arbpl===e);return a?a.KtextUp:""},getEqustatText:function(e){return e==="X"?"E/S":"F/S"},getBloqueoText:function(e){return e==="X"?"SI":"NO"},getPeriodoText:function(e){return e==="D"?"Diaria":"Continua"},getStatusText:function(e,r){if(e==="01"){return u.getApprovalSubstatus(e,r)}else{return u.getStatusName(e)}},rolesForDuplication:function(e,r){let a=t.getModel("CurrentUser").getData().Region;var o=$.extend([],t.getModel("UserJsonModel").getData().roles);var i=t.getModel("permisosModel").getData()["listado"]["!BotonSolicitudListado"];let s=u.centroToRegion(a);if(s){o=o.map(e=>e.replace("_"+s,""))}if(e==="L"){var n=o.find(e=>e==="Coordinador_Mantenimiento");return!n}else{return!o.some(e=>i.includes(e))}},validateChecks:function(e){var r=t.getModel("FilterSelectionJsonModel").getData();if(r.checkedLic&&r.checkedSol){}else if(r.checkedLic){e.push(new sap.ui.model.Filter("Tipo",sap.ui.model.FilterOperator.EQ,"L"))}else if(r.checkedSol){e.push(new sap.ui.model.Filter("Tipo",sap.ui.model.FilterOperator.EQ,"S"))}},successGET:function(e,r){var a=o.removeResults(r);o.formatTimesFromGetLicenses(a);a.forEach(e=>{e.ArbplDesc=this.getArbplDesc(e.Arbpl);e.EqustatText=this.getEqustatText(e.Equstat);e.BloqueoText=this.getBloqueoText(e.Bloqueo);e.PeriodoText=this.getPeriodoText(e.Period);e.StatusText=this.getStatusText(e.Licstat,e.Substatus);e.ValidForDuplicate=this.rolesForDuplication(e.Tipo,e.Werks)});
-//	var aLicensesWithCheck = this.validateChecks(aLicensesOrdered);
-if(e!==true){var s=_.orderBy(a,["Anio","Id"],["desc","desc"])}else{s=a}t.getModel("LicencesListJsonModel").setData({Licenses:s});i.close()},errorGET:function(e){var r=o.parseJsonError(e);if(r==="No se encontraron datos"){t.getModel("LicencesListJsonModel").setData({Licenses:[]})}a.showAlert("Alert",r);i.close()},getLicStatByRol:function(e,r){var a=r;var o=t.getModel("UserJsonModel").getData().roles;var i=t.getModel("EnviarCoordModel").getProperty("/visibleTipoLicencia");if(i&&(e==="N"||e==="EM"||e==="TE")){t.getModel("LicenseJsonModel").setProperty("/Gdate",new Date);r="07";var s=o.find(e=>e==="Solicitante_Lic_TBA");if(s&&a==="09"){switch(e){case"N":r="09";break;case"EM":r="07";break;case"TE":r="09";break}}else if(s&&a==="30"){r="30"}}return r},POSTLicense:function(e){return new Promise((a,s)=>{i.open();let l=n.cloneLicense(t.getModel("LicenseJsonModel").getData());l.Licstat=this.getLicStatByRol(l.Tipolicencia,l.Licstat);o.formatTimes(l);o.formatDayArrayTimes(l);o.deleteNavPropertiesByPeriod(l,l.Period);let c="/LicenciaTrabajoSet";if(l.Rdisparo==="Y")l.Rdisparo="";if(l.Equstat==="Y")l.Equstat="";l.Comments="";console.log(l);r.getModel("TransenerOperaciones").create(c,l,{success:function(r){console.log(r);var o={bIsSol:e,responseData:r,licence:l};a(o)},error:function(){s()}})})},POST:function(e){i.open();this.POSTLicense(e).then($.proxy(this.successPOST,this)).catch($.proxy(this.errorPOST,this))},getTimeFormatted:function(){var e=new Date;let r=new Date(e.getTime()+e.getTimezoneOffset()*60*1e3);let a=new Date(r);var o=a.toISOString().split("T")[1].substr(0,8);return o.split(":").join("")},PostPromesa:function(e,a,o,t,i,s,n,l){var c={Empresa:n,Id:o,Anio:e,Tipo:a,Rol:l,Legajo:t,Nombre:i,Mail:s,Fecha:new Date,Hora:this.getTimeFormatted()};return new Promise((e,a)=>{var o="/PermisosLicenciaSet";r.getModel("TransenerOperaciones").create(o,c,{success:e,error:a})})},PutPromise:function(e,a,o,t,i,s,n,l){var c={Anio:e,Empresa:n,Id:o,Tipo:a,Rol:l,Legajo:t,Nombre:i,Mail:s,Fecha:new Date,Hora:this.getTimeFormatted()};return new Promise((e,a)=>{var o="/PermisosLicenciaSet";r.getModel("TransenerOperaciones").create(o,c,{success:e,error:a})})},editLicense:function(){return new Promise((e,r)=>{var a=t.getModel("LicenseJsonModel").getData();var o=n.cloneLicense(a);this.updateLicense(o,{success:e(o),error:r})})},editComments:function(){return new Promise((e,r)=>{var a=t.getModel("LicenseJsonModel").getData();var o=n.cloneLicense(a);this.updateLicense(o,{success:e(o),error:r})})},handlePromisePermisos:function(e,r,a,o,t,i,s,n,l){if(n==="CREATION"){return this.PostPromesa(e,r,a,o,t,i,s,l)}if(n==="EDITION"){return this.PutPromise(e,r,a,o,t,i,s,l)}},getPermisosPOSTArray:function(e,r,a,o,i){var s=t.getModel("UserJsonModel").getData();var n=s.email;var l=s.nombre+", "+s.apellido;var c=[];let d=u.getSolicitanteName(e.Solicitante);let p=u.getSolicitanteName(e.SolSuplente);let T=u.getJefeName(e.Jefe);let m=u.getJefeName(e.JefeSuplente);let h=u.getSolicitanteName(e.SolSuplenteAux);c.push(this.handlePromisePermisos(e.Anio,r,a,o.Legajo,l,n,o.Empresa,"CREATION","CREADOR"),this.handlePromisePermisos(e.Anio,r,a,e.Solicitante,d,"",o.Empresa,"CREATION","SOLICITANTE"),this.handlePromisePermisos(e.Anio,r,a,e.SolSuplente,p,"",o.Empresa,"CREATION","SOLICITANTE_SUPLENTE"),this.handlePromisePermisos(e.Anio,r,a,e.SolSuplenteAux,h,"",o.Empresa,"CREATION","SOLICITANTE_SUPLENTE_AUXILIAR"),this.handlePromisePermisos(e.Anio,r,a,e.Jefe,T,"",o.Empresa,"CREATION","JEFE_TRABAJO"),this.handlePromisePermisos(e.Anio,r,a,e.JefeSuplente,m,"",o.Empresa,"CREATION","JEFE_TRABAJO_SUPLENTE"));return c},getPermisosPUTArray:function(e,r,a,o,i){var s=e.Anio;var n=t.getModel("UserJsonModel").getData();var l=n.email;var c=n.nombre+", "+n.apellido;var d=[];let p=u.getSolicitanteName(e.Solicitante);let T=u.getSolicitanteName(e.SolSuplente);let m=u.getJefeName(e.Jefe);let h=u.getJefeName(e.JefeSuplente);let g=u.getSolicitanteName(e.SolSuplenteAux);d.push(this.handlePromisePermisos(s,r,a,o.Legajo,c,l,o.Empresa,"EDITION","CREADOR"),this.handlePromisePermisos(s,r,a,e.Solicitante,p,"",o.Empresa,"EDITION","SOLICITANTE"),this.handlePromisePermisos(s,r,a,e.SolSuplente,T,"",o.Empresa,"EDITION","SOLICITANTE_SUPLENTE"),this.handlePromisePermisos(s,r,a,e.SolSuplenteAux,g,"",o.Empresa,"EDITION","SOLICITANTE_SUPLENTE_AUXILIAR"),this.handlePromisePermisos(s,r,a,e.Jefe,m,"",o.Empresa,"EDITION","JEFE_TRABAJO"),this.handlePromisePermisos(s,r,a,e.JefeSuplente,h,"",o.Empresa,"EDITION","JEFE_TRABAJO_SUPLENTE"));return d},getMailsByPermisos:function(e,r){var a=e.find(e=>e.Rol===r);return a?[a.Mail]:[""]},PUTPermisosLicencia:function(r,o,s,n,l){var u=s.Tipo==="S"?"Solicitud":"Licencia";var d=o?r.Tipo:s.Tipo;var T=o?r.id:s.Idsolicitud===this.nullId?s.Id:s.Idsolicitud;var m=this.getPermisosPUTArray(s,d,T,n,l);Promise.all(m).then(()=>{var r="";if(s.Licstat==="30"||s.Licstat==="02"){if(o)r="Edición exitosa, esta solicitud se ha convertido en licencia";else r=`${u} modificada de manera exitosa`;i.close();a.showAlert("Alerta",r,$.proxy(this.goToHome,this));return}var l=t.getModel("UserJsonModel").getData();var d=l.nombre+", "+l.apellido;var r="";var T=[];var m={Coordinador:"",Creador:n.Legajo+", "+d};T.push(this.getPermisos(s));T.push(p.getPromise(s.Empresa,s.Tplnr,this.getSelectionArea(s.Tipo,s.Licstat)));Promise.all(T).then(e=>{var t=[];var n=e[0];let l={};n.forEach(e=>{l[e.Rol]=e});var d=e[1].results&&e[1].results!==0?e[1].results.map(e=>e.Mail).join(","):"";if(s.Tipo==="L"){var p=[l["SOLICITANTE"],l["SOLICITANTE_SUPLENTE"],l["SOLICITANTE_SUPLENTE_AUXILIAR"],l["JEFE_TRABAJO"],l["JEFE_TRABAJO_SUPLENTE"]].map(e=>e&&e.Mail||"hzea@inclusion.cloud")}else{var p=[]}t=t.concat(p);m.Solicitante=l["SOLICITANTE"].Legajo+", "+l["SOLICITANTE"].Nombre;m.SolicitanteSuplente=l["SOLICITANTE_SUPLENTE"].Legajo+", "+l["SOLICITANTE_SUPLENTE"].Nombre;m.Jefe=l["JEFE_TRABAJO"].Legajo+", "+l["JEFE_TRABAJO"].Nombre;m.JefeSuplente=l["JEFE_TRABAJO_SUPLENTE"].Legajo+", "+l["JEFE_TRABAJO_SUPLENTE"].Nombre;m.SolSuplenteAux=l["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo+", "+l["SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre;var T=t.join(",");var h="";if(s.Licstat==="30"){T="";d=""}c.sendEmail(s,m,T,d,h).then(()=>{if(o){r="Edición exitosa, esta solicitud se ha convertido en licencia"}else{if(s.Licstat==="09"){r=`La ${u} se generó exitosamente`}else{r=`${u} modificada de manera exitosa`}}i.close();a.showAlert("Alerta",r,$.proxy(this.goToHome,this))}).catch(e=>{console.error(e);a.showAlert("Alerta","Se ha producido un error al enviar mail.",$.proxy(this.goToHome,this))})},r=>{console.error(e);a.showAlert("Alerta","Se ha producido un error al enviar mail.",$.proxy(this.goToHome,this))})}).catch(e=>{console.error(e);a.showAlert("Alerta","Se ha producido un error al editar los permisos",$.proxy(this.goToHome,this))})},getMailsByRole:function(e){return new Promise((r,a)=>{if(e===""){r([])}else{var o="/destinations/Examinadores_PT15/";$.get(o+"Users/?filter=groups eq '"+e+"'",function(e){var a=e.Resources;var o=a.map(function(e){return e.emails[0].value});r(o)}).fail(a)}})},getSelectionArea:function(e,r){var a="";if(e==="S"){if(r==="09"){a="COORD"}}else{if(r==="01"||r==="11"||r==="07"||r==="06"||r==="04"||r==="03"){a="TECNICO"}}return a},POSTPermisosLicencias:function(e,r,o,s,n){var l=r?e.Tipo:"L";var d=e.Id;var T=this.getPermisosPOSTArray(o,l,d,s,n);Promise.all(T).then(()=>{var n="";var l=[];l.push(this.getPermisos(e));var T=t.getModel("UserJsonModel").getData();var m=T.nombre+", "+T.apellido;var h={Coordinador:"",Creador:s.Legajo+", "+m};switch(o.Licstat){case"30":if(r){n="Solicitud Nº "+d+" creada con exito";t.getModel("LicenciaClonadaID");t.getModel("LicenciaClonadaID").setData({IdClonada:d})}else{n="Licencia Nº"+d+" creada con exito";t.getModel("LicenciaClonadaID");t.getModel("LicenciaClonadaID").setData({IdClonada:d})}l.push(this.getMailsByRole(""));break;case"09":l.push(this.getMailsByRole(this.rolCoordinador+"_"+u.centroToRegion(o.Werks)));break;case"07":h.RecepOper=h.Creador;l.push(this.getMailsByRole(this.rolTramitador));break}l.push(p.getPromise(o.Empresa,o.Tplnr,this.getSelectionArea(o.Tipo,o.Licstat)));Promise.all(l).then(s=>{var l=[];let u=s[2].results&&s[2].results!==0?s[2].results.map(e=>e.Mail).join(","):"";var p="";var T=s[0];let m={};T.forEach(e=>{m[e.Rol]=e});if(o.Tipo==="L"){var g=[m["SOLICITANTE"],m["SOLICITANTE_SUPLENTE"],m["SOLICITANTE_SUPLENTE_AUXILIAR"],m["JEFE_TRABAJO"],m["JEFE_TRABAJO_SUPLENTE"]].map(e=>e&&e.Mail||"hzea@inclusion.cloud")}else{var g=[m["SOLICITANTE"],m["CREADOR"]].map(e=>e&&e.Mail);g=s[2].results&&s[2].results.length!==0?g.concat(s[2].results.map(e=>e.Mail)):g}l=l.concat(g);var E=l.join(",");h.Solicitante=m["SOLICITANTE"].Legajo+", "+m["SOLICITANTE"].Nombre;h.SolicitanteSuplente=m["SOLICITANTE_SUPLENTE"].Legajo+", "+m["SOLICITANTE_SUPLENTE"].Nombre;h.Jefe=m["JEFE_TRABAJO"].Legajo+", "+m["JEFE_TRABAJO"].Nombre;h.JefeSuplente=m["JEFE_TRABAJO_SUPLENTE"].Legajo+", "+m["JEFE_TRABAJO_SUPLENTE"].Nombre;h.SolSuplenteAux=m["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo+", "+m["SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre;if(o.Licstat==="30"){E="";u=""}c.sendEmail(e,h,E,u,p).then(()=>{if(r)n="Solicitud Nº "+d+" creada con exito";else n="Licencia Nº "+d+" creada con exito";t.getModel("LicenciaClonadaID");t.getModel("LicenciaClonadaID").setData({IdClonada:d});i.close();a.showAlert("Alerta",n,$.proxy(this.goToHome,this))}).catch(e=>{console.error(e);a.showAlert("Alerta","Se ha producido un error al enviar mail.",$.proxy(this.goToHome,this))})},e=>{console.error(e);a.showAlert("Alerta","Se ha producido un error al enviar mail.",$.proxy(this.goToHome,this))})},e=>{console.error(e);a.showAlert("Alerta","Se ha producido un error al crear los permisos",$.proxy(this.goToHome,this))})},successPOST:function(e){var r=t.getModel("CurrentUser").getData();var a=t.getModel("UserJsonModel").getData();this.POSTPermisosLicencias(e.responseData,e.bIsSol,e.licence,r,a)},goToHome:function(){t.getModel("refreshSearch").setData({data:true});t.getAppRouter().navTo("Licencias")},acceptEmptyValues:function(e,r){switch(e){case"Substatus":var a=t.getModel("FiltersJsonModel").getData();var o=a.Licstat.value;if(r.value===""&&o==="01"){r.value="Z";return true}else{if(r.value!==""){return true}else{return false}}return true;case"Equstatnocam":case"Equstat":return true;default:return r.value!==""}},generateAdvancedFilters:function(){var e=t.getModel("FiltersJsonModel").getData();var r=[];for(var a in e){if(e[a]["value"]!==null&&e[a]["value"].constructor===Array){var o=e[a]["value"];if(o.length!==0){var i=[];for(var s in o){var n=this.getFilterObject(o[s]);i.push(new sap.ui.model.Filter(n.attribute,sap.ui.model.FilterOperator[e[a]["operator"]],n.value))}var l=new sap.ui.model.Filter({filters:i,and:false});r.push(l)}}else{if(this.acceptEmptyValues(a,e[a])){if(e[a]["value"]!==null){if(a==="Solbeg"||a==="Solend"){r.push(new sap.ui.model.Filter(a,sap.ui.model.FilterOperator[e[a]["operator"]],e[a]["value"]))}else{r.push(new sap.ui.model.Filter(a,sap.ui.model.FilterOperator[e[a]["operator"]],e[a]["value"]))}}}}}return r},getFilterObject:function(e){var r={};switch(e){case"0":r.attribute="Senalestados";r.value="X";break;case"1":r.attribute="Senalalarmas";r.value="X";break;case"2":r.attribute="Senalmedicion";r.value="X";break;case"3":r.attribute="Precauciones";r.value="X";break;case"4":r.attribute="Ninguna";r.value="X";break}return r},errorPOST:function(e){i.close();var r=o.parseJsonError(e);a.showAlert("Alert",r)},PUTPromise:function(e){return new Promise((a,i)=>{let s=t.getModel("LicenseJsonModel").getData();var l=n.cloneLicense(s);l.Licstat=this.getLicStatByRol(l.Tipolicencia,l.Licstat);let c="/LicenciaTrabajoSet";o.formatTimes(l);this.deleteNavProperties(l);if(l.Rdisparo==="Y")l.Rdisparo="";if(l.Equstat==="Y")l.Equstat="";r.getModel("TransenerOperaciones").update(c+"(Empresa='"+l.Empresa+"',Id='"+l.Id+"',Tipo='"+l.Tipo+"',Anio='"+l.Anio+"')",l,{success:function(r){var o={bIsSol:e,responseData:r,licence:l};a(o)},error:function(){i(error)}})})},PUT:function(e){i.open();this.PUTPromise(e).then($.proxy(this.successPUT,this)).catch($.proxy(this.errorPUT,this))},successPUT:function(e){var r=t.getModel("CurrentUser").getData();var a=t.getModel("UserJsonModel").getData();this.PUTPermisosLicencia(e.responseData,e.bIsSol,e.licence,r,a)},errorPUT:function(){i.close();a.showAlert("Alerta","Error al modificar")},logTramitationChange:function(e){return new Promise((a,o)=>{let i="/RegistroFechaTramitacionSet";let s=t.getModel("LicenseJsonModel").getData();let n={Empresa:s.Empresa,Id:s.Id,Tipo:s.Tipo,Anio:s.Anio,Fecha:new Date,Tramitador:e};r.getModel("TransenerOperaciones").create(i,n,{success:a,error:o})})},getFullTramitacionesWithCalendarDates:function(){var e=t.getModel("TramitacionListJsonModel")?t.getModel("TramitacionListJsonModel").getData().Tramitaciones:[];var r=[];e.map(e=>{r.push(this.getDatesFromTramitacion(e))});Promise.all(r).then(r=>{e.map((e,a)=>{r.map(o=>{e.CalendarDates=r[a].results});t.getModel("TramitacionListJsonModel").setProperty("/CalendarDates",e.CalendarDates)})})}}});
+sap.ui.define([
+	"sap/ui/model/Filter",
+	"sap/ui/model/FilterOperator",
+	"transener/sistemadeturnos/services/oDataService",
+	"transener/sistemadeturnos/utils/MessageBoxHelper",
+	"transener/sistemadeturnos/utils/FormatHelper",
+	"transener/sistemadeturnos/utils/AppManagementHelper",
+	"transener/sistemadeturnos/utils/BusyDialogHelper",
+	"transener/sistemadeturnos/utils/BatchOperationsHelper",
+	"transener/sistemadeturnos/utils/LicenseHelper",
+	"transener/sistemadeturnos/utils/FileDownloadHelper",
+	"transener/sistemadeturnos/utils/MailHelper",
+	"transener/sistemadeturnos/utils/FormatterHelper",
+	"transener/sistemadeturnos/services/LibroGuardiasService",
+	"transener/sistemadeturnos/services/EtMailService",
+	"transener/sistemadeturnos/utils/LegacyValidationHelper",
+], function (Filter, FilterOperator, oDataService, MessageBoxHelper, FormatHelper, AppManagementHelper, BusyDialogHelper,
+	BatchOperationsHelper, LicenceHelper,
+	FileDownloadHelper, MailHelper, FormatterHelper, LibroGuardiasService, EtMailService, LegacyValidationHelper) {
+	"use strict";
+	return {
+		rolCoordinador: "Coordinador_Mantenimiento",
+		rolTramitador: "Tramitador",
+		nullId: "0000000000",
+		nullLegajo: "00000000",
+
+		_expandProperties: "HorariosPorLicencia_nav,CoordinacionesLicencia_nav,ObservacionesLicencia_nav,TramitacionesLicencia_nav," +
+			"SuspensionLicencia_nav,ReanudacionLicencia_nav,TransferenciaJefeTrabajo_nav,DevolucionLicencia_nav,EntregasLicencia_nav,AttachmentXLicencia_nav,EsquemaUnifilar_nav",
+
+		PostDaysLicence: function (oLicenseData) {
+			return new Promise((resolve, reject) => {
+				var entity = "/LicenciaTrabajoSet";
+				oDataService.getModel("TransenerOperaciones").create(entity, oLicenseData, {
+					success: function () {
+						resolve();
+					},
+					error: function () {
+						reject();
+					}
+				});
+			});
+		},
+
+		deleteNavProperties: function (oObject) {
+			delete oObject.HorariosPorLicencia_nav;
+			delete oObject.CoordinacionesLicencia_nav;
+			delete oObject.ObservacionesLicencia_nav;
+			delete oObject.TramitacionesLicencia_nav;
+			delete oObject.SuspensionLicencia_nav;
+			delete oObject.TransferenciaJefeTrabajo_nav;
+			delete oObject.DevolucionLicencia_nav;
+			delete oObject.EntregasLicencia_nav;
+			delete oObject.ReanudacionLicencia_nav;
+			delete oObject.AttachmentXLicencia_nav;
+			delete oObject.EsquemaUnifilar_nav;
+		},
+
+		getDiccionarioClase: function (society) {
+			return new Promise((resolve, reject) => {
+				let aFilters = []
+				aFilters.push(new sap.ui.model.Filter("Empresa", sap.ui.model.FilterOperator.EQ, society));
+				AppManagementHelper.getModel("SelectModel").read("/DiccionarioCategoriasSet", {
+					filters: aFilters,
+					success: function (data) {
+						resolve(data.results);
+					},
+					error: function (error) {
+						reject(error);
+					}
+				});
+			})
+		},
+
+		getPropiedadesEquipos: function (society, desde) {
+			let aFilters = [];
+			//	aFilters.push(new sap.ui.model.Filter("Desde", sap.ui.model.FilterOperator.EQ, desde));
+			aFilters.push(new sap.ui.model.Filter("Empresa", sap.ui.model.FilterOperator.EQ, society));
+			return new Promise((resolve, reject) => {
+				// Issue 504: se cambio el read de la entidad "PropiedadesEquiposSet" a la nueva entidad "ParteDiarioSemanalSet".
+				AppManagementHelper.getModel("SelectModel").read("/ParteDiarioSemanalSet", {
+					filters: aFilters,
+					success: function (data) {
+						resolve(data.results);
+					},
+					error: function (error) {
+						reject(error);
+					}
+				});
+			});
+		},
+
+		getEstacionCode: function (sTplnr) {
+			return new Promise((resolve, reject) => {
+				AppManagementHelper.getModel("SelectModel").read("/EstacionesSet", {
+					success: function (data) {
+						var oData = data.results.find(function (e) {
+							return e.Codigo === sTplnr;
+						})
+						resolve(oData);
+					},
+					error: function (error) {
+						reject(error);
+					}
+				});
+			});
+		},
+
+		getEstacionesCodes: function (aTplnr) {
+			let aDataPromise = [];
+			for (let sTplnr of aTplnr) {
+				aDataPromise.push(this.getEstacionCode(sTplnr));
+			}
+			return new Promise((resolve, reject) => {
+				Promise.all(aDataPromise).then((aEstaciones) => {
+					resolve(aEstaciones)
+				}).catch((e) => {
+					reject(e)
+				})
+			});
+		},
+
+		getJobCond: function () {
+			return new Promise((resolve, reject) => {
+
+				let aFilters = [new sap.ui.model.Filter("Tabname", sap.ui.model.FilterOperator.EQ, "ZTAB_LICENCIAS"),
+					new sap.ui.model.Filter("Fieldname", sap.ui.model.FilterOperator.EQ, "JOBCOND")
+				]
+				oDataService.getModel("TransenerOperaciones").read("/FixedValuesSet", {
+					filters: aFilters,
+					success: function (data) {
+						resolve(data.results);
+					},
+					error: function (error) {
+						reject();
+					}
+				});
+			})
+		},
+
+		GETTipoLicenciaCatalog: function () {
+			var oModelBlockEnviarCoord = AppManagementHelper.getModel("EnviarCoordModel");
+			oModelBlockEnviarCoord.setProperty("/visibleEnviarCoord", true);
+			oModelBlockEnviarCoord.setProperty("/visibleTipoLicencia", false);
+			var aRoles = AppManagementHelper.getModel("UserJsonModel").getData().roles;
+			var oModel = AppManagementHelper.getModel("TipoLicenciaCatalogModel");
+			var aData = [];
+
+			var bJefeTurnoCOT = aRoles.find((r) => {
+				return r === "Jefe_Turno_COT" || r === "Jefe_Turno_COTDT"
+			});
+
+			var bProgramacion = aRoles.find((r) => {
+				return r === "Programacion_COT" || r === "Programacion_COTDT"
+			});
+
+			var bOperador = aRoles.find((r) => {
+				return r === "Operador_COT" || r === "Operador_COTDT"
+			});
+
+			var bSolicitanteLicTBA = aRoles.find(sRol => sRol === "Solicitante_Lic_TBA");
+
+			if (bJefeTurnoCOT) {
+				oModelBlockEnviarCoord.setProperty("/visibleEnviarCoord", false);
+				oModelBlockEnviarCoord.setProperty("/visibleTipoLicencia", true);
+				aData = [{
+					key: "N",
+					descripcion: "Licencia Programada"
+				}, {
+					key: "EM",
+					descripcion: "Licencia de emergencia"
+				}, {
+					key: "TE",
+					descripcion: "Licencia de terceros"
+				}]
+			}
+
+			// #Issue 131 se agrega licencia de emergencia.
+			if (bProgramacion || bOperador) {
+				oModelBlockEnviarCoord.setProperty("/visibleEnviarCoord", false);
+				oModelBlockEnviarCoord.setProperty("/visibleTipoLicencia", true);
+				aData = [{
+					key: "N",
+					descripcion: "Licencia Programada"
+				}, {
+					key: "TE",
+					descripcion: "Licencia de terceros"
+				}, {
+					key: "EM",
+					descripcion: "Licencia de emergencia"
+				}]
+			}
+
+			if (bSolicitanteLicTBA) {
+				oModelBlockEnviarCoord.setProperty("/visibleTipoLicencia", true);
+				aData = [{
+					key: "N",
+					descripcion: "Licencia Programada"
+				}, {
+					key: "EM",
+					descripcion: "Licencia de emergencia"
+				}, {
+					key: "TE",
+					descripcion: "Licencia de terceros"
+				}]
+			}
+
+			var oModelFilters = AppManagementHelper.getModel("TipoLicFiltersModel");
+			var aDataFilter = [{
+				key: "N",
+				descripcion: "Licencia Programada"
+			}, {
+				key: "EM",
+				descripcion: "Licencia de emergencia"
+			}, {
+				key: "TE",
+				descripcion: "Licencia de terceros"
+			}];
+
+			oModelFilters.setData({
+				TipoLic: aDataFilter
+			});
+
+			oModel.setData({
+				TipoLic: aData
+			});
+
+			return aData && aData[0] && aData[0].key;
+
+		},
+
+		POSTUnifilarSchema: function (oUnifilar) {
+			var entity = "/EsquemaUnifilarSet";
+			oDataService.getModel("TransenerOperaciones").create(entity, oUnifilar, {
+				success: $.proxy(this.successPOSTUnifilar, this),
+				error: $.proxy(this.errorPOSTUnifilar, this)
+			});
+		},
+
+		successPOSTUnifilar: function () {
+			this.PUT(false);
+			//	MessageBoxHelper.showAlert("Alerta", "Esquema unifilar guardado con exito", $.proxy(this.refreshLicense, this))
+		},
+
+		refreshLicense: function () {
+			BusyDialogHelper.close();
+			var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			this.FIND(oLicence);
+		},
+
+		errorPOSTUnifilar: function () {
+			MessageBoxHelper.showAlert("Error", "Se ha producido un error al guardar el esquema unifilar")
+		},
+
+		PUTDayPromise: function (oDay) {
+			return new Promise((resolve, reject) => {
+				let entity = "/HorariosLicenciaSet";
+				oDay.Horainicio = FormatHelper.getTimeStringSAPFormat(oDay.Horainicio);
+				oDay.Horafin = FormatHelper.getTimeStringSAPFormat(oDay.Horafin);
+				oDataService.getModel("TransenerOperaciones").update(entity + "(Id='" + oDay.Id + "',Modif='" + oDay.Modif + "')",
+					oDay, {
+						success: function () {
+							resolve()
+						},
+						error: function (error) {
+							reject(error)
+						}
+					});
+			});
+		},
+
+		PUTDay: function (oDay) {
+			this.PUTDayPromise(oDay).then($.proxy(this.onSuccessPutDay, this)).catch($.proxy(this.onErrorPutDay, this));
+		},
+
+		onSuccessPutDay: function () {
+			var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+			var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alert", "Se ha realizado el estado diario para este dia de manera correcta", $.proxy(this.FIND, this,
+				license));
+		},
+
+		onErrorPutDay: function (error) {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alert", "Se ha producido un error al realizar el estado diario");
+		},
+
+		deliveryHasBeenMade: function () {
+			let aDeliveries = AppManagementHelper.getModel("DeliveryTableJsonModel").getData().Deliveries
+			return aDeliveries.some(e => e.Entindex && e.Entindex !== "" && e.Motivono === "");
+		},
+
+		deliveryLicence: function (oDelivery) {
+			var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			var licenseClone = LicenceHelper.cloneLicense(oLicence);
+			this.bMotivoNo = oDelivery.Motivono !== "";
+			licenseClone.Substatus = oDelivery.Motivono !== "" ? "" : "E";
+			//this is for the final.
+			if (this.bMotivoNo && licenseClone.Period === "C") {
+				if (this.deliveryHasBeenMade()) {
+					licenseClone.Licstat = "11"
+				} else {
+					licenseClone.Licstat = "01"
+					licenseClone.Substatus = "";
+				}
+
+			}
+
+			this.updateLicense(licenseClone, {
+				success: $.proxy(this.successPUTLicenceDelivery, this, oDelivery),
+				error: $.proxy(this.errorPUTLicenceDelivery, this)
+			});
+
+		},
+
+		//Warning this method modifies the license
+		updateLicense: function (license, options) {
+			var entity = "/LicenciaTrabajoSet";
+			FormatHelper.formatTimes(license);
+			this.deleteNavProperties(license);
+			if (license.Rdisparo === "Y") license.Rdisparo = "";
+			if (license.Equstat === "Y") license.Equstat = "";
+			oDataService.getModel("TransenerOperaciones").update(entity + "(Empresa='" + license.Empresa + "',Id='" + license.Id + "',Tipo='" +
+				license.Tipo + "',Anio='" + license.Anio + "')", license, options);
+		},
+
+		updateLicenciaPromise: function (oLicencia) {
+			return new Promise((resolve, reject) => {
+				FormatHelper.formatTimes(oLicencia);
+				this.deleteNavProperties(oLicencia);
+				if (oLicencia.Rdisparo === "Y") oLicencia.Rdisparo = "";
+				if (oLicencia.Equstat === "Y") oLicencia.Equstat = "";
+
+				let sEntity = "/LicenciaTrabajoSet";
+				let sEntryId = "(Empresa='" + oLicencia.Empresa + "',Id='" + oLicencia.Id + "',Tipo='" + oLicencia.Tipo + "',Anio='" + oLicencia.Anio +
+					"')";
+				oDataService.getModel("TransenerOperaciones").update(sEntity + sEntryId, oLicencia, {
+					success: () => {
+						resolve();
+					},
+					error: (oError) => {
+						reject();
+					}
+				});
+			});
+		},
+
+		successPUTLicenceDelivery: function (oDelivery, data) {
+			var entity = "/EntregasLicenciaSet";
+			oDelivery.Datelicencia = FormatHelper.getUTCdate(oDelivery.Datelicencia);
+			oDataService.getModel("TransenerOperaciones").create(entity, oDelivery, {
+				success: $.proxy(this.successPOSTDelivery, this),
+				error: $.proxy(this.errorPOSTDelivery, this)
+			});
+		},
+
+		successPOSTDelivery: function (data) {
+			var oLicense = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			var fechaRepresentante = FormatHelper.formatDatesGMT(data.Datelicencia)
+			fechaRepresentante.setHours(data.Time.getHours())
+			fechaRepresentante.setMinutes(data.Time.getMinutes())
+			console.log(fechaRepresentante);
+			// Issue 542  Registrar automáticamente en el Libro de Guardia la Novedad "NO Entrega de LT"
+			// Se debe enviar las No entregas tambien, se agrego condicion para determinar tipo de novedad
+			var sTNovedad = (this.bMotivoNo) ? "NE" : "E";
+			if (!this.bMotivoNo) {
+				var sNovedad = `Numero de licencia ${oLicense.Id}, Trabajo a realizar: ${oLicense.Descripcion}`;
+			} else {
+				var sMotivNoT = AppManagementHelper.getModel("HardCodeModel").getProperty("/Motivono").filter((oElement) => oElement.key === data.Motivono)[
+					0].value;
+
+				sNovedad =
+					`Numero de licencia ${oLicense.Id}, Trabajo a realizar: ${oLicense.Descripcion}, Motivo: ${sMotivNoT}, Comentario: ${data.Commen} `;
+
+			}
+
+			var oLibroGuardia = {
+				"Fechahora": fechaRepresentante,
+				"Equipo": oLicense.Equnr,
+				"Lugar": oLicense.Tplnr,
+				"Novedad": sNovedad,
+				"Tiponovedad": FormatterHelper.getNovedadType(sTNovedad),
+				"Empresa": oLicense.Empresa
+			};
+			// if (this.bMotivoNo) {
+			// 	BusyDialogHelper.close();
+			// 	var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+			// 	var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			// 	MessageBoxHelper.showAlert("Alert", `Se ha realizado la ${ this.bMotivoNo ? "NO Entrega" : "Entrega"} de manera exitosa`, $.proxy(
+			// 		this.FIND, this, license));
+			// } else {
+			LibroGuardiasService.POSTLibroGuardia(oLibroGuardia).then(() => {
+					BusyDialogHelper.close();
+					var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+					var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+					MessageBoxHelper.showAlert("Alert", `Se ha realizado la ${ this.bMotivoNo ? "NO Entrega" : "Entrega"} de manera exitosa`, $.proxy(
+						this.FIND, this, license));
+				}).catch((e) => {
+					BusyDialogHelper.close();
+					console.error(e)
+					MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al crear guardia")
+				})
+				// }
+		},
+
+		errorPOSTDelivery: function (error) {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alert", "Se ha producido un error al crear el registro de entrega");
+		},
+
+		errorPUTLicenceDelivery: function (error) {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alert", "Se ha producido un error al modificar la licencia para la entrega");
+		},
+
+		cancelacionDefinitivaLicence: function (oCC) {
+			var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			var licenseClone = LicenceHelper.cloneLicense(oLicence);
+			this.statGuardBook = "CC";
+			// Antes era 11 y 28, con el ticket 66 el 28 pasa a ser 01 (autorizada) de nuevo.
+			licenseClone.Licstat = "11";
+			// Si se finaliza como continua finaliza literal, sinó pasa de nuevo a entregada para que se repita el ciclo.
+			licenseClone.Substatus = "";
+			this.updateLicense(licenseClone, {
+				success: $.proxy(this.successPUTLicenceCancelacion, this, oCC),
+				error: $.proxy(this.errorPUTLicenceCancelacion, this)
+			});
+		},
+
+		successPUTLicenceCancelacion: function (data) {
+			//GUARDAR EL FECHA Y HORA DE LA ENTREGA SUSPENCION Y REANUDACION. DEVOLUCION
+			var oLicense = AppManagementHelper.getModel("LicenseJsonModel").getData();
+
+			// Issue #487
+			// var fechaRepresentante = FormatHelper.formatDatesGMT(data.Datelicencia);
+			var fechaRepresentante = data.Datelicencia;
+			fechaRepresentante.setHours(data.Time.getHours());
+			fechaRepresentante.setMinutes(data.Time.getMinutes());
+			console.log(fechaRepresentante);
+			var oLibroGuardia = {
+				"Fechahora": fechaRepresentante,
+				"Equipo": oLicense.Equnr,
+				"Lugar": oLicense.Tplnr,
+				"Novedad": `Numero de licencia ${oLicense.Id}, Trabajo a realizar: ${oLicense.Descripcion}, TE/JT/JTG: ${data.Tejt} - ${FormatterHelper.getPersonalHabilitadoName(data.Tejt)}`,
+				"Tiponovedad": FormatterHelper.getNovedadType(this.statGuardBook),
+				"Empresa": oLicense.Empresa
+			};
+			LibroGuardiasService.POSTLibroGuardia(oLibroGuardia).then(() => {
+
+				this.postCancelacionDefinitiva(data).then(() => {
+
+					let promises = [this.getPermisos(oLicense)];
+					promises.push(EtMailService.getPromise(oLicense.Empresa, oLicense.Tplnr, this.getSelectionArea(oLicense.Tipo, "01")));
+					Promise.all(promises).then(res => {
+						var currentUser = AppManagementHelper.getModel("CurrentUser").getData();
+						let emails = [];
+						let hashPermisos = {};
+						let permisos = res[0];
+						var oUserJson = AppManagementHelper.getModel("UserJsonModel").getData();
+						var currentEmail = oUserJson.email;
+						var currentName = oUserJson.nombre + ", " + oUserJson.apellido;
+
+						permisos.forEach(permiso => {
+							hashPermisos[permiso.Rol] = permiso;
+						});
+
+						emails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"],
+							hashPermisos["JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"], hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"]
+						].map(permiso => permiso && permiso.Mail || "nurrestarazu@inclusion.cloud");
+
+						let usuariosAsignados = {
+							Coordinador: currentUser.Legajo + ", " + currentName,
+							Creador: hashPermisos["CREADOR"] ? hashPermisos["CREADOR"].Legajo + ", " + hashPermisos["CREADOR"].Nombre : "",
+							Solicitante: hashPermisos["SOLICITANTE"] ? hashPermisos["SOLICITANTE"].Legajo + ", " + hashPermisos["SOLICITANTE"].Nombre : "",
+							SolicitanteSuplente: hashPermisos["SOLICITANTE_SUPLENTE"] ? hashPermisos["SOLICITANTE_SUPLENTE"].Legajo + ", " +
+								hashPermisos["SOLICITANTE_SUPLENTE"].Nombre : "",
+							Jefe: hashPermisos["JEFE_TRABAJO"] ? hashPermisos["JEFE_TRABAJO"].Legajo + ", " + hashPermisos["JEFE_TRABAJO"].Nombre : "",
+							JefeSuplente: hashPermisos["JEFE_TRABAJO_SUPLENTE"] ? hashPermisos["JEFE_TRABAJO_SUPLENTE"].Legajo + ", " + hashPermisos[
+								"JEFE_TRABAJO_SUPLENTE"].Nombre : "",
+							SolSuplenteAux: hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo + ", " + hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"]
+								.Nombre
+						};
+
+						let sEmailEt = res[1].results && res[1].results !== 0 ? res[1].results.map(e => (e.Mail)).join(",") : "";
+						let stringEmails = emails.join(",");
+						var sInfAdicional = "";
+						var esAnulacion = false;
+						var MotivoDeAnulacion = '';
+						var ObservacionDeAnulacion = '';
+						var fechaAnulacion = '';
+						var vieneDeTramitacion = false;
+						var vieneDeObservacion = false;
+						var comentObserCoord = "";
+						var nameLegacyObservator = "";
+						var vieneDeCoordinacion = false;
+						var vieneDeCancelacion = true;
+						var nameLegacyCoordinator = this.getLastCoordinator();
+						var nameLegacyTramitador = oLicense.Tramitador;
+						var MotivoObservacion = "";
+						var ComentarioObservacion = "";
+						var MotivoNoAut = "";
+						var ComentariosNoAut = "";
+
+						MailHelper.sendEmail(oLicense, usuariosAsignados, stringEmails, sEmailEt, sInfAdicional, esAnulacion, MotivoDeAnulacion,
+							ObservacionDeAnulacion, fechaAnulacion, vieneDeTramitacion, vieneDeObservacion, comentObserCoord, nameLegacyObservator,
+							vieneDeCoordinacion, vieneDeCancelacion, nameLegacyCoordinator, nameLegacyTramitador, MotivoObservacion,
+							ComentarioObservacion, MotivoNoAut, ComentariosNoAut
+						).then(() => {
+							BusyDialogHelper.close();
+							var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+							var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+							MessageBoxHelper.showAlert(
+								"Alert",
+								"Se ha realizado la cancelación definitiva de manera exitosa",
+								$.proxy(this.FIND, this, license)
+							);
+						}).catch((e) => {
+							console.error(e);
+							MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail.", $.proxy(this.goToHome, this));
+						});
+					}).catch((e) => {
+						BusyDialogHelper.close();
+						console.error(e);
+						MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al crear guardia");
+					});
+
+				}).catch((e) => {
+					BusyDialogHelper.close();
+					MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al crear la cancelacion definitiva.");
+				});
+
+			}).catch((e) => {
+				BusyDialogHelper.close();
+				MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al crear guardia");
+			});
+		},
+
+		errorPUTLicenceCancelacion: function () {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alert", "Se ha producido un error al modificar la licencia para la cancelación definitiva");
+		},
+
+		postCancelacionDefinitiva: function (oCancelacionDef) {
+			return new Promise((resolve, reject) => {
+				let oLicense = AppManagementHelper.getModel("LicenseJsonModel").getData();
+
+				let oDate = oCancelacionDef.Datelicencia;
+				oDate.setHours(oCancelacionDef.Time.getHours());
+				oDate.setMinutes(oCancelacionDef.Time.getMinutes());
+
+				// format time:
+				let oFormatTime = sap.ui.core.format.DateFormat.getDateInstance({
+					pattern: "PThh'H'mm'M'ss'S'"
+				});
+
+				let oEntry = {
+					Empresa: oLicense.Empresa,
+					Id: oLicense.Id,
+					Tipo: oLicense.Tipo,
+					Anio: oLicense.Anio,
+					CancFecha: oDate,
+					CancHora: oFormatTime.format(oCancelacionDef.Time),
+					CotCotdt: AppManagementHelper.getUserLegacy().Legajo,
+					JefeTrab: oCancelacionDef.Tejt,
+					Tecet: oCancelacionDef.TecET
+				};
+
+				oDataService.getModel("TransenerOperaciones").create("/CancelacionDefinitivaSet", oEntry, {
+					success: resolve,
+					error: reject,
+					async: true
+				});
+			});
+		},
+
+		devolutionLicence: function (oDevolution) {
+			var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			var licenseClone = LicenceHelper.cloneLicense(oLicence);
+			this.statGuardBook = "D";
+			// Antes era 11 y 28, con el ticket 66 el 28 pasa a ser 01 (autorizada) de nuevo.
+			licenseClone.Licstat = "01";
+			// Si se finaliza como continua finaliza literal, sinó pasa de nuevo a entregada para que se repita el ciclo.
+			licenseClone.Substatus = "";
+			this.updateLicense(licenseClone, {
+				success: $.proxy(this.successPUTLicenceDevolution, this, oDevolution),
+				error: $.proxy(this.errorPUTLicenceDevolution, this)
+			});
+		},
+
+		successPUTLicenceDevolution: function (oDevolution) {
+			// TODO: sacar esto para issue 513
+			// delete oDevolution.TecET;
+
+			var entity = "/DevolucionLicenciaSet";
+			oDevolution.Datelicencia = FormatHelper.getUTCdate(oDevolution.Datelicencia);
+			oDataService.getModel("TransenerOperaciones").create(entity, oDevolution, {
+				success: $.proxy(this.successPOSTDevolution, this),
+				error: $.proxy(this.errorPOSTDevolution, this)
+			});
+		},
+
+		successPOSTDevolution: function (data) {
+			//GUARDAR EL FECHA Y HORA DE LA ENTREGA SUSPENCION Y REANUDACION. DEVOLUCION
+			var oLicense = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			var fechaRepresentante = FormatHelper.formatDatesGMT(data.Datelicencia)
+			fechaRepresentante.setHours(data.Time.getHours())
+			fechaRepresentante.setMinutes(data.Time.getMinutes())
+			console.log(fechaRepresentante);
+			var oLibroGuardia = {
+				"Fechahora": fechaRepresentante,
+				"Equipo": oLicense.Equnr,
+				"Lugar": oLicense.Tplnr,
+				"Novedad": `Numero de licencia ${oLicense.Id}, Trabajo a realizar: ${oLicense.Descripcion}`,
+				"Tiponovedad": FormatterHelper.getNovedadType(this.statGuardBook),
+				"Empresa": oLicense.Empresa
+			};
+			LibroGuardiasService.POSTLibroGuardia(oLibroGuardia).then(() => {
+				BusyDialogHelper.close();
+				var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+				var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+				MessageBoxHelper.showAlert("Alert", "Se ha realizado la devolución de manera exitosa", $.proxy(this.FIND, this, license));
+			}).catch((e) => {
+				console.error(e);
+				MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al crear guardia")
+			})
+		},
+
+		errorPOSTDevolution: function () {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alert", "Se ha producido un error al crear el registro de devolucion");
+		},
+
+		errorPUTLicenceDevolution: function () {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alert", "Se ha producido un error al modificar la licencia para la devolucion");
+		},
+
+		transferLicence: function (oTransfer) {
+			// #513 -> "Que la Transferencia no pise el jefe titular."
+			//
+			// var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			// var licenseClone = LicenceHelper.cloneLicense(oLicence);
+			// licenseClone.Jefe = oTransfer.Jefetra;
+			// this.updateLicense(licenseClone, {
+			// 	success: $.proxy(this.successPUTLicenceTransfer, this, oTransfer),
+			// 	error: $.proxy(this.errorPUTLicenceTransfer, this)
+			// });
+			//
+			this.successPUTLicenceTransfer(oTransfer);
+		},
+
+		successPUTLicenceTransfer: function (oTransfer) {
+			var entity = "/TransferenciaJefeTrabajoSet";
+			oDataService.getModel("TransenerOperaciones").create(entity, oTransfer, {
+				success: $.proxy(this.successPOSTTransfer, this),
+				error: $.proxy(this.errorPOSTTransfer, this)
+			});
+
+		},
+
+		successPOSTTransfer: function (data) {
+			var oUserJson = AppManagementHelper.getModel("UserJsonModel").getData();
+			var sCurrentUserMail = oUserJson.email;
+			var sCurrentUserName = oUserJson.nombre + ", " + oUserJson.apellido;
+			var oDataLicencia = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			var sLicenseId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+			var sAnio = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Anio")
+			var aPromises = [];
+			var oPromiseJT = this.PostPromesa(sAnio, "L", sLicenseId, oDataLicencia.Jefe, FormatterHelper.getJefeName(oDataLicencia.Jefe),
+				"", oDataLicencia.Empresa, "JEFE_TRABAJO");
+			aPromises.push(oPromiseJT);
+			Promise.all(aPromises).then(() => {
+				BusyDialogHelper.close();
+				var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+				var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+				MessageBoxHelper.showAlert("Alert", "Se ha transferido al jefe de trabajo de manera exitosa", $.proxy(this.FIND, this, license));
+			}).catch((e) => {
+				console.error(e);
+				MessageBoxHelper.showAlert("Alert", "Error al transferir al jefe de trabajo", $.proxy(this.goToHome, this));
+				BusyDialogHelper.close();
+			})
+
+		},
+
+		errorPOSTTransfer: function (error) {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alert", "Se ha producido un error al realizar el registro de transferencia");
+		},
+
+		errorPUTLicenceTransfer: function () {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alert", "Se ha producido un error al realizar la modificacion para la transferencia");
+		},
+
+		// proceso de coordinacion de licencia 
+		// primero se hace un post a coordinacion 
+		// luego se hace un put a la entidad licencias de trabajo
+		// licstat 09 = generada
+		// licstat 07 coordinada
+		coordinateLicence: function (oCoordination) {
+			var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			var licenseClone = LicenceHelper.cloneLicense(oLicence);
+			licenseClone.Licstat = "07";
+			this.updateLicense(licenseClone, {
+				success: $.proxy(this.successPUTLicenceCoord, this, oCoordination, licenseClone),
+				error: $.proxy(this.errorPUTLicenceCoord, this)
+			});
+		},
+
+		successPUTLicenceCoord: function (oCoordination, licenseClone) {
+			var entity = "/CoordinacionesLicenciaSet";
+			oDataService.getModel("TransenerOperaciones").create(entity, oCoordination, {
+				success: $.proxy(this.successPOSTCoordination, this, oCoordination, licenseClone),
+				error: $.proxy(this.errorPOSTCoordination, this)
+			});
+		},
+
+		getSolicitantesEmails: function (aPermisos) {
+			var aEmailsSolic = [];
+			var oSolicitante = aPermisos.find(e => e.Rol === "SOLICITANTE")
+			if (oSolicitante)
+				aEmailsSolic.push(oSolicitante.Mail);
+			var oSolicitanteSup = aPermisos.find(e => e.Rol === "SOLICITANTE_SUPLENTE")
+			if (oSolicitanteSup)
+				aEmailsSolic.push(oSolicitanteSup.Mail);
+			var oSolicitanteSupAux = aPermisos.find(e => e.Rol === "SOLICITANTE_SUPLENTE_AUXILIAR")
+			if (oSolicitanteSupAux)
+				aEmailsSolic.push(oSolicitanteSupAux.Mail);
+			return aEmailsSolic;
+		},
+
+		successPOSTCoordination: function (oCoordination, licenseClone) {
+			var oLicence = licenseClone;
+			this.getPermisos(oLicence).then((aPermisos) => {
+				var {
+					Anio,
+					Id,
+					Empresa,
+					Tipo
+				} = oLicence;
+
+				var aEmails = [];
+
+				var oCreador = aPermisos.find(oPermiso => {
+					return oPermiso.Rol === "CREADOR";
+				});
+
+				var hashPermisos = {};
+				aPermisos.forEach(permiso => {
+					hashPermisos[permiso.Rol] = permiso;
+				});
+
+				if (Tipo === "L") {
+					aEmails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"], hashPermisos[
+						"JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"], hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"]].map(permiso => permiso &&
+						permiso.Mail || "nurrestarazu@inclusion.cloud");
+				} else {
+					aEmails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"]].map(permiso => permiso && permiso.Mail ||
+						"nurrestarazu@inclusion.cloud");
+				}
+
+				var sEmails = aEmails.join(",");
+				var sInfAdicional = oCoordination.Coordination;
+				var oUserJson = AppManagementHelper.getModel("UserJsonModel").getData();
+				var sCurrentUserMail = oUserJson.email;
+				var sCurrentUserName = oUserJson.nombre + ", " + oUserJson.apellido;
+				var oCurrentUser = AppManagementHelper.getModel("CurrentUser").getData();
+				var oUsuariosAsignados = {
+					Coordinador: oCurrentUser.Legajo + ", " + sCurrentUserName,
+					Creador: oCreador.Legajo + ", " + oCreador.Nombre
+				};
+				oUsuariosAsignados.Solicitante = hashPermisos["SOLICITANTE"].Legajo + ", " + hashPermisos["SOLICITANTE"].Nombre;
+				oUsuariosAsignados.SolicitanteSuplente = hashPermisos["SOLICITANTE_SUPLENTE"].Legajo + ", " + hashPermisos["SOLICITANTE_SUPLENTE"]
+					.Nombre;
+				oUsuariosAsignados.Jefe = hashPermisos["JEFE_TRABAJO"].Legajo + ", " + hashPermisos["JEFE_TRABAJO"].Nombre;
+				oUsuariosAsignados.JefeSuplente = hashPermisos["JEFE_TRABAJO_SUPLENTE"].Legajo + ", " + hashPermisos["JEFE_TRABAJO_SUPLENTE"].Nombre;
+				oUsuariosAsignados.SolSuplenteAux = hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo + ", " + hashPermisos[
+					"SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre;
+
+				var aPromises = [];
+				aPromises.push(EtMailService.getPromise(Empresa, oLicence.Tplnr));
+				Promise.all(aPromises).then((responses) => {
+					var sType = oLicence.Tipo === "S" ? "Solicitud" : "Licencia";
+					let sEmailEt = responses[0].results && responses[0].results !== 0 ? responses[0].results.map(e => (e.Mail)).join(",") : "";
+					var esAnulacion = false;
+					var MotivoDeAnulacion = '';
+					var ObservacionDeAnulacion = '';
+					var fechaAnulacion = '';
+					var vieneDeTramitacion = false;
+					var vieneDeObservacion = false;
+					var comentObserCoord = "";
+					var nameLegacyObservator = "";
+					var vieneDeCoordinacion = true;
+					var vieneDeCancelacion = false;
+					var nameLegacyCoordinator = oCoordination.Coouser;
+					var nameLegacyTramitador = "";
+					var MotivoObservacion = "";
+					var ComentarioObservacion = "";
+					var MotivoNoAut = "";
+					var ComentariosNoAut = "";
+
+					// #581 LT - cambiar destinatarios de mail en SOLICITUDES Coordinadas 
+					if (Tipo !== "L" && responses[0].results) {
+						var aCoordinadores = responses[0].results.filter(e => e.Area === "COORD");
+						if (aCoordinadores.length)
+							aEmails.push(...aCoordinadores.map(e => e.Mail));
+					}
+
+					MailHelper.sendEmail(oLicence, oUsuariosAsignados, sEmails, sEmailEt, sInfAdicional, esAnulacion,
+						MotivoDeAnulacion,
+						ObservacionDeAnulacion, fechaAnulacion, vieneDeTramitacion, vieneDeObservacion, comentObserCoord, nameLegacyObservator,
+						vieneDeCoordinacion, vieneDeCancelacion, nameLegacyCoordinator, nameLegacyTramitador,
+						MotivoObservacion,
+						ComentarioObservacion,
+						MotivoNoAut,
+						ComentariosNoAut
+					).then(() => {
+						BusyDialogHelper.close();
+						var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+						var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+						MessageBoxHelper.showAlert("Alert", "Se ha coordinado la " + sType + " de manera correcta", $.proxy(this.handleCoordinationSuccess,
+							this,
+							license));
+					}).catch((e) => {
+						console.error(e);
+						MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail para la coordinacion.", $.proxy(this.goToHome,
+							this));
+					});
+				}).catch((e) => {
+					console.error(e);
+					MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail para la coordinacion.", $.proxy(
+						this.goToHome,
+						this));
+				})
+			}).catch((e) => {
+				console.error(e);
+				MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al obtener permisos", $.proxy(this.goToHome, this));
+			})
+		},
+
+		handleCoordinationSuccess: function (license) {
+			this.FIND(license);
+			var aRoles = AppManagementHelper.getModel("UserJsonModel").getData().roles
+			var bCoordinateRole = aRoles.find((sRole) => {
+				return sRole === "Supervisor_Mantenimiento";
+			})
+			if (bCoordinateRole) {
+				AppManagementHelper.getAppRouter().navTo("Licencias");
+			}
+		},
+
+		errorPOSTCoordination: function () {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alert", "Se ha producido un error al agregar coordinacion");
+		},
+
+		errorPUTLicenceCoord: function () {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al modificar esta licencia");
+		},
+
+		successPUTLicence: function () {
+			BusyDialogHelper.close();
+			var sIdInterno = AppManagementHelper.getModel("LicenceJsonModel").getProperty("/Id");
+			MessageBoxHelper.showAlert("Alerta", "Licencia Coordinada con Exito", $.proxy(this.FIND, this, sIdInterno));
+		},
+		// fin del proceso de coordinacion
+
+		// inicio proceso de coordinacion masiva
+		/*handleMassiveCoordination: function () {
+			this.aItems = AppManagementHelper.getModel("ItemsJsonModel").getData().Items;
+			this.oCoordination = AppManagementHelper.getModel("CoordinacionModel").getData();
+			this.successPutLicences = [];
+			this.errorPutLicences = [];
+			this.errorPOSTCoordinations = [];
+			this.successPOSTCoordinations = [];
+			this.handleRecursiveMassiveCoordination();
+		},*/
+
+		handleUploadFile: function (aFiles) {
+			this.aSuccessFiles = [];
+			this.aErrorFiles = [];
+			this.aFilesToUpload = aFiles
+			this.uploadRecursiveFiles();
+		},
+
+		removeSelectedFile: function (sAttindex, sId, empresa, Anio) {
+			// Se pasa la data de cada Documento
+			//TODO preguntar a demian si está implementado el delete para esta entidad /AttachmentLicenciasSet
+			// en el caso de que no esté implementado el tiene que agregarlo.
+			// que te deje hacer la eliminacion con los campos clave de dicha tentidad
+			//<PropertyRef Name="Anio"/><PropertyRef Name="Empresa"/><PropertyRef Name="Id"/><PropertyRef Name="Attindex"/>
+			// /AttachmentLicenciasSet(Anio='2020',Empresa='100',Id="12121212",AttIndex="123123")
+			// oDataservice.remove("/AttachmentLicenciasSet(Anio='2020',Empresa='100',Id="12121212",AttIndex="123123")", { success: () => {}, error: () => {}})
+
+			return new Promise((resolve, reject) => {
+				var entity = "/AttachmentLicenciasSet(Id='" + sId + "',Attindex='" + sAttindex + "',Empresa='" + empresa + "',Anio='" + Anio +
+					"')";
+				//var sEntity = `/AttachmentLicenciasSet(Id='${sId} bla bla bla bla`;
+				oDataService.getModel("TransenerOperaciones").remove(entity, {
+					success: function (data) {
+						resolve(data);
+					},
+					error: function (error) {
+						reject(error);
+					}
+				});
+			});
+		},
+
+		uploadFilePromise: function (oPayload) {
+			return new Promise((resolve, reject) => {
+				let entity = "/AttachmentLicenciasSet";
+				oDataService.getModel("TransenerOperaciones").create(entity, oPayload, {
+					success: function (data) {
+						resolve();
+					},
+					error: function (error) {
+						reject(error);
+					}
+				});
+			});
+		},
+
+		findFilePromise: function (sAttindex, sId, empresa, Anio) { //Obtiene el archivo para descargar
+
+			return new Promise((resolve, reject) => {
+				var entity = "/AttachmentLicenciasSet(Id='" + sId + "',Attindex='" + sAttindex + "',Empresa='" + empresa + "',Anio='" + Anio +
+					"')";
+				oDataService.getModel("TransenerOperaciones").read(entity, {
+					success: function (data) {
+						resolve(data);
+					},
+					error: function (error) {
+						reject(error);
+					}
+				});
+			});
+		},
+
+		diaryPartReport: function (solbeg, Empresa) {
+			var aFilters = [];
+			aFilters.push(new sap.ui.model.Filter("Solbeg", sap.ui.model.FilterOperator.LE, solbeg));
+			aFilters.push(new sap.ui.model.Filter("Solend", sap.ui.model.FilterOperator.GE, solbeg));
+			aFilters.push(new sap.ui.model.Filter("Empresa", sap.ui.model.FilterOperator.EQ, Empresa));
+			return new Promise((resolve, reject) => {
+				var entity = "/ReporteLTAutorizadasSet";
+				oDataService.getModel("TransenerOperaciones").read(entity, {
+					filters: aFilters,
+					success: function (data) {
+						resolve(data.results);
+					},
+					error: function (error) {
+						reject(error);
+					}
+				});
+			});
+		},
+
+		//TODO revisar, pero ya no se usa
+		GETTramitaciones: function (empresa) {
+			var aFilters = [];
+
+			aFilters.push(new sap.ui.model.Filter("Bukrs", sap.ui.model.FilterOperator.EQ, empresa));
+
+			var entity = "/CatalogoTramitacionSet";
+			oDataService.getModel("TransenerOperaciones").read(entity, {
+				filters: aFilters,
+				success: function (data) {
+					var oModel = AppManagementHelper.getModel("TramitacionesCatalogoJsonModel")
+					oModel.setData({
+						Tramitaciones: data.results
+					})
+				},
+				error: function (error) {
+					console.log(error);
+				}
+			});
+		},
+
+		getPuestoTrabajo: function (Region) {
+			return new Promise((resolve, reject) => {
+				if (Region) {
+					let aFilters = [new sap.ui.model.Filter("Werks", sap.ui.model.FilterOperator.EQ, Region)]
+					oDataService.getModel("TransenerOperaciones").read("/PuestoTrabajoSet", {
+						filters: aFilters,
+						success: function (data) {
+							resolve(data.results);
+						},
+						error: function (error) {
+							reject();
+						}
+					});
+				} else {
+					resolve([]);
+				}
+			})
+		},
+
+		findLicenseFile: function (sDocumentId, sId, empresa, Anio) {
+			this.findFilePromise(sDocumentId, sId, empresa, Anio).then($.proxy(this.successFindFile, this)).catch($.proxy(this.errorFindFile,
+				this));
+		},
+
+		successFindFile: function (data) {
+			var binary = atob(data.Attachment);
+			FileDownloadHelper.saveBinaryFile(binary, data.Doctype, data.Filename);
+		},
+
+		errorFindFile: function (error) {
+
+		},
+
+		uploadRecursiveFiles: function () {
+			if (this.aFilesToUpload.length !== 0) {
+				var oFile = this.aFilesToUpload.shift();
+				var oPayload = {
+					Anio: AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Anio"),
+					Doctype: oFile.type,
+					Id: AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id"),
+					Empresa: AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Empresa"),
+					Attindex: "",
+					Filename: oFile.name
+				}
+				var reader = new FileReader();
+				reader.onloadend = () => {
+					oPayload.Attachment = btoa(reader.result);
+					this.uploadFilePromise(oPayload).then($.proxy(this.successUploadDocument, this)).catch($.proxy(this.errorUploadDocument, this))
+				}
+				reader.readAsBinaryString(oFile);
+			} else {
+				var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+				var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+				var iSuccess = this.aSuccessFiles.length;
+				var iError = this.aErrorFiles.length;
+
+				var commentsTEMPmodel = AppManagementHelper.getModel("commentsTEMP");
+				commentsTEMPmodel.setData({
+					Comments: license.Comments,
+					Tdtcomments: license.Tdtcomments,
+					Prgcomments: license.Prgcomments
+				});
+
+				MessageBoxHelper.showAlert("Alerta", "Archivos subidos de manera exitosa: " + iSuccess + "\n" + "Archivos con error: " + iError, $
+					.proxy(
+						this.FIND, this, license));
+
+			}
+		},
+
+		successUploadDocument: function () {
+			this.aSuccessFiles.push({});
+			this.uploadRecursiveFiles();
+		},
+
+		errorUploadDocument: function (error) {
+			console.log(error);
+			this.aErrorFiles.push({});
+			this.uploadRecursiveFiles();
+		},
+
+		observateLicence: function (oObservation) {
+			var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			var licenseClone = LicenceHelper.cloneLicense(oLicence);
+			licenseClone.Licstat = "02";
+			this.updateLicense(licenseClone, {
+				success: $.proxy(this.successPUTLicenceObs, this, oObservation, licenseClone),
+				error: $.proxy(this.errorPUTLicenceObs, this)
+			});
+		},
+
+		successPUTLicenceObs: function (oObservation, licenseClone) {
+			var entity = "/ObservacionesLicenciaSet";
+			oDataService.getModel("TransenerOperaciones").create(entity, oObservation, {
+				success: $.proxy(this.successPOSTObservation, this, oObservation, licenseClone),
+				error: $.proxy(this.errorPOSTObservation, this)
+			});
+		},
+
+		successPOSTObservation: function (observation, licenseClone) {
+			var licencia = licenseClone;
+			let promises = [this.getPermisos(licencia)];
+			var oUserJson = AppManagementHelper.getModel("UserJsonModel").getData();
+			var currentEmail = oUserJson.email;
+			var currentName = oUserJson.nombre + ", " + oUserJson.apellido;
+			var currentUser = AppManagementHelper.getModel("CurrentUser").getData();
+			var licenseId = licencia.Id;
+			var sAnio = licencia.Anio;
+
+			promises.push(this.PostPromesa(sAnio, "L", licenseId, currentUser.Legajo, currentName, currentEmail, currentUser.Empresa,
+				"COORDINADOR"));
+			promises.push(EtMailService.getPromise(licencia.Empresa, licencia.Tplnr, this.getSelectionArea(licencia.Tipo, "02")));
+
+			Promise.all(promises).then(res => {
+				let emails = [];
+				let hashPermisos = {};
+				let permisos = res[0];
+				permisos.forEach(permiso => {
+					hashPermisos[permiso.Rol] = permiso;
+				});
+
+				//soolo para saber el coordinó del template
+				var nameLegacyObservator = "";
+				if (res[1].Legajo) {
+					var aPersonalTodo = AppManagementHelper.getModel("PersonalHabilitadoModel").getData().Todos;
+					var oPersonal = aPersonalTodo.find(e => e.Legajo === res[1].Legajo);
+					if (oPersonal) {
+						nameLegacyObservator = `${oPersonal.Legajo} - ${oPersonal.Nombre} `
+					}
+				}
+
+				var sEmailEt = "";
+				if (licencia.Tipo === "S") {
+					emails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"]].map(permiso => permiso && permiso.Mail ||
+						"nurrestarazu@inclusion.cloud");
+					sEmailEt = "";
+				} else {
+					emails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"], hashPermisos["JEFE_TRABAJO"],
+						hashPermisos["JEFE_TRABAJO_SUPLENTE"], hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"]
+					].map(permiso => permiso && permiso.Mail || "nurrestarazu@inclusion.cloud");
+					sEmailEt = res[2].results && res[2].results !== 0 ? res[2].results.map(e => (e.Mail)).join(",") : "";
+				}
+
+				let usuariosAsignados = {
+					Coordinador: currentUser.Legajo + ", " + currentName,
+					Creador: hashPermisos["CREADOR"] ? hashPermisos["CREADOR"].Legajo + ", " + hashPermisos["CREADOR"].Nombre : "",
+					Solicitante: hashPermisos["SOLICITANTE"] ? hashPermisos["SOLICITANTE"].Legajo + ", " + hashPermisos["SOLICITANTE"].Nombre : "",
+					SolicitanteSuplente: hashPermisos["SOLICITANTE_SUPLENTE"] ? hashPermisos["SOLICITANTE_SUPLENTE"].Legajo + ", " + hashPermisos[
+						"SOLICITANTE_SUPLENTE"].Nombre : "",
+					Jefe: hashPermisos["JEFE_TRABAJO"] ? hashPermisos["JEFE_TRABAJO"].Legajo + ", " + hashPermisos["JEFE_TRABAJO"].Nombre : "",
+					JefeSuplente: hashPermisos["JEFE_TRABAJO_SUPLENTE"] ? hashPermisos["JEFE_TRABAJO_SUPLENTE"].Legajo + ", " + hashPermisos[
+						"JEFE_TRABAJO_SUPLENTE"].Nombre : "",
+					SolSuplenteAux: hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo + ", " + hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre
+				};
+
+				if (observation) {
+					if (observation.Observation) {
+						var comentarioObservacion = ' / Comentario: ' + observation.Observation;
+					} else {
+						var comentarioObservacion = '';
+					}
+					if (observation.Obscause) {
+						if (observation.Obscause === 'MSEG') {
+							var formattedMotivo = 'Modificación de medidas de seguridad';
+						} else if (observation.Obscause === 'FECH') {
+							var formattedMotivo = 'Modificación de las fechas y horarios'
+						} else if (observation.Obscause === 'CAMP') {
+							var formattedMotivo = 'Modificación de otros campos';
+						} else {
+							var formattedMotivo = observation.Obscause;
+						}
+						var motivoObservacion = 'Motivo: ' + formattedMotivo;
+					} else {
+						var motivoObservacion = '';
+					}
+					var infAdicional = motivoObservacion + comentarioObservacion;
+				} else {
+					var infAdicional = '';
+				}
+				let stringEmails = emails.join(",");
+
+				var esAnulacion = false;
+				var MotivoDeAnulacion = '';
+				var ObservacionDeAnulacion = '';
+				var fechaAnulacion = '';
+				var vieneDeTramitacion = false;
+				var vieneDeObservacion = true;
+				var comentObserCoord = observation.Observation;
+				var nameLegacyObservator = observation.Obsuser;
+				var vieneDeCoordinacion = false;
+				var vieneDeCancelacion = false;
+				var nameLegacyCoordinator = "";
+				var nameLegacyTramitador = "";
+				var MotivoObservacion = formattedMotivo;
+				var ComentarioObservacion = "";
+				var MotivoNoAut = "";
+				var ComentariosNoAut = "";
+
+				MailHelper.sendEmail(licencia, usuariosAsignados, stringEmails, sEmailEt, infAdicional, esAnulacion, MotivoDeAnulacion,
+					ObservacionDeAnulacion, fechaAnulacion, vieneDeTramitacion, vieneDeObservacion, comentObserCoord, nameLegacyObservator,
+					vieneDeCoordinacion, vieneDeCancelacion, nameLegacyCoordinator, nameLegacyTramitador, MotivoObservacion,
+					ComentarioObservacion, MotivoNoAut, ComentariosNoAut).then(() => {
+					var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+					var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+					var stipo = license.Tipo === "S" ? "Solicitud" : "Licencia";
+					MessageBoxHelper.showAlert("Alerta", "Se ha observado la " + stipo + " de manera correcta", $.proxy(this.handleSuccesObservation,
+						this));
+				}).catch((e) => {
+					console.error(e);
+					MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail.", $.proxy(this.goToHome, this));
+				});
+			}, (err) => {
+				MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail.", $.proxy(this.goToHome, this));
+			});
+		},
+
+		handleSuccesObservation: function () {
+			this.goToHome();
+		},
+
+		errorPOSTObservation: function () {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al observar esta licencia");
+		},
+
+		errorPUTLicenceObs: function () {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al modificar esta licencia para la observacion");
+		},
+
+		// fin observado de licencia
+		annulateLicense: function (oAnulatePayload) {
+			var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			this.sMessageAnnulate = oLicence.Tipo === "S" ? `Se ha anulado la solicitud de manera exitosa` :
+				`Se ha anulado la licencia de manera exitosa`;
+			var licenseClone = LicenceHelper.cloneLicense(oLicence);
+			licenseClone.Licstat = "03";
+			licenseClone.Anulador = AppManagementHelper.getStringUserLegacy();
+			licenseClone.Causaanulado = oAnulatePayload.Causaanulado;
+			oAnulatePayload.Anulador = AppManagementHelper.getStringUserLegacy();
+			licenseClone.Obscausa = oAnulatePayload.Obscausa;
+			this.updateLicense(licenseClone, {
+				success: $.proxy(this.successPUTLicenseAnnul, this, oAnulatePayload, licenseClone),
+				error: $.proxy(this.errorPUTLicenseAnnul, this)
+			});
+		},
+
+		errorPUTLicenseAnnul: function () {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al modificar esta licencia para la anulación");
+		},
+
+		successPUTLicenseAnnul: function (oAnulatePayload, licenseClone) {
+			this.successPOSTAnnul(oAnulatePayload, licenseClone);
+		},
+
+		successPOSTAnnul: function (oAnulatePayload, licenseClone) {
+			var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+			var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			license.Licstat = licenseClone.Licstat;
+			license.Anulador = licenseClone.Anulador;
+
+			let promises = [];
+			promises.push(this.getPermisos(license));
+			promises.push(EtMailService.getPromise(license.Empresa, license.Tplnr));
+			Promise.all(promises).then(res => {
+				let sEmailEt = res[1].results && res[1].results !== 0 ? res[1].results.map(e => (e.Mail)).join(",") : "";
+				let permisos = res[0];
+				let hashPermisos = {};
+				permisos.forEach(permiso => {
+					hashPermisos[permiso.Rol] = permiso;
+				});
+				let causaAnulado = FormatterHelper.getMotivoAnulDesc(license.Causaanulado);
+				let infAdicional = causaAnulado + "\n" + license.Obscausa;
+				let stringEmails = "";
+
+				stringEmails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"]].map(permiso => permiso && permiso.Mail ||
+					"nurrestarazu@inclusion.cloud").join(",");
+
+				var usuariosAsignados = {
+					Coordinador: hashPermisos["COORDINADOR"] ? hashPermisos["COORDINADOR"].Legajo + ", " + hashPermisos["COORDINADOR"].Nombre : "",
+					Creador: hashPermisos["CREADOR"] ? hashPermisos["CREADOR"].Legajo + ", " + hashPermisos["CREADOR"].Nombre : "",
+					Solicitante: hashPermisos["SOLICITANTE"].Legajo + ", " + hashPermisos["SOLICITANTE"].Nombre,
+					SolicitanteSuplente: hashPermisos["SOLICITANTE_SUPLENTE"].Legajo + ", " + hashPermisos["SOLICITANTE_SUPLENTE"].Nombre,
+					Jefe: hashPermisos["JEFE_TRABAJO"].Legajo + ", " + hashPermisos["JEFE_TRABAJO"].Nombre,
+					JefeSuplente: hashPermisos["JEFE_TRABAJO_SUPLENTE"].Legajo + ", " + hashPermisos["JEFE_TRABAJO_SUPLENTE"].Nombre,
+					SolSuplenteAux: hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo + ", " + hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre
+				};
+				var esAnulacion = true;
+				var MotivoDeAnulacion = oAnulatePayload.Obscausa;
+				var ObservacionDeAnulacion = FormatterHelper.getMotivoAnulacionText(oAnulatePayload.Causaanulado);
+				var fechaAnulacion = FormatHelper.formatDateLicenseWithoutUtc(new Date());
+				var vieneDeTramitacion = false;
+				var vieneDeObservacion = false;
+				var comentObserCoord = "";
+				var nameLegacyObservator = "";
+				var vieneDeCoordinacion = false;
+				var vieneDeCancelacion = false;
+				var nameLegacyCoordinator = this.getLastCoordinator();
+				var nameLegacyTramitador = license.Tramitador;
+				var MotivoObservacion = "";
+				var ComentarioObservacion = "";
+				var MotivoNoAut = "";
+				var ComentariosNoAut = "";
+
+				MailHelper.sendEmail(license, usuariosAsignados, stringEmails, sEmailEt, infAdicional, esAnulacion, MotivoDeAnulacion,
+					ObservacionDeAnulacion, fechaAnulacion, vieneDeTramitacion, vieneDeObservacion, comentObserCoord, nameLegacyObservator,
+					vieneDeCoordinacion, vieneDeCancelacion, nameLegacyCoordinator, nameLegacyTramitador, MotivoObservacion,
+					ComentarioObservacion, MotivoNoAut, ComentariosNoAut).then(() => {
+					BusyDialogHelper.close();
+					MessageBoxHelper.showAlert("Alerta", this.sMessageAnnulate, $.proxy(this.goToHome, this, license));
+				}, () => {
+					BusyDialogHelper.close();
+					MessageBoxHelper.showAlert("Alerta", "Error al enviar email al usuario", $.proxy(this.goToHome, this, license));
+				});
+			});
+		},
+
+		getFechaAnulacion: function () {
+			var date = new Date();
+			var dia = date.getDate() < 10 ? '0' + date.getDate() : date.getDate();
+			var mes = date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1;
+			var ano = date.getFullYear();
+			var min = date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes();
+			var hora = date.getHours() < 10 ? '0' + date.getHours() : date.getHours();
+
+			return dia + '-' + mes + '-' + ano + ' ' + hora + ':' + min
+		},
+
+		errorPOSTAnul: function () {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al anular esta licencia");
+		},
+
+		errorPUTLicenseAnul: function () {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al modificar esta licencia para la anulación");
+		},
+
+		reanudateLicence: function (oReanudation) {
+			var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			var licenseClone = LicenceHelper.cloneLicense(oLicence);
+			// si está aprobada se le agrega el en tramite, sinó anulada
+			licenseClone.Licstat = "01";
+			licenseClone.Substatus = "E";
+			this.updateLicense(licenseClone, {
+				success: $.proxy(this.successPUTLicenceReanudation, this, oReanudation),
+				error: $.proxy(this.errorPUTLicenceReanudation, this)
+			});
+		},
+
+		successPUTLicenceReanudation: function (oReanudation, data) {
+			var entity = "/ReanudacionLicenciaSet";
+			oDataService.getModel("TransenerOperaciones").create(entity, oReanudation, {
+				success: $.proxy(this.successPOSTReanudation, this),
+				error: $.proxy(this.errorPOSTTReanudation, this)
+			});
+		},
+
+		successPOSTReanudation: function (data) {
+			var oLicense = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			var fechaRepresentante = FormatHelper.formatDatesGMT(data.Datelicencia)
+			fechaRepresentante.setHours(data.Time.getHours())
+			fechaRepresentante.setMinutes(data.Time.getMinutes())
+			console.log(fechaRepresentante);
+			var oLibroGuardia = {
+				"Fechahora": fechaRepresentante,
+				"Equipo": oLicense.Equnr,
+				"Lugar": oLicense.Tplnr,
+				"Novedad": `Numero de licencia ${oLicense.Id}, Trabajo a realizar: ${oLicense.Descripcion}`,
+				"Tiponovedad": FormatterHelper.getNovedadType("R"),
+				"Empresa": oLicense.Empresa
+			};
+			LibroGuardiasService.POSTLibroGuardia(oLibroGuardia).then(() => {
+				BusyDialogHelper.close();
+				var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+				var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+				MessageBoxHelper.showAlert("Alerta", "Se ha reanudado la licencia de manera correcta", $.proxy(this.FIND, this, license));
+			}).catch((e) => {
+				console.error(e);
+				BusyDialogHelper.close();
+				MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al crear guardia")
+			})
+
+		},
+
+		errorPOSTTReanudation: function (error) {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al crear el registro de reanudacion");
+		},
+
+		errorPUTLicenceReanudation: function () {
+			MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al modificar esta licencia para la observacion");
+		},
+		//
+		cancelTramitacion: function () {
+			var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			var licenseClone = LicenceHelper.cloneLicense(oLicence);
+			licenseClone.Licstat = "07";
+
+			// Issue #519
+			licenseClone.LastTramiteAvisoprog = AppManagementHelper.getStringUserLegacy();
+			licenseClone.LastTramiteFecha = FormatHelper.customFormat("yyyy-MM-ddTHH:mm:ss", new Date());
+			licenseClone.LastTramiteHora = FormatHelper.customFormat("PTHH'H'mm'M'ss'S'", new Date());
+
+			this.updateLicense(licenseClone, {
+				success: $.proxy(this.successCancelTramitacion, this),
+				error: $.proxy(this.errorCancelTramitacion, this)
+			});
+		},
+
+		successCancelTramitacion: function () {
+			var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			this.getPermisos(oLicence).then((aPermisos) => {
+				let sInfAdicional = "";
+				let emails = [];
+				let hashPermisos = {};
+
+				aPermisos.forEach(permiso => {
+					hashPermisos[permiso.Rol] = permiso;
+				});
+				//MOMENTANEO
+				hashPermisos["COORDINADOR"] = hashPermisos["COORDINADOR"] || "";
+
+				emails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"], hashPermisos[
+						"SOLICITANTE_SUPLENTE_AUXILIAR"], hashPermisos[
+						"TRAMITADOR"],
+					hashPermisos["JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"], hashPermisos["COORDINADOR"]
+				].map(permiso => permiso && permiso.Mail || "pgotelli@inclusion.cloud");
+
+				//emails = "hzea@inclusion.cloud"
+
+				var oUserJson = AppManagementHelper.getModel("UserJsonModel").getData();
+				var sCurrentUserMail = oUserJson.email;
+				var sCurrentUserName = oUserJson.nombre + ", " + oUserJson.apellido;
+				var oCurrentUser = AppManagementHelper.getModel("CurrentUser").getData()
+				var sLicenseId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+				var sAnio = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Anio");
+				var aPromises = [];
+				let stringEmails = aPermisos.map(permiso => {
+					hashPermisos[permiso.Rol] = permiso;
+					return permiso.Mail
+				}).join(",");
+				var oUsuariosAsignados = {
+					Coordinador: hashPermisos["COORDINADOR"] ? hashPermisos["COORDINADOR"].Legajo + ", " + hashPermisos["COORDINADOR"].Nombre : "",
+					Creador: hashPermisos["CREADOR"] ? hashPermisos["CREADOR"].Legajo + ", " + hashPermisos["CREADOR"].Nombre : "",
+					Solicitante: hashPermisos["SOLICITANTE"] ? hashPermisos["SOLICITANTE"].Legajo + ", " + hashPermisos["SOLICITANTE"].Nombre : "",
+					SolicitanteSuplente: hashPermisos["SOLICITANTE_SUPLENTE"] ? hashPermisos["SOLICITANTE_SUPLENTE"].Legajo + ", " + hashPermisos[
+						"SOLICITANTE_SUPLENTE"].Nombre : "",
+					Jefe: hashPermisos["JEFE_TRABAJO"] ? hashPermisos["JEFE_TRABAJO"].Legajo + ", " + hashPermisos["JEFE_TRABAJO"].Nombre : "",
+					JefeSuplente: hashPermisos["JEFE_TRABAJO_SUPLENTE"] ? hashPermisos["JEFE_TRABAJO_SUPLENTE"].Legajo + ", " + hashPermisos[
+						"JEFE_TRABAJO_SUPLENTE"].Nombre : "",
+					SolSuplenteAux: hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo + ", " + hashPermisos[
+						"SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre,
+					Tramitador: hashPermisos["TRAMITADOR"].Legajo + ", " + hashPermisos[
+						"TRAMITADOR"].Nombre,
+				};
+				aPromises.push(EtMailService.getPromise(oLicence.Empresa, oLicence.Tplnr));
+				Promise.all(aPromises).then((res) => {
+					let sEmailEt = res[0].results[0] && res[0].results[0].Mail;
+					var vieneDeTramitacion = false;
+					var esAnulacion = false;
+					var MotivoDeAnulacion = '';
+					var ObservacionDeAnulacion = '';
+					var fechaAnulacion = '';
+					oLicence.Licstat = '07';
+					MailHelper.sendEmail(oLicence, oUsuariosAsignados, stringEmails, sEmailEt, sInfAdicional, esAnulacion, MotivoDeAnulacion,
+						ObservacionDeAnulacion, fechaAnulacion, vieneDeTramitacion).then(() => {
+						MessageBoxHelper.showAlert("Alerta", "Se ha cancelado la tramitación de manera exitosa", $.proxy(this.goToHome, this));
+					}).catch((e) => {
+						BusyDialogHelper.close();
+						console.error(e);
+						MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail para la coordinacion.", $.proxy(this.goToHome,
+							this));
+					});
+				}).catch((e) => {
+					BusyDialogHelper.close();
+					console.error(e);
+					MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail para la coordinacion.", $.proxy(
+						this.goToHome,
+						this));
+				})
+			}).catch((e) => {
+				BusyDialogHelper.close();
+				console.error(e);
+				MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al obtener permisos", $.proxy(this.goToHome, this));
+			})
+		},
+
+		errorCancelTramitacion: function () {
+			MessageBoxHelper.showAlert("Alerta", "se ha producido un error al cancelar la tramitacion", $.proxy(this.goToHome, this));
+		},
+
+		tramitLicence: function (aTramites, bFinishTramitacion, bFromSelect, sStatusFromSelect) {
+			var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			oLicence.Tramitador = AppManagementHelper.getStringUserLegacy();
+			var licenseClone = LicenceHelper.cloneLicense(oLicence);
+			var EstadoGeneralSegunTramites = "";
+
+			// Si viene de Guardar o finalizar tramitacion
+			if (!bFromSelect) {
+				var bValid = LicenceHelper.getIsFinish(oLicence.Licstat);
+				if (bValid) {
+					// Se debería aplicar SOLO si se finalizó la tramitación anteriormente
+					EstadoGeneralSegunTramites = LicenceHelper.getTramitStatus(aTramites);
+				}
+
+				if (bFinishTramitacion === false) {
+					// Si viene del boton "GUARDAR" la tramitacion
+				} else {
+					// (oTramite.Estado === "01") ? "06" : "01";
+					licenseClone.Licstat = bFinishTramitacion ? LicenceHelper.getTramitStatus(aTramites) : "07";
+				}
+			} else {
+				if (sStatusFromSelect === "TA") {
+					// Autorizada
+					licenseClone.Licstat = "01"
+						//TN
+				} else {
+					// No autorizada
+					licenseClone.Licstat = "06"
+				}
+			}
+
+			// Si viene del boton ? "Finalizar tramitacion" : "Guardar tramitacion"
+			var sMessage = bFinishTramitacion ? "Se ha realizado la tramitación de manera exitosa" :
+				"Se ha guardado la tramitación de manera exitosa";
+			this.stateOfTramit = licenseClone.Licstat;
+			licenseClone.Tramitador = AppManagementHelper.getStringUserLegacy();
+
+			// Issue #519
+			licenseClone.LastTramiteAvisoprog = AppManagementHelper.getStringUserLegacy();
+			licenseClone.LastTramiteFecha = FormatHelper.customFormat("yyyy-MM-ddTHH:mm:ss", new Date());
+			licenseClone.LastTramiteHora = FormatHelper.customFormat("PTHH'H'mm'M'ss'S'", new Date());
+
+			this.updateLicense(licenseClone, {
+				success: $.proxy(this.successPUTLicenceTramit, this, bFinishTramitacion, sMessage, aTramites, licenseClone),
+				error: $.proxy(this.errorPUTLicenceTramit, this)
+			});
+		},
+
+		successPUTLicenceTramit: function (bFinishTramitacion, sMessage, aTramites, licenseClone) {
+			var aCalendarDates = aTramites.map((oTramite) => {
+				return oTramite.CalendarDates;
+			});
+
+			var aTramitePromises = this.handleTramitePromises(aTramites);
+			Promise.all(aTramitePromises).then((aResponses) => {
+				var aPromisesCalendarPost = this.getCalendarDatesPromises(aResponses, aCalendarDates, aTramites);
+				Promise.all(aPromisesCalendarPost).then(() => {
+					this.successPOSTTramitacion(bFinishTramitacion, sMessage, licenseClone);
+				});
+			}).catch((e) => {
+				console.error(e);
+				BusyDialogHelper.close();
+				MessageBoxHelper.showAlert("Alerta", "Se ha producido un error tramitar", $.proxy(this.goToHome, this));
+			})
+
+		},
+
+		toggleIncludeCammesa: function () {
+			BusyDialogHelper.open();
+			var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			var licenseClone = LicenceHelper.cloneLicense(oLicence);
+			this.updateLicense(licenseClone, {
+				success: $.proxy(this.successPUTLicenceIncludeCammesa, this),
+				error: $.proxy(this.errorPUTLicenceIncludeCammesa, this)
+			});
+		},
+
+		getTramitePromise: function (oTramite) {
+			delete oTramite.CalendarDates;
+			if (oTramite.Traindex === "") {
+				return new Promise((resolve, reject) => {
+					var entity = "/TramitacionesSet";
+					oDataService.getModel("TransenerOperaciones").create(entity, oTramite, {
+						success: resolve,
+						error: reject
+					});
+				});
+			} else {
+				delete oTramite.LicenciaEstadoDiarioSet;
+				return new Promise((resolve, reject) => {
+					var entity = "/TramitacionesSet";
+					oDataService.getModel("TransenerOperaciones").update(entity + "(Anio='" + oTramite.Anio +
+						"',Empresa='" + oTramite.Empresa + "',Id='" + oTramite.Id +
+						"',Traindex='" + oTramite.Traindex + "')",
+						oTramite, {
+							success: resolve,
+							error: reject
+						});
+				});
+			}
+		},
+
+		getCalendarPostTramitacion: function (oResponse, oCalendar, dDate) {
+			var oPayload = {
+				Anio: AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Anio"),
+				Id: AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id"),
+				Empresa: oResponse.Empresa,
+				Traindex: oResponse.Traindex,
+				Fecha: dDate,
+				Estado: oCalendar.Estado,
+				Observaciones: oCalendar.Observaciones
+			};
+			return new Promise((resolve, reject) => {
+				var entity = "/LicenciaEstadoDiarioSet";
+				oDataService.getModel("TransenerOperaciones").create(entity, oPayload, {
+					success: resolve,
+					error: reject
+				});
+			});
+		},
+
+		postCalendarTramitationDate: function (oPayload) {
+			return new Promise((resolve, reject) => {
+				var entity = "/LicenciaEstadoDiarioSet";
+				oDataService.getModel("TransenerOperaciones").create(entity, oPayload, {
+					success: resolve,
+					error: reject
+				});
+			});
+		},
+
+		getCalendarDatesPromises: function (aResponses, aCalendarDates, aTramites) {
+			var aPromises = [];
+			for (var i = 0; i < aResponses.length; i++) {
+				for (var oCalendarDate of aCalendarDates[i]) {
+					if (!aResponses[i]) {
+						aPromises.push(this.getCalendarPostTramitacion(aTramites[i], oCalendarDate, oCalendarDate.Fecha));
+					} else {
+						aPromises.push(this.getCalendarPostTramitacion(aResponses[i], oCalendarDate, oCalendarDate.Fecha));
+					}
+				}
+			}
+			return aPromises;
+		},
+
+		handleTramitePromises: function (aTramites) {
+			var aPromises = [];
+			for (var oTramite of aTramites) {
+				aPromises.push(this.getTramitePromise(oTramite));
+			}
+			return aPromises;
+		},
+
+		getDatesFromTramitacion: function (oTramite) {
+			var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+			return new Promise((resolve, reject) => {
+				oDataService.getModel("TransenerOperaciones").read("/TramitacionesSet" + "(Anio='" + oTramite.Anio + "',Empresa='" + oTramite.Empresa +
+					"',Id='" + sId +
+					"',Traindex='" + oTramite.Traindex + "')/LicenciaEstadoDiarioSet", {
+						success: resolve,
+						error: reject
+					});
+			})
+		},
+
+		errorPOSTTramitacion: function (error) {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al tramitar esta licencia");
+		},
+
+		successPUTLicenceIncludeCammesa: function (sMessage, aTramites, data) {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alerta", "Se ha guardado el cambio correctamente");
+			this.goToHome.bind(this)();
+		},
+
+		errorPUTLicenceIncludeCammesa: function (error) {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al incluir la solicitud en el reporte cammesa");
+			this.goToHome.bind(this)();
+		},
+
+		getLastCoordinator: function () {
+			var aCoordinations = AppManagementHelper.getModel("CoordinationTableJsonModel").getData().Coordinations;
+			var aCoordinationsMade = aCoordinations.filter(e => e.Cooindex !== "");
+			if (aCoordinationsMade.length > 0) {
+				return aCoordinationsMade[aCoordinationsMade.length - 1].Coouser;
+			}
+			return "";
+		},
+
+		sendLicenciaEmail: function (oLicence) {
+			return new Promise((resolve, reject) => {
+				this.getPermisos(oLicence).then((aPermisos) => {
+					let sInfAdicional = "";
+					let emails = [];
+					let hashPermisos = {};
+
+					aPermisos.forEach(permiso => {
+						hashPermisos[permiso.Rol] = permiso;
+					});
+					hashPermisos["COORDINADOR"] = hashPermisos["COORDINADOR"] || "";
+					emails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"], hashPermisos[
+						"SOLICITANTE_SUPLENTE_AUXILIAR"], hashPermisos["JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"]].map(permiso => permiso &&
+						permiso.Mail || "nurrestarazu@inclusion.cloud").join(",");
+
+					var oUserJson = AppManagementHelper.getModel("UserJsonModel").getData();
+					var sCurrentUserMail = oUserJson.email;
+					var sCurrentUserName = oUserJson.nombre + ", " + oUserJson.apellido;
+					var oCurrentUser = AppManagementHelper.getModel("CurrentUser").getData();
+					var sLicenseId = oLicence.Id;
+					var sAnio = oLicence.Anio;
+					var aPromises = [];
+					var oPromiseCoord = this.PostPromesa(sAnio, "L", sLicenseId, oCurrentUser.Legajo, sCurrentUserName, sCurrentUserMail,
+						oCurrentUser.Empresa, "TRAMITADOR");
+					aPromises.push(oPromiseCoord);
+
+					var oUsuariosAsignados = {
+						Coordinador: hashPermisos["COORDINADOR"] ? hashPermisos["COORDINADOR"].Legajo + ", " + hashPermisos["COORDINADOR"].Nombre : "",
+						Creador: hashPermisos["CREADOR"] ? hashPermisos["CREADOR"].Legajo + ", " + hashPermisos["CREADOR"].Nombre : "",
+						Solicitante: hashPermisos["SOLICITANTE"] ? hashPermisos["SOLICITANTE"].Legajo + ", " + hashPermisos["SOLICITANTE"].Nombre : "",
+						SolicitanteSuplente: hashPermisos["SOLICITANTE_SUPLENTE"] ? hashPermisos["SOLICITANTE_SUPLENTE"].Legajo + ", " + hashPermisos[
+							"SOLICITANTE_SUPLENTE"].Nombre : "",
+						Jefe: hashPermisos["JEFE_TRABAJO"] ? hashPermisos["JEFE_TRABAJO"].Legajo + ", " + hashPermisos["JEFE_TRABAJO"].Nombre : "",
+						JefeSuplente: hashPermisos["JEFE_TRABAJO_SUPLENTE"] ? hashPermisos["JEFE_TRABAJO_SUPLENTE"].Legajo + ", " + hashPermisos[
+							"JEFE_TRABAJO_SUPLENTE"].Nombre : "",
+						SolSuplenteAux: hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo + ", " + hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre
+					};
+					aPromises.push(EtMailService.getPromise(oLicence.Empresa, oLicence.Tplnr, this.getSelectionArea(oLicence.Tipo, "01")));
+
+					Promise.all(aPromises).then((res) => {
+						var sEmailEt = "";
+						// issue 514 - Se deben enviar correos a los tecnicos incluyendo no autorizados "06"
+						//		if (this.stateOfTramit === "06") {
+						//			sEmailEt = "";
+						//		} else {
+						sEmailEt = sEmailEt = res[1].results && res[1].results !== 0 ? res[1].results.map(e => (e.Mail)).join(",") : "";
+						//		}
+
+						var esAnulacion = false;
+						var MotivoDeAnulacion = '';
+						var ObservacionDeAnulacion = '';
+						var fechaAnulacion = '';
+						var vieneDeTramitacion = false;
+						var vieneDeObservacion = false;
+						var comentObserCoord = "";
+						var nameLegacyObservator = "";
+						var vieneDeCoordinacion = false;
+						var vieneDeCancelacion = false;
+						var nameLegacyCoordinator = this.getLastCoordinator();
+						var nameLegacyTramitador = oLicence.Tramitador;
+						var MotivoObservacion = "";
+						var ComentarioObservacion = "";
+						var MotivoNoAut = "";
+						var ComentariosNoAut = "";
+
+						MailHelper.sendEmail(oLicence, oUsuariosAsignados, emails, sEmailEt, sInfAdicional, esAnulacion, MotivoDeAnulacion,
+							ObservacionDeAnulacion, fechaAnulacion, vieneDeTramitacion, vieneDeObservacion, comentObserCoord, nameLegacyObservator,
+							vieneDeCoordinacion, vieneDeCancelacion, nameLegacyCoordinator, nameLegacyTramitador, MotivoObservacion,
+							ComentarioObservacion, MotivoNoAut, ComentariosNoAut).then(() => {
+							resolve();
+						}).catch((e) => {
+							console.error(e);
+							reject();
+						});
+					});
+				});
+			});
+		},
+
+		successPOSTTramitacion: function (bFinishTramitacion, sMessage, licenseClone) {
+			var oLicence = licenseClone;
+			this.getPermisos(oLicence).then((aPermisos) => {
+				let sInfAdicional = "";
+				let emails = [];
+				let hashPermisos = {};
+
+				aPermisos.forEach(permiso => {
+					hashPermisos[permiso.Rol] = permiso;
+				});
+
+				// MOMENTANEO
+				hashPermisos["COORDINADOR"] = hashPermisos["COORDINADOR"] || "";
+				emails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"], hashPermisos[
+					"SOLICITANTE_SUPLENTE_AUXILIAR"], hashPermisos["JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"]].map(permiso => permiso &&
+					permiso.Mail || "nurrestarazu@inclusion.cloud").join(",");
+
+				var oUserJson = AppManagementHelper.getModel("UserJsonModel").getData();
+				var sCurrentUserMail = oUserJson.email;
+				var sCurrentUserName = oUserJson.nombre + ", " + oUserJson.apellido;
+				var oCurrentUser = AppManagementHelper.getModel("CurrentUser").getData();
+				var sLicenseId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+				var sAnio = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Anio");
+				var aPromises = [];
+				var oPromiseCoord = this.PostPromesa(sAnio, "L", sLicenseId, oCurrentUser.Legajo, sCurrentUserName, sCurrentUserMail, oCurrentUser
+					.Empresa, "TRAMITADOR");
+				aPromises.push(oPromiseCoord);
+				var oUsuariosAsignados = {
+					Coordinador: hashPermisos["COORDINADOR"] ? hashPermisos["COORDINADOR"].Legajo + ", " + hashPermisos["COORDINADOR"].Nombre : "",
+					Creador: hashPermisos["CREADOR"] ? hashPermisos["CREADOR"].Legajo + ", " + hashPermisos["CREADOR"].Nombre : "",
+					Solicitante: hashPermisos["SOLICITANTE"] ? hashPermisos["SOLICITANTE"].Legajo + ", " + hashPermisos["SOLICITANTE"].Nombre : "",
+					SolicitanteSuplente: hashPermisos["SOLICITANTE_SUPLENTE"] ? hashPermisos["SOLICITANTE_SUPLENTE"].Legajo + ", " + hashPermisos[
+						"SOLICITANTE_SUPLENTE"].Nombre : "",
+					Jefe: hashPermisos["JEFE_TRABAJO"] ? hashPermisos["JEFE_TRABAJO"].Legajo + ", " + hashPermisos["JEFE_TRABAJO"].Nombre : "",
+					JefeSuplente: hashPermisos["JEFE_TRABAJO_SUPLENTE"] ? hashPermisos["JEFE_TRABAJO_SUPLENTE"].Legajo + ", " + hashPermisos[
+						"JEFE_TRABAJO_SUPLENTE"].Nombre : "",
+					SolSuplenteAux: hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo + ", " + hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre
+				};
+
+				aPromises.push(EtMailService.getPromise(oLicence.Empresa, oLicence.Tplnr, this.getSelectionArea(oLicence.Tipo, "01")));
+				Promise.all(aPromises).then((res) => {
+					var sEmailEt = "";
+					// Issue 514 - Se deben enviar correos a los tecnicos incluyendo status 06	
+					//	if (this.stateOfTramit === "06") {
+					//		sEmailEt = "";
+					//	} else {
+					sEmailEt = res[1].results && res[1].results !== 0 ? res[1].results.map(e => (e.Mail)).join(",") : "";
+					//	}
+
+					var esAnulacion = false;
+					var MotivoDeAnulacion = '';
+					var ObservacionDeAnulacion = '';
+					var fechaAnulacion = '';
+					var vieneDeTramitacion = true;
+					var vieneDeObservacion = false;
+					var comentObserCoord = "";
+					var nameLegacyObservator = "";
+					var vieneDeCoordinacion = false;
+					var vieneDeCancelacion = false;
+					var nameLegacyCoordinator = this.getLastCoordinator();
+					var nameLegacyTramitador = oLicence.Tramitador;
+					var MotivoObservacion = "";
+					var ComentarioObservacion = "";
+					var MotivoNoAut = "";
+					var ComentariosNoAut = "";
+
+					if (!bFinishTramitacion) {
+						this.logTramitationChange(sCurrentUserName).then(() => {
+							BusyDialogHelper.close();
+							var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+							var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+							MessageBoxHelper.showAlert("Alerta", sMessage, $.proxy(this.goToHome, this));
+						}).catch((e) => {
+							BusyDialogHelper.close();
+							console.error(e);
+							MessageBoxHelper.showAlert("Alerta", "Se ha guardado correctamente los cambios, pero ha habido un error en el logueo.", $.proxy(
+								this.goToHome, this));
+						});
+					} else {
+						if (this.stateOfTramit === "23") {
+							this.logTramitationChange(sCurrentUserName).then(() => {
+								BusyDialogHelper.close();
+								var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+								var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+								MessageBoxHelper.showAlert("Alerta", sMessage, $.proxy(this.goToHome, this));
+							}).catch((e) => {
+								BusyDialogHelper.close();
+								console.error(e);
+								MessageBoxHelper.showAlert("Alerta", "Se ha guardado correctamente los cambios, pero ha habido un error en el logueo.", $.proxy(
+									this.goToHome, this));
+							});
+						} else {
+							MailHelper.sendEmail(oLicence, oUsuariosAsignados, emails, sEmailEt, sInfAdicional, esAnulacion, MotivoDeAnulacion,
+								ObservacionDeAnulacion, fechaAnulacion, vieneDeTramitacion, vieneDeObservacion, comentObserCoord, nameLegacyObservator,
+								vieneDeCoordinacion, vieneDeCancelacion, nameLegacyCoordinator, nameLegacyTramitador,
+								MotivoObservacion,
+								ComentarioObservacion,
+								MotivoNoAut,
+								ComentariosNoAut).then(() => {
+								this.logTramitationChange(sCurrentUserName).then(() => {
+									BusyDialogHelper.close();
+									var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+									var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+									MessageBoxHelper.showAlert("Alerta", sMessage, $.proxy(this.goToHome, this));
+								}).catch((e) => {
+									BusyDialogHelper.close();
+									console.error(e);
+									MessageBoxHelper.showAlert("Alerta", "Se ha guardado correctamente los cambios, pero ha habido un error en el logueo.",
+										$.proxy(this.goToHome, this));
+								});
+							}).catch((e) => {
+								BusyDialogHelper.close();
+								console.error(e);
+								MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail para la coordinacion.", $.proxy(this.goToHome,
+									this));
+							});
+						}
+					}
+				}).catch((e) => {
+					BusyDialogHelper.close();
+					console.error(e);
+					MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail para la coordinacion.", $.proxy(this.goToHome,
+						this));
+				})
+			}).catch((e) => {
+				BusyDialogHelper.close();
+				console.error(e);
+				MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al obtener permisos", $.proxy(this.goToHome, this));
+			})
+		},
+
+		errorPUTLicenceTramit: function (error) {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al modificar esta licencia para la tramitacion");
+		},
+
+		suspendLicence: function (oSuspension) {
+			var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			var licenseClone = LicenceHelper.cloneLicense(oLicence);
+			// si está aprobada se le agrega el en tramite, sinó anulada
+			licenseClone.Substatus = "S";
+			this.updateLicense(licenseClone, {
+				success: $.proxy(this.successPUTLicenceSuspend, this, oSuspension),
+				error: $.proxy(this.errorPUTLicenceSuspend, this)
+			});
+		},
+
+		errorPUTLicenceSuspend: function (error) {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al modificar esta licencia para la suspension");
+		},
+
+		successPUTLicenceSuspend: function (oSuspension, data) {
+			var entity = "/SuspensionLicenciaSet";
+			// oSuspension.Time = FormatHelper.formatDateTimePickerTime(oSuspension.Time);
+			oDataService.getModel("TransenerOperaciones").create(entity, oSuspension, {
+				success: $.proxy(this.successPOSTSuspention, this, oSuspension),
+				error: $.proxy(this.errorPOSTSuspention, this)
+			});
+		},
+
+		successPOSTSuspention: function (oSuspension, data) {
+			var oLicense = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			var fechaRepresentante = FormatHelper.formatDatesGMT(data.Datelicencia)
+			fechaRepresentante.setHours(data.Time.getHours())
+			fechaRepresentante.setMinutes(data.Time.getMinutes())
+			console.log(fechaRepresentante);
+			var oLibroGuardia = {
+				"Fechahora": fechaRepresentante,
+				"Equipo": oLicense.Equnr,
+				"Lugar": oLicense.Tplnr,
+				"Novedad": `Numero de licencia ${oLicense.Id}, Trabajo a realizar: ${oLicense.Descripcion}`,
+				"Tiponovedad": FormatterHelper.getNovedadType("S"),
+				"Empresa": oLicense.Empresa
+			};
+			LibroGuardiasService.POSTLibroGuardia(oLibroGuardia).then(() => {
+				BusyDialogHelper.close();
+				var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+				var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+				MessageBoxHelper.showAlert("Alerta", "Se ha suspendido la licencia de manera correcta", $.proxy(this.FIND, this, license));
+			}).catch((e) => {
+				console.error(e)
+				MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al crear guardia")
+			})
+		},
+
+		errorPOSTSuspention: function (error) {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al crear el registro de suspension");
+		},
+
+		checkFilterLogic: function (aFilters) {
+			var aComplete = $.extend([], true, aFilters);
+			let oRemoved = _.remove(aComplete, (e) => {
+				if (e.sPath === "Equstat" || e.sPath === "Equstatnocam") {
+					if (e.oValue1 === "N") {
+						return false;
+					}
+					if (e.oValue1 === "") {
+						e.oValue1 = "N"
+						return true;
+					}
+				}
+				return true;
+			})
+			return oRemoved;
+		},
+
+		formatLicstatValues: function (sValue) {
+			switch (sValue) {
+			case "90":
+				return "1E";
+			case "10":
+				return "1S";
+			default:
+				return sValue;
+			}
+		},
+
+		validateLicStatFilters: function (aFilters) {
+			var oLicstatFilter = aFilters.find(e => e._bMultiFilter && e.aFilters.length > 0 && e.aFilters[0].sPath === "Licstat")
+			if (oLicstatFilter) {
+				oLicstatFilter.aFilters.forEach(e => {
+					e.oValue1 = this.formatLicstatValues(e.oValue1)
+				});
+			}
+		},
+
+		validateAroBloqueoRdisparoFilters: function (aFilters) {
+			var aComplete = $.extend([], true, aFilters);
+			let oRemoved = _.remove(aComplete, (e) => {
+				if (e.sPath === "Rdisparo" || e.sPath === "Bloqueo") {
+					if (e.oValue1 === "N") {
+						return false;
+					}
+					return true;
+				}
+				if (e.sPath === "Aro") {
+					if (e.oValue1 === "Z") {
+						return false;
+					}
+					return true;
+				}
+				return true;
+			})
+			return oRemoved;
+
+		},
+
+		GETWithFilters: function (aFilters, bDontSort) {
+
+			console.log("Pase", aFilters)
+				// var aFiltersFound = this.checkFilterLogic(aFilters);
+				// this.validateChecks(aFiltersFound);
+				// this.validateLicStatFilters(aFiltersFound);
+				// var aWithoutAroBloqueoRdisparo = this.validateAroBloqueoRdisparoFilters(aFiltersFound);
+			BusyDialogHelper.open("", "");
+			var entity = "/LicenciaTrabajoSet";
+			oDataService.getModel("TransenerOperaciones").read(entity, {
+				filters: aFilters,
+				// urlParameters: {
+				// 	"$top": 60
+				// },
+				// urlParameters: {
+				// 	"$expand": "HorariosPorLicencia_nav"
+				// },
+				success: function (bDontSort, oData) {
+					sap.m.MessageToast.show("Se han recuperado las ultimas 60 licencias/solicitudes, las demas estaran disponibles en breve");
+					this.successGET(bDontSort, oData);
+				}.bind(this, bDontSort),
+				error: $.proxy(this.errorGET, this)
+			});
+			// oDataService.getModel("TransenerOperaciones").read(entity, {
+			// 	filters: aWithoutAroBloqueoRdisparo,
+
+			// 	/*urlParameters: {
+			// 		"$expand": "HorariosPorLicencia_nav"
+			// 	},*/
+			// 	success: function (bDontSort, oData) {
+			// 		sap.m.MessageToast.show("Se han recuperado todas las licencias/solicitudes");
+			// 		this.successGET(bDontSort, oData);
+			// 	}.bind(this, bDontSort),
+			// 	//$.proxy(this.successGET, this, bDontSort),
+			// 	error: $.proxy(this.errorGET, this)
+			// });
+		},
+
+		GETLicense: function (turno) {
+			const filters = []
+
+			// filters.push(new Filter("Id", FilterOperator.EQ, turno.Id));
+			//  filters.push(new Filter("Empresa", FilterOperator.EQ, turno.Empresa));
+			//  filters.push(new Filter("Anio", FilterOperator.EQ, turno.Anio));
+			//  filters.push(new Filter("Tipo", FilterOperator.EQ, turno.Tipo));
+
+			 filters.push(new Filter("Id", FilterOperator.EQ, "L202400039"));
+			 filters.push(new Filter("Empresa", FilterOperator.EQ, "100"));
+			 filters.push(new Filter("Anio", FilterOperator.EQ, "2024"));
+			 filters.push(new Filter("Tipo", FilterOperator.EQ, "L"));
+			oDataService.getModel("TransenerOperaciones").read("/LicenciaTrabajoSet", {
+				filters: filters,
+				success: (data) => {
+					console.log("Licencia", data)
+					return data
+				},
+				error: (error) => {
+					this.errorGET(error);
+				}
+			});
+
+		},
+
+		GETLicenses: function (filters) {
+			let entity = "/LicenciaTrabajoSet";
+			oDataService.getModel("TransenerOperaciones").read(entity, {
+				filters: filters,
+				sorter: [{
+					path: 'Anio',
+					descending: false
+				}, {
+					path: 'Id',
+					descending: false
+				}],
+				urlParameters: {
+					"$top": 60
+				},
+				success: (data) => {
+					sap.m.MessageToast.show("Se han recuperado todas las licencias/solicitudes");
+					this.successGET(false, data);
+				},
+				error: (error) => {
+					this.errorGET(error);
+				}
+			});
+			return new Promise((resolve, reject) => {
+				oDataService.getModel("TransenerOperaciones").read(entity, {
+					filters: filters,
+					sorter: [{
+						path: 'Anio',
+						descending: false
+					}, {
+						path: 'Id',
+						descending: false
+					}],
+					urlParameters: {
+						"$top": 60
+					},
+					success: function (data) {
+						sap.m.MessageToast.show("Se han recuperado las ultimas 60 licencias/solicitudes, las demas estaran disponibles en breve");
+						resolve(data);
+					},
+					error: function (error) {
+						reject(error)
+					}
+				});
+
+			})
+		},
+
+		getCammesaComments: function (oLicense) {
+			let aFilters = [];
+
+			let sId = "";
+			let sType = "";
+
+			sType = oLicense.Tipo;
+			sId = oLicense.Id;
+
+			aFilters.push(new sap.ui.model.Filter("Id", sap.ui.model.FilterOperator.EQ, sId));
+			aFilters.push(new sap.ui.model.Filter("Tipo", sap.ui.model.FilterOperator.EQ, sType));
+			aFilters.push(new sap.ui.model.Filter("Anio", sap.ui.model.FilterOperator.EQ, oLicense.Anio));
+			aFilters.push(new sap.ui.model.Filter("Empresa", sap.ui.model.FilterOperator.EQ, oLicense.Empresa));
+			//aFilters.push(new sap.ui.model.Filter("Semana", sap.ui.model.FilterOperator.EQ, oLicense.Semana));
+
+			oDataService.getModel("TransenerOperaciones").read("/LTComentariosCammesaSet", {
+				filters: aFilters,
+				success: (data) => {
+					data.results.forEach((e) => {
+						e.EstadoSemanal = this.getEstadoSemanal(e.EstadoSemanal);
+					});
+					let oModel = AppManagementHelper.getModel("CammesaCommentsModel")
+					oModel.setData({
+						Comments: data.results
+					})
+				},
+				error: (e) => {
+					console.log(e)
+				}
+			});
+		},
+
+		getEval: function (filterExtendedWithoutWerks) {
+			var filterData = filterExtendedWithoutWerks;
+			var localFilterData = AppManagementHelper.getModel("LocalFilterJsonModel").getData();
+
+			var filtrosEnviados = []; //Hago un rejunte de los filtros que se agregan de distintos modelos y los pongo en un solo lado
+			for (var item in filterData) { //Hago un rejunte de los filtros que se agregan de distintos modelos y los pongo en un solo lado
+				if (item === "Tplnr" && filterData["Tplnr"].values !== undefined) {
+					filtrosEnviados.push({
+						attribute: item,
+						value: filterData[item].values[0]
+					});
+				}
+				//	filtrosEnviados.push(filterData[item].value);
+				filtrosEnviados.push({
+					attribute: item,
+					value: filterData[item].value
+				})
+			}
+			for (var item in localFilterData) { //Hago un rejunte de los filtros que se agregan de distintos modelos y los pongo en un solo lado
+				//filtrosEnviados.push(localFilterData[item]);
+				filtrosEnviados.push({
+					attribute: item,
+					value: localFilterData[item]
+				})
+			}
+			var Eval = filtrosEnviados.some(function (item) {
+				if (item.attribute === "Equstat" || item.attribute === "Equstatnocam") {
+					return item.value === "" || item.value === "X"
+				} else if (item.attribute === "Aro") {
+					return item.value !== "Z"
+				} else {
+					return item.value !== undefined && item.value !== null && item.value !== "" && item.value !== " " && item.value.length !== 0 &&
+						item.value !== "N"
+				}
+			});
+			if (Eval) {
+				return true;
+			} else {
+				return false;
+			}
+
+		},
+
+		getEstadoSemanal: function (sIdEstadoSemanal) {
+			var aEstados = AppManagementHelper.getModel("EstadosModel").getData().estados;
+			var oEstado = aEstados.find(e => e.DomvalueL === sIdEstadoSemanal)
+			return oEstado ? oEstado.Ddtext : "";
+		},
+
+		validateColor: function () {
+			var oFilterData = AppManagementHelper.getModel("FiltersJsonModel").getData();
+			var bHasWerks = oFilterData.Werks.value !== "";
+			var oExtendFilters = $.extend({}, AppManagementHelper.getModel("FiltersJsonModel").getData())
+			delete oExtendFilters.Werks;
+
+			//si tengo werks y no tengo filtros
+
+			if (bHasWerks && !this.getEval(oExtendFilters)) {
+				return "yellow"
+			}
+			//si no tengo werks y tengo filtros
+			if (!bHasWerks && this.getEval(oExtendFilters)) {
+				return "red"
+			}
+
+			if (bHasWerks && this.getEval(oExtendFilters)) {
+				return "red"
+			}
+
+			if (!bHasWerks && !this.getEval(oExtendFilters)); {
+				return "white"
+			}
+
+			return "white"
+
+		},
+
+		GET: function (filters) {
+			AppManagementHelper.getModel("OrderNumberJsonModel").setData({
+				Odering: "down"
+			});
+			this.validateChecks(filters);
+			// AppManagementHelper.getModel("ColorModel").setProperty("/Color", this.validateColor());
+			BusyDialogHelper.open("", "");
+			this.GETLicenses(filters).then(this.successGET.bind(this, false)).catch($.proxy(this.errorGET, this));
+		},
+
+		FIND: function (license, fnCallback, fnCallbackError) {
+			this.fnCallbackSuccess = fnCallback;
+			this.fnCallbackError = fnCallbackError;
+			var entity = "/LicenciaTrabajoSet";
+			var key = entity + "(Empresa='" + license.Empresa + "',Id='" + license.Id + "',Tipo='" + license.Tipo + "',Anio='" + license.Anio +
+				"')";
+			let urlParameters = {};
+			if (license.Tipo === "L") {
+				urlParameters.$expand = this._expandProperties;
+			} else {
+				urlParameters.$expand = "HorariosPorLicencia_nav,CoordinacionesLicencia_nav,ObservacionesLicencia_nav";
+			}
+			oDataService.getModel("TransenerOperaciones").read(key, {
+				urlParameters: urlParameters,
+				success: $.proxy(this.successFIND, this),
+				error: $.proxy(this.errorFIND, this)
+			});
+		},
+
+		getPromise: function (license, expand) {
+			return new Promise((resolve, reject) => {
+				var entity = "/LicenciaTrabajoSet";
+				var key = entity + "(Empresa='" + license.Empresa + "',Id='" + license.Id + "',Tipo='" +
+					license.Tipo + "',Anio='" + license.Anio + "')";
+				let urlParameters = {};
+				if (expand) {
+					urlParameters.$expand = expand;
+				}
+				oDataService.getModel("TransenerOperaciones").read(key, {
+					urlParameters: urlParameters,
+					success: resolve,
+					error: reject
+				});
+			})
+		},
+
+		deleteUnifilar: function (sId) {
+			return new Promise((resolve, reject) => {
+				var oData = AppManagementHelper.getModel("LicenseJsonModel").getData();
+				var entity = "/EsquemaUnifilarMarcadorSet(Idunifilar='" + sId + "',Numerolicencia='" + oData.Idunifilar + "',Empresa='" + oData.Empresa +
+					"',Anio='" + oData.Anio + "')";
+				oDataService.getModel("TransenerOperaciones").remove(entity, {
+					success: () => {
+						resolve();
+					},
+					error: () => {
+						reject();
+					}
+				});
+			});
+		},
+
+		getIndividualUnifilar: function (Anio, Empresa, Idunifilar, Numerolicencia, navigation) {
+			//TODO TRAER EMPRESA Y NUMEROLICENCIA Y ANIO EN BASE AL ESQUEMA Y NO A LA LICENCIA
+			var sNavigation = navigation ? navigation : ""
+			return new Promise((resolve, reject) => {
+				var oData = AppManagementHelper.getModel("LicenseJsonModel").getData();
+				var entity = "/EsquemaUnifilarMarcadorSet(Idunifilar='" + Idunifilar + "',Numerolicencia='" + Numerolicencia + "',Empresa='" +
+					Empresa +
+					"',Anio='" + Anio + "')" + sNavigation;
+				oDataService.getModel("TransenerOperaciones").read(entity, {
+					success: function (data) {
+						resolve(data)
+					},
+					error: function (e) {
+						console.log(e)
+						reject();
+					}
+				});
+			})
+		},
+
+		getUnifilarCount: function (oLicense) {
+			return new Promise((resolve, reject) => {
+				var aFilters = [
+					new sap.ui.model.Filter({
+						path: "Empresa",
+						operator: sap.ui.model.FilterOperator.EQ,
+						value1: oLicense.Empresa
+					}),
+					new sap.ui.model.Filter({
+						path: "Anio",
+						operator: sap.ui.model.FilterOperator.EQ,
+						value1: oLicense.Anio
+					}),
+					new sap.ui.model.Filter({
+						path: "Numerolicencia",
+						operator: sap.ui.model.FilterOperator.EQ,
+						value1: oLicense.Idunifilar
+					})
+				]
+				var entity = "/EsquemaUnifilarMarcadorSet/$count";
+				oDataService.getModel("TransenerOperaciones").read(entity, {
+					filters: aFilters,
+					success: (data) => {
+						resolve(parseInt(data));
+					},
+					error: (e) => {
+						reject(e)
+					}
+				});
+			})
+		},
+
+		checkUnifilarByJobCond: function (oLicense) {
+			return new Promise((resolve, reject) => {
+				if (oLicense.Tipo === "L") {
+					if (oLicense.Jobcond === "01") {
+						var aFilters = [
+							new sap.ui.model.Filter({
+								path: "Empresa",
+								operator: sap.ui.model.FilterOperator.EQ,
+								value1: oLicense.Empresa
+							}),
+							new sap.ui.model.Filter({
+								path: "Anio",
+								operator: sap.ui.model.FilterOperator.EQ,
+								value1: oLicense.Anio
+							}),
+							new sap.ui.model.Filter({
+								path: "Numerolicencia",
+								operator: sap.ui.model.FilterOperator.EQ,
+								value1: oLicense.Idunifilar
+							})
+						]
+						var entity = "/EsquemaUnifilarMarcadorSet/$count";
+						oDataService.getModel("TransenerOperaciones").read(entity, {
+							filters: aFilters,
+							success: (data) => {
+								if (data) {
+									var bValid = parseInt(data) !== 0;
+									resolve(bValid);
+								}
+								reject();
+							},
+							error: (e) => {
+								reject(e)
+							}
+						});
+					} else {
+						resolve(true)
+					}
+				} else {
+					resolve(true)
+				}
+
+			});
+		},
+
+		getUnifilarVersion: function (oUnifilar) {
+			return new Promise((resolve, reject) => {
+				var aFilters = [];
+				//TODO MAPEAR CENTRO LICENCIA this.Centro 102
+				var centerFilter = new sap.ui.model.Filter({
+					path: "Centro", //a
+					operator: sap.ui.model.FilterOperator.EQ,
+					value1: oUnifilar.Region //d
+				});
+				//TODO MAPEAR CENTRO LICENCIA this.ET AB
+				var ETFilter = new sap.ui.model.Filter({
+					path: "Et", //a
+					operator: sap.ui.model.FilterOperator.EQ,
+					value1: oUnifilar.Et //d
+				});
+
+				var TipoFilter = new sap.ui.model.Filter({
+					path: "TipoUnifilar", //a
+					operator: sap.ui.model.FilterOperator.EQ,
+					value1: oUnifilar.TipoUnifilar //d
+				});
+
+				var EstadoFilter = new sap.ui.model.Filter({
+					path: "Estado",
+					operator: sap.ui.model.FilterOperator.EQ,
+					value1: "1"
+				});
+
+				aFilters.push(EstadoFilter);
+				aFilters.push(centerFilter);
+				aFilters.push(ETFilter);
+				aFilters.push(TipoFilter);
+
+				var oModelOperaciones = oDataService.getModel("TransenerOperaciones");
+				oModelOperaciones.read("/LTUnifilaresFileSet", {
+					filters: aFilters,
+					success: (data) => {
+						resolve(data)
+					},
+					error: (e) => {
+						reject(e)
+					}
+				})
+			})
+		},
+
+		createUnifilar: function (oPayload) {
+			return new Promise((resolve, reject) => {
+				oDataService.getModel("TransenerOperaciones").create("/EsquemaUnifilarMarcadorSet", oPayload, {
+					success: (data) => {
+						resolve(data);
+					},
+					error: (e) => {
+						reject(e);
+					}
+				})
+			})
+		},
+
+		getUnifilares: function (license, fnCallback, fnError, oParameter) {
+			var aFilters = [
+				new sap.ui.model.Filter({
+					path: "Empresa",
+					operator: sap.ui.model.FilterOperator.EQ,
+					value1: license.Empresa
+				}),
+				new sap.ui.model.Filter({
+					path: "Anio",
+					operator: sap.ui.model.FilterOperator.EQ,
+					value1: license.Anio
+				}),
+				new sap.ui.model.Filter({
+					path: "Numerolicencia",
+					operator: sap.ui.model.FilterOperator.EQ,
+					value1: license.Idunifilar
+				})
+			];
+			var entity = "/EsquemaUnifilarMarcadorSet";
+			oDataService.getModel("TransenerOperaciones").read(entity, {
+				filters: aFilters,
+				urlParameters: oParameter ? oParameter : {
+					"$select": "Nombre,Idunifilar,NumVersion,Region,TipoUnifilar,Et,Empresa,Anio,Region,IntAbLe,SecAbBt,SecPatCr,PatAdic,Numerolicencia"
+				},
+				success: fnCallback,
+				error: fnError
+			});
+		},
+
+		getUnifilarFiles: function (aFilters) {
+			return new Promise((resolve, reject) => {
+				oDataService.getModel("TransenerOperaciones").read("/LTUnifilaresFileSet", {
+					filters: aFilters,
+					urlParameters: {
+						"$select": "Et,Descripcion,TipoUnifilar,IdUnifilar"
+					},
+					success: (data) => {
+						resolve(data)
+					},
+					error: (e) => {
+						reject(e)
+					}
+				});
+			});
+		},
+
+		postDay: function (oDay) {
+			return new Promise((resolve, reject) => {
+				oDataService.getModel("TransenerOperaciones").create("/HorariosLicenciaSet", oDay, {
+					success: resolve,
+					error: reject,
+				})
+			});
+		},
+
+		putDayHorarios: function (oDay) {
+			return new Promise((resolve, reject) => {
+				oDataService.getModel("TransenerOperaciones").update("/HorariosLicenciaSet" + "(Tipo='" + oDay.Tipo + "',Empresa='" + oDay.Empresa +
+					"',Id='" +
+					oDay.Id +
+					"',Modif='" + oDay.Modif + "',Anio='" + oDay.Anio + "')", oDay, {
+						success: resolve,
+						error: reject
+					});
+			});
+		},
+
+		findHorarios: function (oLicense) {
+
+			var aFilters = [];
+
+			aFilters.push(new sap.ui.model.Filter("Id", sap.ui.model.FilterOperator.EQ, oLicense.Id));
+			aFilters.push(new sap.ui.model.Filter("Empresa", sap.ui.model.FilterOperator.EQ, oLicense.Empresa));
+			aFilters.push(new sap.ui.model.Filter("Tipo", sap.ui.model.FilterOperator.EQ, oLicense.Tipo));
+			aFilters.push(new sap.ui.model.Filter("Anio", sap.ui.model.FilterOperator.EQ, oLicense.Anio))
+
+			return new Promise((resolve, reject) => {
+				oDataService.getModel("TransenerOperaciones").read("/HorariosLicenciaSet", {
+					success: resolve,
+					filters: aFilters,
+					error: reject
+				});
+			});
+		},
+
+		deleteDay: function (oDay) {
+			return new Promise((resolve, reject) => {
+				oDataService.getModel("TransenerOperaciones").remove("/HorariosLicenciaSet" + "(Tipo='" + oDay.Tipo + "',Empresa='" + oDay.Empresa +
+					"',Id='" +
+					oDay.Id +
+					"',Modif='" + oDay.Modif + "',Anio='" + oDay.Anio + "')", {
+						success: resolve,
+						error: reject
+					});
+			});
+		},
+
+		removeTramitacion: function (oTramitacion) {
+			return new Promise((resolve, reject) => {
+				oDataService.getModel("TransenerOperaciones").remove("/TramitacionesSet" + "(Empresa='" + oTramitacion.Empresa +
+					"',Id='" +
+					oTramitacion.Id +
+					"',Traindex='" + oTramitacion.Traindex + "',Anio='" + oTramitacion.Anio + "')", {
+						success: resolve,
+						error: reject
+					});
+			});
+		},
+
+		refreshLicenceList: function () {
+			var aFilters = this.generateAdvancedFilters();
+			aFilters.push(new sap.ui.model.Filter({
+				path: "Empresa",
+				operator: sap.ui.model.FilterOperator.EQ,
+				value1: AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Empresa")
+			}));
+			this.GETWithFilters(aFilters);
+		},
+
+		getDeleteDatePromise: function (oCalendarPayload, aDifferenceToDelete) {
+			var aPromise = [];
+			for (var oDifference of aDifferenceToDelete) {
+				var sDate = oDifference.Fecha.toISOString().split("T")[0] + "T00:00:00"
+				aPromise.push(new Promise((resolve, reject) => {
+					oDataService.getModel("TransenerOperaciones").remove("/LicenciaEstadoDiarioSet" + "(Anio='" + oCalendarPayload.Anio +
+						"',Empresa='" + oCalendarPayload.Empresa +
+						"',Id='" +
+						oCalendarPayload.Id +
+						"',Traindex='" + oCalendarPayload.Traindex + "',Fecha=datetime'" + sDate + "')", {
+							success: resolve,
+							error: reject
+						});
+				}));
+			}
+			return aPromise;
+		},
+
+		removeDates: function (oCalendarPayload, aDifferenceToDelete) {
+			var aPromisesDates = this.getDeleteDatePromise(oCalendarPayload, aDifferenceToDelete);
+			return Promise.all(aPromisesDates);
+		},
+
+		getPermisos: function (oLicense) {
+			var aFilters = [];
+
+			aFilters.push(new sap.ui.model.Filter("Id", sap.ui.model.FilterOperator.EQ, oLicense.Id));
+			aFilters.push(new sap.ui.model.Filter("Empresa", sap.ui.model.FilterOperator.EQ, oLicense.Empresa));
+			aFilters.push(new sap.ui.model.Filter("Tipo", sap.ui.model.FilterOperator.EQ, oLicense.Tipo));
+			aFilters.push(new sap.ui.model.Filter("Anio", sap.ui.model.FilterOperator.EQ, oLicense.Anio));
+
+			return new Promise((resolve, reject) => {
+				var entity = "/PermisosLicenciaSet";
+				oDataService.getModel("TransenerOperaciones").read(entity, {
+					filters: aFilters,
+					success: function (data) {
+						resolve(data.results);
+					},
+					error: function (error) {
+						reject(error);
+					}
+				});
+			});
+
+		},
+
+		handleUserPermission: function (aUserPermissions, sTipo, sLicStat) {
+			//array creacion, observacion
+
+			//para complentar dps
+			var aRolesForCreation = ["CREADOR", "JEFE_TRABAJO", "JEFE_TRABAJO_SUPLENTE", "SOLICITANTE", "SOLICITANTE_SUPLENTE"]
+				//coordinacion y observacion. 
+			var aRolesForCoordinationObservation = ["COORDINADOR"];
+			var aRolesForTramitation = ["TRAMITADOR"];
+
+			var oModelPermisos = AppManagementHelper.getModel("PermisosJsonModel")
+			var sCurrentUserLegajo = AppManagementHelper.getModel("CurrentUser").getData().Legajo;
+			if (sCurrentUserLegajo === "") sCurrentUserLegajo = this.nullLegajo;
+			//lo seteo en un array vacio para evitar problemas en etapas de desarrollo
+			var sSelectedArray = [];
+
+			switch (sLicStat) {
+			case "02":
+			case "30":
+				sSelectedArray = aRolesForCreation;
+				break;
+			case "07":
+				sSelectedArray = aRolesForTramitation;
+				break;
+			case "09":
+				sSelectedArray = aRolesForCoordinationObservation;
+				break;
+
+			}
+			//ROLES CORRESPONDIENTES AL ESTADO
+			var bFound = aUserPermissions.some((oUser) => {
+				if (sSelectedArray.includes(oUser.Rol)) {
+					return oUser.Legajo === sCurrentUserLegajo;
+				} else {
+					return false;
+				}
+			});
+
+			// SI VOY A REALIZAR PROCESOS POR PRIMERA VEZ Y NO EXISTO.
+			if (!bFound) {
+				//MAPEAMOS LOS ROLES DEL USUARIO AL ARRAY DE AUSERPERMISSIONS
+				var aRoles = aUserPermissions.map(oUser => {
+					return oUser.Rol;
+				});
+				bFound = !aRoles.some(sRol => sSelectedArray.includes(sRol))
+			}
+
+			var oModelPermisos = AppManagementHelper.getModel("PermisosJsonModel").setProperty("/UsuarioEncontrado", bFound);
+		},
+
+		findEquipoById: function (sTplnr) {
+			let aData = AppManagementHelper.getModel("EstacionesJsonModel").getProperty("/Estaciones");
+			var oFiltered = aData.find((e) => {
+				return e.Codigo === sTplnr
+			});
+
+			if (oFiltered !== undefined) {
+				var DescripcionETJsonModel = AppManagementHelper.getModel("DescripcionETJsonModel");
+				DescripcionETJsonModel.setData({
+					Descripcion: oFiltered.Descripcion
+				});
+			}
+		},
+
+		getStatusTramitacion: function (sLicStat) {
+			if (sLicStat === "01") { // Autorizada
+				return "TA";
+			}
+			if (sLicStat === "06") { // NO Autorizada
+				return "TN";
+			}
+			if (sLicStat === "23") { // En tramite
+				return "ET";
+			}
+			return "";
+		},
+
+		loadSpecialDatesTramitacion: function (sAnio, sId, Empresa, sPeriod) {
+			var aFilters = [];
+
+			aFilters.push(new sap.ui.model.Filter("Empresa", sap.ui.model.FilterOperator.EQ, Empresa));
+			aFilters.push(new sap.ui.model.Filter("Id", sap.ui.model.FilterOperator.EQ, sId));
+			aFilters.push(new sap.ui.model.Filter("Anio", sap.ui.model.FilterOperator.EQ, sAnio));
+
+			var entity = "/LicenciaEstadoDiarioSet";
+			oDataService.getModel("TransenerOperaciones").read(entity, {
+				filters: aFilters,
+				success: function (data) {
+					//issue 190 ya no importa si es diaria o continua
+					//TODO on hold
+					var oDataFechas = sPeriod === "D" ? LicenceHelper.handleSpecialDatesTramitacion(data.results) : {
+						Fechas: []
+					};
+					var oDataFechas = LicenceHelper.handleSpecialDatesTramitacion(data.results)
+					oDataFechas = LicenceHelper.getOrderSpecialDate(oDataFechas);
+					var oModelTramitacionDates = AppManagementHelper.getModel("EspecialDatesTramitacion");
+					oModelTramitacionDates.setData(oDataFechas);
+					BusyDialogHelper.close();
+				},
+				error: function (error) {
+					console.log(error);
+				}
+			});
+
+		},
+
+		successFIND: function (data) {
+			var oData = FormatHelper.removeResults(data);
+			var oLicense = oData;
+			this.findEquipoById(oLicense.Tplnr);
+			this._observedStatus = oLicense.Licstat === "02";
+			var sTipo = oLicense.Tipo;
+			this.getPermisos(oLicense).then((dataPermisos) => {
+				var licenseJsonModel = AppManagementHelper.getModel("LicenseJsonModel");
+				this.loadSpecialDatesTramitacion(oLicense.Anio, oLicense.Id, oLicense.Empresa, oLicense.Period);
+				this.handleUserPermission(dataPermisos, sTipo, oLicense.Licstat);
+				var aLicences = [];
+				aLicences.push(oData);
+				BusyDialogHelper.close();
+				AppManagementHelper.getModel("FilterSelectionJsonModel").setProperty("/visible", true);
+				var oModelTramitacionStatus = AppManagementHelper.getModel("TramitacionStatusModel");
+
+				oModelTramitacionStatus.setProperty("/Status", this.getStatusTramitacion(oLicense.Licstat));
+				oModelTramitacionStatus.setProperty("/StatusText", FormatterHelper.getStatusTramitacionText(oLicense.Licstat));
+
+				FormatHelper.formatTimesFromGetLicenses(aLicences);
+				oLicense.Timbeg = FormatHelper.formaTimesToShow(oLicense.Timbeg);
+				oLicense.Timend = FormatHelper.formaTimesToShow(oLicense.Timend);
+				var horarios = oLicense.HorariosPorLicencia_nav;
+				var miliSecondsOffset = new Date().getTimezoneOffset() * 60 * 1000; //offset en segundos
+				horarios.forEach(function (dia) {
+					dia.Fecha = new Date(dia.Fecha.getTime() + miliSecondsOffset);
+				});
+				oLicense.Solbeg = FormatHelper.formatDatesGMT(oLicense.Solbeg);
+				oLicense.Solend = FormatHelper.formatDatesGMT(oLicense.Solend);
+				oLicense.SolSuplente = oLicense.SolSuplente === this.nullLegajo ? "" : oLicense.SolSuplente;
+				oLicense.Jefe = oLicense.Jefe === this.nullLegajo ? "" : oLicense.Jefe;
+				oLicense.JefeSuplente = oLicense.JefeSuplente === this.nullLegajo ? "" : oLicense.JefeSuplente;
+
+				if (oLicense.AttachmentXLicencia_nav.length) {
+					AppManagementHelper.getModel("FilterSelectionJsonModel").setProperty("/visibleFiles", true);
+				} else {
+					AppManagementHelper.getModel("FilterSelectionJsonModel").setProperty("/visibleFiles", false);
+				}
+
+				AppManagementHelper.setNavigationProperties(oLicense);
+				LicenceHelper.generateDeliveryDevolution(oLicense);
+
+				LicenceHelper.setPersonalHabilitadoParaCboEntraga(oLicense);
+				LicenceHelper.setPersonalHabilitadoParaCboDevolucion(oLicense);
+				LicenceHelper.setPersonalHabilitadoParaCboCancelacion(oLicense);
+
+				LicenceHelper.generateSuspentionReanudation(oLicense);
+
+				if (oLicense.Rdisparo === "") oLicense.Rdisparo = "Y";
+
+				LicenceHelper.setComments(oLicense);
+				licenseJsonModel.setData(oLicense);
+
+				this.handleCoordinationTableDataByUserRole();
+				this.handleObservationTableDataByUserRole();
+				this.handleTransfers();
+				this.enableSpecifyBarraControl(oLicense.Barrafs);
+
+				BusyDialogHelper.close();
+				AppManagementHelper.getModel("FilterSelectionJsonModel").setProperty("/busyData", false);
+				LegacyValidationHelper.checkLegacies();
+				if (AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Period") === 'C') {
+					AppManagementHelper.getModel("DisableControlsJsonModel").setProperty("/enabled", true);
+					AppManagementHelper.getModel("DisableControlsJsonModel").setProperty("/HorariosSemanaEnabled", false);
+				}
+
+				if (this.fnCallbackSuccess) {
+					this.fnCallbackSuccess(oLicense);
+				}
+
+				this.getFullTramitacionesWithCalendarDates();
+
+			}).catch((e) => {
+				console.error(e);
+				BusyDialogHelper.close();
+				MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al obtener permisos")
+			})
+
+		},
+
+		enableSpecifyBarraControl: function (sKey) {
+			var oLicenseJsonModel = AppManagementHelper.getModel("LicenseJsonModel");
+			var oFilterSelecitonJsonModel = AppManagementHelper.getModel("FilterSelectionJsonModel");
+			if (sKey === "N") {
+				oFilterSelecitonJsonModel.setProperty("/enabledEspecifyBarra", false);
+				oLicenseJsonModel.setProperty("/Barrafstx", "");
+			} else {
+				oFilterSelecitonJsonModel.setProperty("/enabledEspecifyBarra", true);
+			}
+		},
+
+		handleTransfers: function () {
+			var oLicense = AppManagementHelper.getModel("LicenseJsonModel").getData();
+			var empresa = AppManagementHelper.getModel("UtilsJsonModel").getProperty("/empresa");
+			var sType = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Tipo");
+			var aTransfers = sType === "L" ? AppManagementHelper.getModel("TransferListJsonModel").getData().Transfers : []
+			LegacyValidationHelper.validateLegaciesTransfer(oLicense, aTransfers);
+			aTransfers.push({
+				Anio: AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Anio"),
+				Id: AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id"),
+				Empresa: empresa,
+				Jefetra: "",
+				Time: new Date(),
+				Autcot: "",
+				Teinformo: "",
+				TeinformoValueState: "Success",
+				TeinformoValueStateText: "",
+				JefetraValueState: "Success",
+				JefetraValueStateText: ""
+			});
+			aTransfers.forEach((e) => {
+				e.enabledCombo = e.Trjindex === undefined || e.Trjindex === "";
+			})
+			AppManagementHelper.getModel("TransferListJsonModel").refresh(true);
+		},
+
+		handleCoordinationTableDataByUserRole: function () {
+			//TODO TAR PENDIENTE CON ESTA FUNC
+			var empresa = AppManagementHelper.getModel("UtilsJsonModel").getProperty("/empresa");
+			var aRoles = AppManagementHelper.getModel("UserJsonModel").getData().roles
+			var bLicenseWithGenerateStatus = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Licstat") === "09";
+			var sType = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Tipo");
+			var aCoordinations = AppManagementHelper.getModel("CoordinationTableJsonModel").getData().Coordinations;
+			aCoordinations.push({
+				Id: AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id"),
+				Anio: AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Anio"),
+				Tipo: AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Tipo"),
+				Empresa: empresa,
+				Cooindex: "",
+				CreationDate: new Date(),
+				CreationTime: "PT00H00M00S",
+				Coouser: AppManagementHelper.getStringUserLegacy(),
+				Coordination: ""
+			})
+			AppManagementHelper.getModel("CoordinationTableJsonModel").refresh(true);
+			//}
+		},
+
+		handleObservationTableDataByUserRole: function () {
+			var empresa = AppManagementHelper.getModel("UtilsJsonModel").getProperty("/empresa");
+			var aRoles = AppManagementHelper.getModel("UserJsonModel").getData().roles
+			var bLicenseWithGenerateStatus = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Licstat") === "09";
+			var sType = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Tipo");
+			var aObservations = AppManagementHelper.getModel("ObservationTableJsonModel").getData().Observations
+			aObservations.push({
+				Id: AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id"),
+				Anio: AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Anio"),
+				Empresa: empresa,
+				Obsindex: "",
+				CreationDate: new Date(),
+				CreationTime: "PT00H00M00S",
+				Obsuser: AppManagementHelper.getStringUserLegacy(),
+				Observation: ""
+			});
+			AppManagementHelper.getModel("ObservationTableJsonModel").refresh(true);
+		},
+
+		errorFIND: function (error) {
+			if (this.fnCallbackError) this.fnCallbackError(error);
+		},
+
+		getArbplDesc: function (sArbpl) {
+			var aWorkPlaces = AppManagementHelper.getModel("WorkPlacesJsonModel").getData().WorkPlaces;
+			var oWorkPlace = aWorkPlaces.find((e) => {
+				return e.Arbpl === sArbpl
+			})
+			return oWorkPlace ? oWorkPlace.KtextUp : "";
+		},
+
+		getEqustatText: function (sEqustat) {
+			return (sEqustat === "X") ? "E/S" : "F/S";
+		},
+
+		getBloqueoText: function (sBloqueo) {
+			return (sBloqueo === "X") ? "SI" : "NO";
+		},
+
+		getPeriodoText: function (sPeriod) {
+			return (sPeriod === "D") ? "Diaria" : "Continua";
+		},
+
+		getStatusText: function (status, substatus) {
+			if (status === "01") {
+				return FormatterHelper.getApprovalSubstatus(status, substatus)
+			} else {
+				return FormatterHelper.getStatusName(status);
+			}
+		},
+
+		rolesForDuplication: function (type, region) {
+			let sRegion = AppManagementHelper.getModel("CurrentUser").getData().Region;
+			var aUserRoles = $.extend([], AppManagementHelper.getModel("UserJsonModel").getData().roles);
+			var aPermisosForDuplication = AppManagementHelper.getModel("permisosModel").getData()["listado"]["!BotonSolicitudListado"];
+
+			let sRegionFormat = FormatterHelper.centroToRegion(sRegion);
+
+			if (sRegionFormat) {
+				aUserRoles = aUserRoles.map(role => role.replace("_" + sRegionFormat, ""));
+			}
+
+			if (type === "L") {
+				var oCoordinateFound = aUserRoles.find(e => e === "Coordinador_Mantenimiento");
+				return !oCoordinateFound
+			} else {
+				return !aUserRoles.some(r => aPermisosForDuplication.includes(r))
+			}
+		},
+
+		validateChecks: function (aFilters) {
+			var oModelCheckData = AppManagementHelper.getModel("FilterSelectionJsonModel").getData();
+			if (oModelCheckData.checkedLic && oModelCheckData.checkedSol) {
+
+			} else if (oModelCheckData.checkedLic) {
+				aFilters.push(new sap.ui.model.Filter("Tipo", sap.ui.model.FilterOperator.EQ, "L"));
+			} else if (oModelCheckData.checkedSol) {
+				aFilters.push(new sap.ui.model.Filter("Tipo", sap.ui.model.FilterOperator.EQ, "S"));
+			}
+		},
+
+		successGET: function (bDontSort, data) {
+			var aLicenses = FormatHelper.removeResults(data);
+			FormatHelper.formatTimesFromGetLicenses(aLicenses);
+			aLicenses.forEach((oLicense) => {
+				oLicense.ArbplDesc = this.getArbplDesc(oLicense.Arbpl);
+				oLicense.EqustatText = this.getEqustatText(oLicense.Equstat);
+				oLicense.BloqueoText = this.getBloqueoText(oLicense.Bloqueo);
+				oLicense.PeriodoText = this.getPeriodoText(oLicense.Period);
+				oLicense.StatusText = this.getStatusText(oLicense.Licstat, oLicense.Substatus);
+				oLicense.ValidForDuplicate = this.rolesForDuplication(oLicense.Tipo, oLicense.Werks);
+			});
+
+			//	var aLicensesWithCheck = this.validateChecks(aLicensesOrdered);
+			// Issue 548 - Para las vistas  LTs de equipos y Salidas y Lineas la info viene ya ordenada de back end y no se debe reordenar
+			// para estas llamadas el parametro dontSort vendra en true
+			// if (bDontSort !== true) {
+			// 	var aLicensesOrdered = _.orderBy(aLicenses, ['Anio', "Id"], ["desc", "desc"])
+			// } else {
+			var aLicensesOrdered = aLicenses;
+			// }
+
+			AppManagementHelper.getModel("LicencesListJsonModel").setData({
+				Licenses: aLicensesOrdered
+			});
+			BusyDialogHelper.close();
+		},
+
+		errorGET: function (error) {
+			var sError = FormatHelper.parseJsonError(error);
+			if (sError === "No se encontraron datos") {
+				AppManagementHelper.getModel("LicencesListJsonModel").setData({
+					Licenses: []
+				});
+			}
+			MessageBoxHelper.showAlert("Alert", sError);
+			BusyDialogHelper.close();
+		},
+
+		// Para los casos de cot y programacion este combo se va a ver y posteriormente se selecciona o nada o emergencia o terceros.
+		getLicStatByRol: function (sTipoLic, sLicStat) {
+			var sLicStatAux = sLicStat;
+			// Issue #518 -> Agregar lógica para setear el estado de una licencia con el nuevo rol: Solicitante_Lic_TBA
+			var aRoles = AppManagementHelper.getModel("UserJsonModel").getData().roles;
+			var inputEnabled = AppManagementHelper.getModel("EnviarCoordModel").getProperty("/visibleTipoLicencia");
+			if (inputEnabled && (sTipoLic === "N" || sTipoLic === "EM" || sTipoLic === "TE")) {
+				AppManagementHelper.getModel("LicenseJsonModel").setProperty("/Gdate", new Date());
+				sLicStat = "07";
+
+				// Si el usuario tiene el nuevo rol -> Solicitante_Lic_TBA
+				var bSolicitanteLicTBA = aRoles.find(sRol => sRol === "Solicitante_Lic_TBA");
+				// Issue # 545 - Solo se debe cambiar el estatus si se uso el boton "Generar Licencia" , si se creo usando el boton "Crear Borrador Licencia"
+				// se debe mantener el estado 30 "Creada"
+				if (bSolicitanteLicTBA && sLicStatAux === "09") {
+					switch (sTipoLic) {
+					case "N":
+						sLicStat = "09";
+						break;
+					case "EM":
+						sLicStat = "07";
+						break;
+					case "TE":
+						sLicStat = "09";
+						break;
+					}
+				} else if (bSolicitanteLicTBA && sLicStatAux === "30") {
+					sLicStat = "30";
+				}
+			}
+
+			return sLicStat;
+		},
+
+		POSTLicense: function (bIsSol) {
+			return new Promise((resolve, reject) => {
+				BusyDialogHelper.open();
+				let oLicenseData = LicenceHelper.cloneLicense(AppManagementHelper.getModel("LicenseJsonModel").getData());
+				oLicenseData.Licstat = this.getLicStatByRol(oLicenseData.Tipolicencia, oLicenseData.Licstat);
+				FormatHelper.formatTimes(oLicenseData);
+				FormatHelper.formatDayArrayTimes(oLicenseData);
+				FormatHelper.deleteNavPropertiesByPeriod(oLicenseData, oLicenseData.Period);
+				let entity = "/LicenciaTrabajoSet";
+				if (oLicenseData.Rdisparo === "Y") oLicenseData.Rdisparo = "";
+				if (oLicenseData.Equstat === "Y") oLicenseData.Equstat = "";
+
+				// Issue #486 - Fix siempre que voy a crear una licencia se crea con el campo Comments vacío.
+				oLicenseData.Comments = "";
+
+				console.log(oLicenseData);
+				oDataService.getModel("TransenerOperaciones").create(entity, oLicenseData, {
+					success: function (data) {
+						console.log(data);
+						var oResponse = {
+							bIsSol: bIsSol,
+							responseData: data,
+							licence: oLicenseData
+						};
+						resolve(oResponse);
+					},
+					error: function () {
+						reject();
+					}
+				});
+			})
+		},
+
+		POST: function (oResponse) {
+			BusyDialogHelper.open();
+			this.POSTLicense(oResponse).then($.proxy(this.successPOST, this)).catch($.proxy(this.errorPOST, this));
+		},
+
+		getTimeFormatted: function () {
+			var dDate = new Date();
+			let dDateFormatted = new Date(dDate.getTime() + dDate.getTimezoneOffset() * 60 * 1000);
+			let d = new Date(dDateFormatted);
+			var sString = d.toISOString().split("T")[1].substr(0, 8);
+			return sString.split(":").join("");
+		},
+
+		PostPromesa: function (sAnio, sTipoSol, sLicense, sLegajo, sName, sMail, sEmpresa, sRol) {
+			var oPayload = {
+				Empresa: sEmpresa,
+				Id: sLicense,
+				Anio: sAnio,
+				Tipo: sTipoSol,
+				Rol: sRol,
+				Legajo: sLegajo,
+				Nombre: sName,
+				Mail: sMail,
+				Fecha: new Date(),
+				Hora: this.getTimeFormatted()
+			};
+			return new Promise((resolve, reject) => {
+				var entity = "/PermisosLicenciaSet";
+				oDataService.getModel("TransenerOperaciones").create(entity, oPayload, {
+					success: resolve,
+					error: reject
+				});
+			})
+		},
+		//for the sake of order i will left this method alive, but it does the same as the PostPromesa
+		PutPromise: function (sAnio, sTipoSol, sLicense, sLegajo, sName, sMail, sEmpresa, sRol) {
+			var oPayload = {
+				Anio: sAnio,
+				Empresa: sEmpresa,
+				Id: sLicense,
+				Tipo: sTipoSol,
+				Rol: sRol,
+				Legajo: sLegajo,
+				Nombre: sName,
+				Mail: sMail,
+				Fecha: new Date(),
+				Hora: this.getTimeFormatted()
+			};
+			return new Promise((resolve, reject) => {
+				var entity = "/PermisosLicenciaSet";
+				//hacemos un create en vez de un update 
+				oDataService.getModel("TransenerOperaciones").create(entity, oPayload, {
+					success: resolve,
+					error: reject
+				});
+			});
+		},
+
+		editLicense: function () {
+			return new Promise((resolve, reject) => {
+				var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+				var licenseClone = LicenceHelper.cloneLicense(oLicence);
+				this.updateLicense(licenseClone, {
+					success: resolve(licenseClone),
+					error: reject
+				});
+			});
+		},
+
+		editComments: function () {
+			return new Promise((resolve, reject) => {
+				var oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+				var licenseClone = LicenceHelper.cloneLicense(oLicence);
+				this.updateLicense(licenseClone, {
+					success: resolve(licenseClone),
+					error: reject
+				});
+			});
+		},
+
+		handlePromisePermisos: function (sAnio, sTipoSol, sLicense, sLegajo, sName, sMail, sEmpresa, sMode, sRol) {
+			if (sMode === "CREATION") {
+				return this.PostPromesa(sAnio, sTipoSol, sLicense, sLegajo, sName, sMail, sEmpresa, sRol)
+			}
+			if (sMode === "EDITION") {
+				return this.PutPromise(sAnio, sTipoSol, sLicense, sLegajo, sName, sMail, sEmpresa, sRol)
+			}
+		},
+
+		getPermisosPOSTArray: function (oLicense, sTipoSol, sId, oCurrentUser, oUserRoles) {
+			var oUserJson = AppManagementHelper.getModel("UserJsonModel").getData();
+			var sCurrentUserMail = oUserJson.email;
+			var sCurrentUserName = oUserJson.nombre + ", " + oUserJson.apellido;
+			var aPromises = [];
+			let solicitanteNombre = FormatterHelper.getSolicitanteName(oLicense.Solicitante);
+			let solicitanteSuplenteNombre = FormatterHelper.getSolicitanteName(oLicense.SolSuplente);
+			let JefeNombre = FormatterHelper.getJefeName(oLicense.Jefe);
+			let JefeSuplenteNombre = FormatterHelper.getJefeName(oLicense.JefeSuplente);
+			let solSuplenteAuxNombre = FormatterHelper.getSolicitanteName(oLicense.SolSuplenteAux);
+			aPromises.push(
+				this.handlePromisePermisos(oLicense.Anio, sTipoSol, sId, oCurrentUser.Legajo, sCurrentUserName, sCurrentUserMail, oCurrentUser.Empresa,
+					"CREATION",
+					"CREADOR"),
+				this.handlePromisePermisos(oLicense.Anio, sTipoSol, sId, oLicense.Solicitante, solicitanteNombre, "", oCurrentUser.Empresa,
+					"CREATION",
+					"SOLICITANTE"),
+				this.handlePromisePermisos(oLicense.Anio, sTipoSol, sId, oLicense.SolSuplente, solicitanteSuplenteNombre, "", oCurrentUser.Empresa,
+					"CREATION",
+					"SOLICITANTE_SUPLENTE"),
+				this.handlePromisePermisos(oLicense.Anio, sTipoSol, sId, oLicense.SolSuplenteAux, solSuplenteAuxNombre, "", oCurrentUser.Empresa,
+					"CREATION",
+					"SOLICITANTE_SUPLENTE_AUXILIAR"),
+				this.handlePromisePermisos(oLicense.Anio, sTipoSol, sId, oLicense.Jefe, JefeNombre, "", oCurrentUser.Empresa, "CREATION",
+					"JEFE_TRABAJO"),
+				this.handlePromisePermisos(oLicense.Anio, sTipoSol, sId, oLicense.JefeSuplente, JefeSuplenteNombre, "", oCurrentUser.Empresa,
+					"CREATION",
+					"JEFE_TRABAJO_SUPLENTE")
+			)
+			return aPromises;
+		},
+
+		getPermisosPUTArray: function (oLicencia, sTipoSol, sLicenceId, oCurrentUser, oUserRoles) {
+			var sYear = oLicencia.Anio;
+			var oUserJson = AppManagementHelper.getModel("UserJsonModel").getData();
+			var sCurrentUserMail = oUserJson.email;
+			var sCurrentUserName = oUserJson.nombre + ", " + oUserJson.apellido;
+			var aPromises = [];
+			let solicitanteNombre = FormatterHelper.getSolicitanteName(oLicencia.Solicitante);
+			let solicitanteSuplenteNombre = FormatterHelper.getSolicitanteName(oLicencia.SolSuplente);
+			let JefeNombre = FormatterHelper.getJefeName(oLicencia.Jefe);
+			let JefeSuplenteNombre = FormatterHelper.getJefeName(oLicencia.JefeSuplente);
+			let solSuplenteAuxNombre = FormatterHelper.getSolicitanteName(oLicencia.SolSuplenteAux);
+			aPromises.push(
+				this.handlePromisePermisos(sYear, sTipoSol, sLicenceId, oCurrentUser.Legajo, sCurrentUserName, sCurrentUserMail, oCurrentUser.Empresa,
+					"EDITION", "CREADOR"),
+				this.handlePromisePermisos(sYear, sTipoSol, sLicenceId, oLicencia.Solicitante, solicitanteNombre, "", oCurrentUser.Empresa,
+					"EDITION",
+					"SOLICITANTE"),
+				this.handlePromisePermisos(sYear, sTipoSol, sLicenceId, oLicencia.SolSuplente, solicitanteSuplenteNombre, "", oCurrentUser.Empresa,
+					"EDITION", "SOLICITANTE_SUPLENTE"),
+				this.handlePromisePermisos(sYear, sTipoSol, sLicenceId, oLicencia.SolSuplenteAux, solSuplenteAuxNombre, "", oCurrentUser.Empresa,
+					"EDITION", "SOLICITANTE_SUPLENTE_AUXILIAR"),
+				this.handlePromisePermisos(sYear, sTipoSol, sLicenceId, oLicencia.Jefe, JefeNombre, "", oCurrentUser.Empresa, "EDITION",
+					"JEFE_TRABAJO"),
+				this.handlePromisePermisos(sYear, sTipoSol, sLicenceId, oLicencia.JefeSuplente, JefeSuplenteNombre, "", oCurrentUser.Empresa,
+					"EDITION",
+					"JEFE_TRABAJO_SUPLENTE")
+			)
+			return aPromises;
+		},
+
+		getMailsByPermisos: function (aPermisos, sRol) {
+			/*var oCoordinado = aPermisos.find(oPermiso => {
+				return oPermiso.Rol === sRol;
+			});
+			return [oCoordinado.Mail];*/
+
+			var oParticipant = aPermisos.find(oPermiso => {
+				return oPermiso.Rol === sRol;
+			});
+			return oParticipant ? [oParticipant.Mail] : [""];
+
+		},
+
+		PUTPermisosLicencia: function (responseData, bIsSol, oLicencia, oCurrentUser, oUserRoles) {
+			//var tipo = oLicencia.Idsolicitud === this.nullId ? "Solicitud" : "Licencia";
+			var tipo = oLicencia.Tipo === "S" ? "Solicitud" : "Licencia";
+			var sTipoSol = bIsSol ? responseData.Tipo : oLicencia.Tipo
+			var sLicenceId = bIsSol ? responseData.id : oLicencia.Idsolicitud === this.nullId ? oLicencia.Id : oLicencia.Idsolicitud;
+			var aPermisos = this.getPermisosPUTArray(oLicencia, sTipoSol, sLicenceId, oCurrentUser, oUserRoles);
+			Promise.all(aPermisos).then(() => {
+				var sMessage = "";
+				if (oLicencia.Licstat === "30" || oLicencia.Licstat === "02") {
+					if (bIsSol)
+						sMessage = "Edición exitosa, esta solicitud se ha convertido en licencia";
+					else
+						sMessage = `${tipo} modificada de manera exitosa`;
+					BusyDialogHelper.close();
+					MessageBoxHelper.showAlert("Alerta", sMessage, $.proxy(this.goToHome, this));
+					return;
+				}
+
+				var oUserJson = AppManagementHelper.getModel("UserJsonModel").getData();
+				var sCurrentUserName = oUserJson.nombre + ", " + oUserJson.apellido;
+				var sMessage = "";
+				//PROCESO MAIL
+				var aPromises = [];
+				var oUsuariosAsignados = {
+					Coordinador: "",
+					Creador: oCurrentUser.Legajo + ", " + sCurrentUserName
+				}
+				aPromises.push(this.getPermisos(oLicencia));
+				//TODO OJO MAIL TMB=???
+				aPromises.push(EtMailService.getPromise(oLicencia.Empresa, oLicencia.Tplnr, this.getSelectionArea(oLicencia.Tipo, oLicencia.Licstat)));
+				Promise.all(aPromises).then((aResPromises) => {
+					var aEmails = [];
+					var aPermisos = aResPromises[0];
+					let hashPermisos = {};
+					aPermisos.forEach(oPermiso => {
+						hashPermisos[oPermiso.Rol] = oPermiso;
+					});
+
+					var sEmailEt = aResPromises[1].results && aResPromises[1].results !== 0 ? aResPromises[1].results.map(e => (e.Mail)).join(",") :
+						""
+
+					if (oLicencia.Tipo === "L") {
+						var aEmailsPermisos = [hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"], hashPermisos[
+							"SOLICITANTE_SUPLENTE_AUXILIAR"], hashPermisos["JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"]].map(permiso =>
+							permiso &&
+							permiso.Mail ||
+							"hzea@inclusion.cloud")
+					} else {
+						var aEmailsPermisos = []
+					}
+
+					aEmails = aEmails.concat(aEmailsPermisos);
+
+					oUsuariosAsignados.Solicitante = hashPermisos["SOLICITANTE"].Legajo + ", " + hashPermisos["SOLICITANTE"].Nombre;
+					oUsuariosAsignados.SolicitanteSuplente = hashPermisos["SOLICITANTE_SUPLENTE"].Legajo + ", " + hashPermisos[
+						"SOLICITANTE_SUPLENTE"].Nombre;
+					oUsuariosAsignados.Jefe = hashPermisos["JEFE_TRABAJO"].Legajo + ", " + hashPermisos["JEFE_TRABAJO"].Nombre;
+					oUsuariosAsignados.JefeSuplente = hashPermisos["JEFE_TRABAJO_SUPLENTE"].Legajo + ", " + hashPermisos["JEFE_TRABAJO_SUPLENTE"]
+						.Nombre;
+					oUsuariosAsignados.SolSuplenteAux = hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo + ", " + hashPermisos[
+						"SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre;
+					var sEmails = aEmails.join(",");
+					//	var sEmailEt = "";
+					var sInfAdicional = ""
+
+					if (oLicencia.Licstat === "30") {
+						sEmails = "";
+						sEmailEt = "";
+					}
+
+					MailHelper.sendEmail(oLicencia, oUsuariosAsignados, sEmails, sEmailEt, sInfAdicional).then(() => {
+						if (bIsSol) {
+							sMessage = "Edición exitosa, esta solicitud se ha convertido en licencia";
+						} else {
+							if (oLicencia.Licstat === '09') {
+								sMessage = `La ${tipo} se generó exitosamente`;
+							} else {
+								sMessage = `${tipo} modificada de manera exitosa`;
+							}
+						}
+						BusyDialogHelper.close();
+						MessageBoxHelper.showAlert("Alerta", sMessage, $.proxy(this.goToHome, this));
+					}).catch((e) => {
+						console.error(e);
+						MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail.", $.proxy(this.goToHome, this));
+					});
+				}, (err) => {
+					console.error(e);
+					MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail.", $.proxy(this.goToHome, this));
+				})
+
+			}).catch((e) => {
+				console.error(e);
+				MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al editar los permisos", $.proxy(this.goToHome, this));
+			});
+		},
+
+		getMailsByRole: function (sRole) {
+
+			var mBaseUrl = sap.ui.getCore().getModel('appCurrentInfo').appUrl;
+
+			return new Promise((resolve, reject) => {
+				if (sRole === "") {
+					resolve([])
+				} else {
+					//var role = "Portal_Proveedores_Gestion";
+					var destination =  mBaseUrl + "/destinations/Examinadores_PT15/";
+					$.get(destination + "Users/?filter=groups eq '" + sRole + "'", function (res) {
+						var users = res.Resources;
+						var emails = users.map(function (user) {
+							return user.emails[0].value;
+						});
+						resolve(emails);
+						//resolve(["hzea@inclusion.cloud"])
+					}).fail(reject);
+				}
+
+			});
+		},
+
+		/*getSchemaPromise: function (Id, Tipo, Anio, Empresa) {
+			var aPromise = [];
+			var aData = AppManagementHelper.getModel("UnifilarListModel").getData().Unifilares
+			if (aData) {
+				aData.forEach(e => {
+					e.Id = Id
+					e.Tipo = Tipo
+					e.Anio = Anio
+					e.Empresa = Empresa
+				});
+				for (var oData of aData) {
+					aPromise.push(new Promise((resolve, reject) => {
+						oDataService.getModel("TransenerOperaciones").create("/EsquemaUnifilarSet", oData, {
+							success: resolve,
+							error: reject
+						});
+					}));
+				}
+			}
+			return aPromise;
+		},*/
+
+		getSelectionArea: function (Tipo, sLicstat) {
+			var sVal = "";
+			if (Tipo === "S") {
+				if (sLicstat === "09") {
+					sVal = "COORD"
+				}
+			} else {
+				// Issue 514 - Para los status 09 y 02 se deben enviar a ambos tecnico y coord
+				//				if (sLicstat === "09" || sLicstat === "02")
+				//				sVal = "COORD"
+				//		}
+				// Issue 514 - Se agregaron nuevos status a la condicion
+				if (sLicstat === "01" || sLicstat === "11" || sLicstat === "07" || sLicstat === "06" || sLicstat === "04" || sLicstat === "03") {
+					sVal = "TECNICO"
+				}
+			}
+			return sVal;
+		},
+
+		POSTPermisosLicencias: function (responseData, bIsSol, oLicencia, oCurrentUser, oUserRoles) {
+			var sTipoSol = bIsSol ? responseData.Tipo : "L"
+			var sLicenceId = responseData.Id;
+			var aPermisos = this.getPermisosPOSTArray(oLicencia, sTipoSol, sLicenceId, oCurrentUser, oUserRoles);
+			//var aSchemas = this.getSchemaPromise(sLicenceId, responseData.Tipo, responseData.Anio, responseData.Empresa);
+			//	aPermisos = aPermisos.concat(aSchemas);
+			Promise.all(aPermisos).then(() => {
+				var sMessage = "";
+				//PROCESO MAIL
+				var aPromises = [];
+				aPromises.push(this.getPermisos(responseData));
+				var oUserJson = AppManagementHelper.getModel("UserJsonModel").getData();
+				var sCurrentUserName = oUserJson.nombre + ", " + oUserJson.apellido;
+				var oUsuariosAsignados = {
+						Coordinador: "",
+						Creador: oCurrentUser.Legajo + ", " + sCurrentUserName
+					}
+					//TODO creador
+				switch (oLicencia.Licstat) {
+				case "30":
+					if (bIsSol) {
+						sMessage = "Solicitud Nº " + sLicenceId + " creada con exito";
+						AppManagementHelper.getModel("LicenciaClonadaID");
+						AppManagementHelper.getModel("LicenciaClonadaID").setData({
+							"IdClonada": sLicenceId
+						});
+					} else {
+						sMessage = "Licencia Nº" + sLicenceId + " creada con exito";
+						AppManagementHelper.getModel("LicenciaClonadaID");
+						AppManagementHelper.getModel("LicenciaClonadaID").setData({
+							"IdClonada": sLicenceId
+						});
+					}
+					//	BusyDialogHelper.close();
+					//	MessageBoxHelper.showAlert("Alerta", sMessage, $.proxy(this.goToHome, this));
+					//	return;
+					aPromises.push(this.getMailsByRole(""));
+					break;
+				case "09":
+					//se hace pero no uso esto 460 461
+					aPromises.push(this.getMailsByRole(this.rolCoordinador + "_" + FormatterHelper.centroToRegion(oLicencia.Werks)));
+					break;
+				case "07":
+					oUsuariosAsignados.RecepOper = oUsuariosAsignados.Creador;
+					aPromises.push(this.getMailsByRole(this.rolTramitador));
+					break;
+				}
+
+				aPromises.push(EtMailService.getPromise(oLicencia.Empresa, oLicencia.Tplnr, this.getSelectionArea(oLicencia.Tipo, oLicencia.Licstat)));
+				Promise.all(aPromises).then((aResPromises) => {
+					// var aEmails = ["hzea@inclusion.cloud"];
+					var aEmails = [];
+
+					let sEmailEt = aResPromises[2].results && aResPromises[2].results !== 0 ? aResPromises[2].results.map(e => (e.Mail)).join(",") :
+						"";
+					var sInfAdicional = "";
+					var aPermisos = aResPromises[0];
+					let hashPermisos = {};
+					aPermisos.forEach(oPermiso => {
+						hashPermisos[oPermiso.Rol] = oPermiso;
+					});
+
+					if (oLicencia.Tipo === "L") {
+						var aEmailsPermisos = [hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"], hashPermisos[
+							"SOLICITANTE_SUPLENTE_AUXILIAR"], hashPermisos["JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"]].map(permiso =>
+							permiso &&
+							permiso.Mail ||
+							"hzea@inclusion.cloud")
+					} else {
+						// Issue 581 - Se debe enviar correo al solicitante ,  creador y Coordinador de Mantenimiento cuando se genere una solicitud
+						var aEmailsPermisos = [hashPermisos["SOLICITANTE"], hashPermisos["CREADOR"]].map(permiso =>
+							permiso &&
+							permiso.Mail);
+						// Los coordinadores de Mantenimientos se obtuvieron  en un paso anterior
+						// aEmailsPermisos = aEmailsPermisos.concat(aResPromises[1]);
+
+						// #581 LT - cambiar destinatarios de mail en SOLICITUDES Coordinadas 
+						aEmailsPermisos = (aResPromises[2].results && aResPromises[2].results.length !== 0) ? aEmailsPermisos.concat(aResPromises[2].results
+							.map(e => e.Mail)) : aEmailsPermisos;
+					}
+
+					aEmails = aEmails.concat(aEmailsPermisos);
+					var sEmails = aEmails.join(",");
+
+					oUsuariosAsignados.Solicitante = hashPermisos["SOLICITANTE"].Legajo + ", " + hashPermisos["SOLICITANTE"].Nombre;
+					oUsuariosAsignados.SolicitanteSuplente = hashPermisos["SOLICITANTE_SUPLENTE"].Legajo + ", " + hashPermisos[
+						"SOLICITANTE_SUPLENTE"].Nombre;
+					oUsuariosAsignados.Jefe = hashPermisos["JEFE_TRABAJO"].Legajo + ", " + hashPermisos["JEFE_TRABAJO"].Nombre;
+					oUsuariosAsignados.JefeSuplente = hashPermisos["JEFE_TRABAJO_SUPLENTE"].Legajo + ", " + hashPermisos["JEFE_TRABAJO_SUPLENTE"]
+						.Nombre;
+					oUsuariosAsignados.SolSuplenteAux = hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"].Legajo + ", " + hashPermisos[
+						"SOLICITANTE_SUPLENTE_AUXILIAR"].Nombre;
+
+					//blanquear todo para estado CREADA, no debe llegarle a nadie.460 461
+					if (oLicencia.Licstat === "30") {
+						sEmails = "";
+						sEmailEt = "";
+					}
+
+					MailHelper.sendEmail(responseData, oUsuariosAsignados, sEmails, sEmailEt, sInfAdicional).then(() => {
+						if (bIsSol)
+							sMessage = "Solicitud Nº " + sLicenceId + " creada con exito";
+						else
+							sMessage = "Licencia Nº " + sLicenceId + " creada con exito";
+						AppManagementHelper.getModel("LicenciaClonadaID");
+						AppManagementHelper.getModel("LicenciaClonadaID").setData({
+							"IdClonada": sLicenceId
+						});
+						BusyDialogHelper.close();
+						MessageBoxHelper.showAlert("Alerta", sMessage, $.proxy(this.goToHome, this));
+					}).catch((e) => {
+						console.error(e);
+						MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail.", $.proxy(this.goToHome, this));
+					});
+				}, (err) => {
+					console.error(err);
+					MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail.", $.proxy(this.goToHome, this));
+				})
+			}, (err) => {
+				console.error(err);
+				MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al crear los permisos", $.proxy(this.goToHome, this));
+			});
+
+		},
+
+		successPOST: function (oResponse) {
+			var oCurrentUserData = AppManagementHelper.getModel("CurrentUser").getData();
+			var oUserRoles = AppManagementHelper.getModel("UserJsonModel").getData();
+			this.POSTPermisosLicencias(oResponse.responseData, oResponse.bIsSol, oResponse.licence, oCurrentUserData, oUserRoles);
+		},
+
+		goToHome: function () {
+			AppManagementHelper.getModel("refreshSearch").setData({
+				"data": true
+			});
+			AppManagementHelper.getAppRouter().navTo("Licencias");
+		},
+
+		acceptEmptyValues: function (sAttribute, object) {
+			switch (sAttribute) {
+			case "Substatus":
+				var oFilterData = AppManagementHelper.getModel("FiltersJsonModel").getData();
+				var sKey = oFilterData.Licstat.value;
+				if (object.value === "" && sKey === "01") {
+					object.value = "Z";
+					return true
+				} else {
+					if (object.value !== "") {
+						return true
+					} else {
+						return false
+					}
+				}
+				return true;
+			case "Equstatnocam":
+			case "Equstat":
+				return true;
+			default:
+				return object.value !== "";
+			}
+		},
+
+		generateAdvancedFilters: function () {
+			var oFilterData = AppManagementHelper.getModel("FiltersJsonModel").getData();
+			var aFilters = [];
+			// RECORRIDO DE ATRIBUTOS 
+			for (var atribute in oFilterData) {
+				// en el recorrido del model de filtros, evaluamos los arrays para creacion de filtros multiples
+				if (oFilterData[atribute]["value"] !== null && oFilterData[atribute]["value"].constructor === Array) {
+					var aValues = oFilterData[atribute]["value"];
+					if (aValues.length !== 0) {
+						var aMultipleFilter = [];
+						for (var value in aValues) {
+							var oFilterValues = this.getFilterObject(aValues[value]);
+							aMultipleFilter.push(new sap.ui.model.Filter(oFilterValues.attribute, sap.ui.model.FilterOperator[oFilterData[atribute][
+								"operator"
+							]], oFilterValues.value));
+						}
+						var oMultipleFilter = new sap.ui.model.Filter({
+							filters: aMultipleFilter,
+							and: false
+						});
+						aFilters.push(oMultipleFilter);
+					}
+				} else {
+					if (this.acceptEmptyValues(atribute, oFilterData[atribute])) {
+						// casos fechas null, no es vacio, porque el date tiene que ser null para presetarse sin nada.
+						if (oFilterData[atribute]["value"] !== null) {
+							// si es atributo fecha hora tratamiento especial
+							if (atribute === "Solbeg" || atribute === "Solend") {
+								//var oFormattedDate = moment(oFilterData[atribute]["value"].setHours(0, 0, 0, 0)).toDate();
+								aFilters.push(new sap.ui.model.Filter(atribute, sap.ui.model.FilterOperator[oFilterData[atribute]["operator"]], oFilterData[
+									atribute]["value"]));
+							} else {
+								// pusheado normal de todos los demas atributos con su filter operator y su valor tranca
+								aFilters.push(new sap.ui.model.Filter(atribute, sap.ui.model.FilterOperator[oFilterData[atribute]["operator"]], oFilterData[
+									atribute]["value"]));
+							}
+						}
+					}
+				}
+			}
+
+			return aFilters;
+		},
+
+		getFilterObject: function (sValue) {
+			var oObject = {};
+			switch (sValue) {
+			case "0":
+				oObject.attribute = "Senalestados";
+				oObject.value = "X";
+				break;
+			case "1":
+				oObject.attribute = "Senalalarmas";
+				oObject.value = "X";
+				break;
+			case "2":
+				oObject.attribute = "Senalmedicion";
+				oObject.value = "X";
+				break;
+			case "3":
+				oObject.attribute = "Precauciones";
+				oObject.value = "X";
+				break;
+			case "4":
+				oObject.attribute = "Ninguna";
+				oObject.value = "X";
+				break;
+			}
+			return oObject;
+
+		},
+
+		errorPOST: function (error) {
+			BusyDialogHelper.close();
+			var sError = FormatHelper.parseJsonError(error);
+			MessageBoxHelper.showAlert("Alert", sError);
+		},
+
+		PUTPromise: function (bSolChanged) {
+			return new Promise((resolve, reject) => {
+				let oLicence = AppManagementHelper.getModel("LicenseJsonModel").getData();
+				var licenseClone = LicenceHelper.cloneLicense(oLicence);
+				licenseClone.Licstat = this.getLicStatByRol(licenseClone.Tipolicencia, licenseClone.Licstat)
+				let entity = "/LicenciaTrabajoSet";
+				FormatHelper.formatTimes(licenseClone);
+				this.deleteNavProperties(licenseClone);
+				if (licenseClone.Rdisparo === "Y") licenseClone.Rdisparo = "";
+				if (licenseClone.Equstat === "Y") licenseClone.Equstat = "";
+				oDataService.getModel("TransenerOperaciones").update(entity + "(Empresa='" + licenseClone.Empresa + "',Id='" + licenseClone.Id +
+					"',Tipo='" + licenseClone.Tipo + "',Anio='" + licenseClone.Anio + "')", licenseClone, {
+						success: function (data) {
+							var oResponse = {
+								bIsSol: bSolChanged,
+								responseData: data,
+								licence: licenseClone
+							}
+							resolve(oResponse);
+						},
+						error: function () {
+							reject(error);
+						}
+					});
+			});
+		},
+
+		PUT: function (bSolChanged) {
+			BusyDialogHelper.open();
+			this.PUTPromise(bSolChanged).then($.proxy(this.successPUT, this)).catch($.proxy(this.errorPUT, this))
+		},
+
+		successPUT: function (oResponse) {
+			var oCurrentUserData = AppManagementHelper.getModel("CurrentUser").getData();
+			var oUserRoles = AppManagementHelper.getModel("UserJsonModel").getData();
+			this.PUTPermisosLicencia(oResponse.responseData, oResponse.bIsSol, oResponse.licence, oCurrentUserData, oUserRoles);
+		},
+
+		errorPUT: function () {
+			BusyDialogHelper.close();
+			MessageBoxHelper.showAlert("Alerta", "Error al modificar");
+		},
+
+		logTramitationChange: function (tramitador) {
+			return new Promise((resolve, reject) => {
+				let entitySet = "/RegistroFechaTramitacionSet";
+				let license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+				let toSave = {
+					Empresa: license.Empresa,
+					Id: license.Id,
+					Tipo: license.Tipo,
+					Anio: license.Anio,
+					Fecha: new Date(),
+					Tramitador: tramitador
+				};
+				oDataService.getModel("TransenerOperaciones").create(entitySet, toSave, {
+					success: resolve,
+					error: reject
+				});
+			});
+
+		},
+
+		getFullTramitacionesWithCalendarDates: function () {
+			var aTramitaciones = AppManagementHelper.getModel("TramitacionListJsonModel") ? AppManagementHelper.getModel(
+				"TramitacionListJsonModel").getData().Tramitaciones : [];
+			var aPromises = [];
+
+			aTramitaciones.map((oTramitacion) => {
+				aPromises.push(this.getDatesFromTramitacion(oTramitacion));
+			});
+
+			Promise.all(aPromises).then((aCalendarDates) => {
+
+				aTramitaciones.map((Tramit, index) => {
+					aCalendarDates.map((oCalendarDates) => {
+						Tramit.CalendarDates = aCalendarDates[index].results;
+					});
+					AppManagementHelper.getModel("TramitacionListJsonModel").setProperty("/CalendarDates", Tramit.CalendarDates);
+				});
+
+			});
+		}
+
+	};
+});
