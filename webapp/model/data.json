@@ -194,11 +194,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400045',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "1ACA",
-        "Consola": "NOA",
-        "TurnoAsignado": "07:00",
-        "FirstItem": true
+        }
     },
     {
         "__metadata": {
@@ -395,11 +391,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400038',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "1BRIN1",
-        "Consola": "NOA",
-        "TurnoAsignado": "07:15",
-        "FirstItem": true
+        }
     },
     {
         "__metadata": {
@@ -596,11 +588,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400040',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "1BRIN1",
-        "Consola": "NOA",
-        "TurnoAsignado": "07:15",
-        "FirstItem": false
+        }
     },
     {
         "__metadata": {
@@ -797,11 +785,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400041',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "1BRIN1",
-        "Consola": "NOA",
-        "TurnoAsignado": "07:15",
-        "FirstItem": false
+        }
     },
     {
         "__metadata": {
@@ -998,11 +982,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400042',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "1BRIN1",
-        "Consola": "NOA",
-        "TurnoAsignado": "07:15",
-        "FirstItem": false
+        }
     },
     {
         "__metadata": {
@@ -1199,11 +1179,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400043',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "1BRIN1",
-        "Consola": "NOA",
-        "TurnoAsignado": "07:15",
-        "FirstItem": false
+        }
     },
     {
         "__metadata": {
@@ -1400,11 +1376,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400044',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "1BRIN1",
-        "Consola": "NOA",
-        "TurnoAsignado": "07:15",
-        "FirstItem": false
+        }
     },
     {
         "__metadata": {
@@ -1601,11 +1573,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400055',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "3AJA",
-        "Consola": "NOA",
-        "TurnoAsignado": "07:30",
-        "FirstItem": true
+        }
     },
     {
         "__metadata": {
@@ -1802,11 +1770,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400047',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "5ABA",
-        "Consola": "METRO-SUR",
-        "TurnoAsignado": "07:45",
-        "FirstItem": true
+        }
     },
     {
         "__metadata": {
@@ -2003,11 +1967,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400048',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "5ABA",
-        "Consola": "METRO-SUR",
-        "TurnoAsignado": "07:45",
-        "FirstItem": false
+        }
     },
     {
         "__metadata": {
@@ -2204,11 +2164,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400049',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "5ABA",
-        "Consola": "METRO-SUR",
-        "TurnoAsignado": "07:45",
-        "FirstItem": false
+        }
     },
     {
         "__metadata": {
@@ -2405,11 +2361,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400050',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "5ABB",
-        "Consola": "METRO-SUR",
-        "TurnoAsignado": "08:15",
-        "FirstItem": true
+        }
     },
     {
         "__metadata": {
@@ -2606,11 +2558,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400058',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "5ACB",
-        "Consola": "NOA",
-        "TurnoAsignado": "08:30",
-        "FirstItem": true
+        }
     },
     {
         "__metadata": {
@@ -2807,11 +2755,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400056',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "5BRA",
-        "Consola": "NOA",
-        "TurnoAsignado": "08:45",
-        "FirstItem": true
+        }
     },
     {
         "__metadata": {
@@ -3008,11 +2952,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400051',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "9AJA",
-        "Consola": "NOA",
-        "TurnoAsignado": "09:15",
-        "FirstItem": true
+        }
     },
     {
         "__metadata": {
@@ -3209,11 +3149,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400052',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "9AJA",
-        "Consola": "NOA",
-        "TurnoAsignado": "09:15",
-        "FirstItem": false
+        }
     },
     {
         "__metadata": {
@@ -3410,11 +3346,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400053',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "9AJA",
-        "Consola": "NOA",
-        "TurnoAsignado": "09:15",
-        "FirstItem": false
+        }
     },
     {
         "__metadata": {
@@ -3611,11 +3543,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400046',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "CA-TIBA 1CAB",
-        "Consola": "NEA",
-        "TurnoAsignado": "09:30",
-        "FirstItem": true
+        }
     },
     {
         "__metadata": {
@@ -3812,11 +3740,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400057',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "CB 5A032",
-        "Consola": "NOA",
-        "TurnoAsignado": "09:45",
-        "FirstItem": true
+        }
     },
     {
         "__metadata": {
@@ -4013,11 +3937,7 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400054',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "T1EZ",
-        "Consola": "METRO-SUR",
-        "TurnoAsignado": "10:15",
-        "FirstItem": true
+        }
     },
     {
         "__metadata": {
@@ -4214,10 +4134,6 @@
             "__deferred": {
                 "uri": "https://webidetesting2104071-da40b6a1b.dispatcher.us2.hana.ondemand.com/destinations/SAP_Gateway/sap/opu/odata/sap/Z_SCP_OPERACIONES_SRV/LicenciaTrabajoSet(Empresa='100',Id='L202400039',Tipo='L',Anio='2024')/RegistroFechaTramitacion_nav"
             }
-        },
-        "Grupo": "T2AT",
-        "Consola": "NEA",
-        "TurnoAsignado": "10:30",
-        "FirstItem": true
+        }
     }
 ]
