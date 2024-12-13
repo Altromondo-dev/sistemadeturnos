@@ -377,6 +377,7 @@ sap.ui.define([
 		onSearch: function () {
 			AppManagementHelper.getModel("LicencesJsonModel").setData([])
 			var oTable = this.byId('turnosTable')
+			var sPath = FioriHelper.getAppPath();
 
 			var oView = this.getView()
 			var aFilters = []
@@ -425,25 +426,53 @@ sap.ui.define([
 				success: (data) => {
 
 					this.onCountItems(data.results)
-					//AppManagementHelper.getModel("LicencesJsonModel").setData(data.results)
+					AppManagementHelper.getModel("LicencesJsonModel").setData(data.results)
+					var oLicencesModel = AppManagementHelper.getModel("LicencesJsonModel");
+					var datos = oLicencesModel.getData();
 
-					AppManagementHelper.getModel("LicencesJsonModel").loadData("../../model/data.json");
-					
-					var datos = AppManagementHelper.getModel("LicencesJsonModel").getData()
-					
-					var OrderConsola = datos.sort((a, b) => {
-						if (a.Consola > b.Consola) return 1;
-						if (a.Consola < b.Consola) return -1;
-						return 0;
-					});
+					// Procesar los datos según la lógica de negocio
+					const arrayOrdenado = this.encontrarGrupo(this.ordenarPorEqunr(datos));
+					this.assignShiftsToLicences(arrayOrdenado);
+
+					// Asignar los datos procesados de nuevo al modelo
+					oLicencesModel.refresh()
+					// AppManagementHelper.getModel("LicencesJsonModel").loadData("../../model/data.json");
+
+					// var datos = AppManagementHelper.getModel("LicencesJsonModel").getData()
+
+					// const Array = this.encontrarGrupo(this.ordenarPorEqunr(datos));
 
 
-					console.log(datos)
+					// var oTurnosModel = this.assignShiftsToLicences(Array);
 					//var oTurnosModel = new sap.ui.model.json.JSONModel();
-					var oTurnosModel = this.assignShiftsToLicences(OrderConsola);
 					//oView.setModel(oTurnosModel);
-					AppManagementHelper.getModel("LicencesJsonModel").setData(oTurnosModel)
+					//AppManagementHelper.getModel("LicencesJsonModel").setData(oTurnosModel)
 					oTable.setBusy(false)
+					// oLicencesModel.loadData(sPath + "/model/data.json");
+					// oLicencesModel.attachRequestCompleted(() => {
+					// 	// Obtener los datos cargados en el modelo
+					// 	var datos = oLicencesModel.getData();
+
+					// 	// Procesar los datos según la lógica de negocio
+					// 	const arrayOrdenado = this.encontrarGrupo(this.ordenarPorEqunr(datos));
+					// 	this.assignShiftsToLicences(arrayOrdenado);
+
+					// 	// Asignar los datos procesados de nuevo al modelo
+					// 	oLicencesModel.refresh()
+					// 	// AppManagementHelper.getModel("LicencesJsonModel").loadData("../../model/data.json");
+
+					// 	// var datos = AppManagementHelper.getModel("LicencesJsonModel").getData()
+
+					// 	// const Array = this.encontrarGrupo(this.ordenarPorEqunr(datos));
+
+
+					// 	// var oTurnosModel = this.assignShiftsToLicences(Array);
+					// 	//var oTurnosModel = new sap.ui.model.json.JSONModel();
+					// 	//oView.setModel(oTurnosModel);
+					// 	//AppManagementHelper.getModel("LicencesJsonModel").setData(oTurnosModel)
+					// 	oTable.setBusy(false)
+					// })
+
 				},
 				error: (error) => {
 					console.log(error)
@@ -479,36 +508,38 @@ sap.ui.define([
 			}
 			return "";
 		},
-	
-		encontrarGrupo: function (consola) {
-			const consolasModel = AppManagementHelper.getModel("consolasModel").getData();
 
-			// Validate the model
+		encontrarGrupo: function (licencias) {
+			const consolasModel = this.getView().getModel("consolasModel").getData();
+
 			if (!consolasModel || typeof consolasModel !== "object") {
 				return "Modelo no encontrado o no es válido";
 			}
 
-			// Initialize a variable to track if the console was found
-			let foundGroup = null;
+			licencias.forEach((licencia) => {
+				for (const grupo in consolasModel) {
+					const consolas = consolasModel[grupo];
 
-			// Iterate through each group in the consolasModel
-			for (const grupo in consolasModel) {
-				const consolas = consolasModel[grupo];
+					if (Array.isArray(consolas)) {
+						const consolaEncontrada = consolas.find((consola) => consola === licencia.Tplnr);
 
-				// Check if the current group is an array
-				if (Array.isArray(consolas)) {
-					// Check if the console is in the current group
-					if (consolas.includes(consola)) {
-						foundGroup = grupo;
-						break; // Exit the loop once the group is found
+						if (consolaEncontrada) {
+							licencia.Consola = grupo;
+						}
+					} else {
+						console.warn(`El grupo '${grupo}' no es un array. Se ignorará.`);
 					}
-				} else {
-					console.warn(`El grupo '${grupo}' no es un array. Se ignorará.`);
 				}
-			}
+			});
+			licencias.sort((a, b) => {
+				if (a.Consola < b.Consola) return -1;
+				if (a.Consola > b.Consola) return 1;
+				return 0;
+			});
 
-			// Return the result
-			return foundGroup ? foundGroup : "Consola no encontrada";
+			console.log(licencias);
+
+			return licencias;
 		},
 
 		transformData: function (data) {
@@ -4808,7 +4839,7 @@ sap.ui.define([
 
 			AppManagementHelper.getModel('LicencesListJsonModel').setData(TurnoLicencias)
 		},
-		
+
 		openMinuteDialog: function (oEvent) {
 			// Obtener el botón que fue presionado
 			var oButton = oEvent.getSource();
@@ -4956,30 +4987,41 @@ sap.ui.define([
 		clearAdvancedFilters: function () {
 			models.createFiltersModel();
 		},
+		ordenarPorEqunr: function (data) {
+			// Ordenar los elementos por el campo 'Equnr'
+			data.sort((a, b) => {
+				if (a.Equnr === b.Equnr) {
+					// Si las consolas son iguales, no cambiar el orden
+					return 0;
+				}
+				return a.Equnr < b.Equnr ? -1 : 1;
+			});
+			return data;
+		},
 
 		assignShiftsToLicences: function (licences) {
-			// Asignar el valor de Equnr al nuevo campo Grupo para cada licencia
+			var initialTime = 7 * 60; // Hora inicial (7:00 AM en minutos)
+			var currentTime = initialTime;
+			var previousConsola = ""; // Para rastrear cambios en la consola
+			var previousGrupo = ""; // Para rastrear cambios en el grupo
+			var firstShiftInGroup = ""; // Para almacenar el primer turno asignado en el grupo
+
+			// Asignar grupo por defecto si no existe
 			licences.forEach(function (license) {
-				if (license.Grupo) return
-				license.Grupo = license.Equnr; // Asignar el valor de Equnr a Grupo
+				if (!license.Grupo) {
+					license.Grupo = license.Equnr;
+				}
 			});
 
-			// Ordenar licencias por el campo 'Grupo', excluyendo los grupos individuales "Desacoplado"
-			licences.sort(function (a, b) {
-				if (a.Grupo.startsWith("_")) return 1; // Los desacoplados siempre al final
-				if (b.Grupo.startsWith("_")) return -1; // Los desacoplados siempre al final
-				return a.Grupo.localeCompare(b.Grupo); // Ordenar normalmente por grupo
-			});
-
-			var currentTime = 7 * 60; // Hora inicial 7:00 AM (en minutos)
-			var previousGrupo = ""; // Guardar el grupo de trabajo anterior
-			var firstShiftInGroup = ""; // Guardar el primer turno asignado en el grupo
-
-			// Asignar turnos por Grupo
+			// Asignar turnos por grupo y consola
 			licences.forEach(
 				function (license) {
-					// Saltar empleados desacoplados
-					license.Consola = this.encontrarGrupo(license.Tplnr);
+					// Reiniciar tiempo si cambia la consola
+					if (license.Consola !== previousConsola) {
+						currentTime = initialTime;
+						previousConsola = license.Consola;
+					}
+
 					if (license.Grupo.startsWith("_")) {
 						return;
 					}
@@ -4989,7 +5031,7 @@ sap.ui.define([
 						previousGrupo = license.Grupo;
 
 						// Determinar la duración del turno en función del Grupo
-						var shiftDuration = license.Jobcond === "04" ? 30 : 15; // 30 mins para Group A, 15 mins para otros
+						var shiftDuration = license.Jobcond === "04" ? 30 : 15; // 30 mins para Grupo "04", 15 mins para otros
 						license.TurnoAsignado = this._formatTime(currentTime);
 						firstShiftInGroup = license.TurnoAsignado; // Guardar el primer turno del grupo
 						currentTime += shiftDuration;
@@ -5000,7 +5042,7 @@ sap.ui.define([
 				}.bind(this)
 			);
 
-			// Asignar turnos a los licencias desacoplados tomando el último turno disponible
+			// Asignar turnos a las licencias desacopladas tomando el último turno disponible
 			licences.forEach(
 				function (license) {
 					if (license.Grupo.startsWith("_")) {
@@ -5010,6 +5052,8 @@ sap.ui.define([
 				}.bind(this)
 			);
 		},
+
+
 		onDragStart: function (oEvent) {
 			const oDraggedRow = oEvent.getParameter("target");
 			const oDragSession = oEvent.getParameter("dragSession");
@@ -5082,60 +5126,7 @@ sap.ui.define([
 			oModel.setProperty("/", aLicences); // Reemplazar el array con la versión actualizada
 			oModel.refresh(true); // Refrescar el modelo para reflejar los cambios en la vista
 		},
-
-		_convertShiftToMinutes: function (shift) {
-			var [hours, minutes] = shift.split(":").map(Number);
-			return hours * 60 + minutes;
-		},
-
-		_formatTime: function (minutes) {
-			var hours = Math.floor(minutes / 60);
-			var mins = minutes % 60;
-			return hours.toString().padStart(2, "0") + ":" + mins.toString().padStart(2, "0");
-		},
-		// 	// Get a reference to the turnosTable
-		// 	var oTable = this.byId("turnosTable");
-
-		// 	console.log(oTable)
-		// 	// Get the selected item from the table
-		// 	var oSelectedItem = oTable.getSelectedIndex();
-
-		// 	// Check if an item is selected
-		// 	if (!oSelectedItem) {
-		// 		MessageToast.show("Por favor, seleccione una fila para eliminar.");
-		// 		return;
-		// 	}
-
-		// 	// Get the context of the selected item
-		// 	var oContext = oSelectedItem.getBindingContext("LicencesJsonModel");
-
-		// 	if (oContext) {
-		// 		// Get the license ID from the selected item
-		// 		var sLicenseId = oContext.getProperty("Id");
-
-		// 		var oModel = this.getView().getModel("LicencesJsonModel");
-		// 		var aLicenses = oModel.getData();
-
-		// 		// Find the index of the license to delete
-		// 		var iLicenseIndex = aLicenses.findIndex(function (license) {
-		// 			return license.Id === sLicenseId;
-		// 		});
-
-		// 		if (iLicenseIndex !== -1) {
-		// 			// Remove the selected license from the list
-		// 			aLicenses.splice(iLicenseIndex, 1);
-
-		// 			// Update the model with the modified list
-		// 			oModel.setProperty("/", aLicenses);
-		// 			oModel.refresh(true);
-
-		// 			// Clear the table selection
-		// 			oTable.removeSelections();
-
-		// 			MessageToast.show("La licencia ha sido eliminada.");
-		// 		}
-		// 	}
-		// },
+		
 		onDeletePress: function () {
 
 			var oTable = this.byId("turnosTable");
@@ -5167,76 +5158,69 @@ sap.ui.define([
 				MessageToast.show("La licencia ha sido eliminada.");
 			}
 		},
-
 		onDetachLicense: function () {
-
 			var oTable = this.byId("turnosTable");
 
-
+			// Check if a row is selected
 			var iSelectedIndex = oTable.getSelectedIndex();
-
-
 			if (iSelectedIndex === -1) {
 				MessageToast.show("Por favor, seleccione una fila para desacoplar.");
 				return;
 			}
 
-
 			var oModel = this.getView().getModel("LicencesJsonModel");
 			var aLicences = oModel.getData();
 
-
-			if (iSelectedIndex >= 0 && iSelectedIndex < aLicences.length) {
-
-				var oDetachedLicense = aLicences.splice(iSelectedIndex, 1)[0];
-
-				var oLastLicense = aLicences[aLicences.length - 1];
-				var currentTime = this._convertShiftToMinutes(oLastLicense.TurnoAsignado);
-				var shiftDuration = oDetachedLicense.Jobcond === "04" ? 30 : 15;
-
-
-				currentTime += shiftDuration;
-				oDetachedLicense.TurnoAsignado = this._formatTime(currentTime);
-
-
-				oDetachedLicense.Grupo = "_Desacoplado_" + oDetachedLicense.Id;
-
-				aLicences.push(oDetachedLicense);
-
-
-				oModel.setProperty("/", aLicences);
-				oModel.refresh(true);
-
-
-				oTable.clearSelection();
-
-				MessageToast.show("Licencia desacoplada, asignada al final con nuevo turno y grupo individual.");
+			// Check if the model data is available and the index is valid
+			if (!oModel || !aLicences || iSelectedIndex < 0 || iSelectedIndex >= aLicences.length) {
+				MessageToast.show("Datos no válidos.");
+				return;
 			}
+
+			// Detach the selected license
+			var oDetachedLicense = aLicences.splice(iSelectedIndex, 1)[0];
+			var groupConsola = oDetachedLicense.Consola;  // Get the Consola value (group identifier)
+
+			// Find the last item in the same group
+			var groupLastIndex = -1;
+			for (var i = aLicences.length - 1; i >= 0; i--) {
+				if (aLicences[i].Consola === groupConsola) {
+					groupLastIndex = i;
+					break;
+				}
+			}
+
+			if (groupLastIndex === -1) {
+				MessageToast.show("No se encontró el grupo de la licencia.");
+				return;
+			}
+
+			// Get the last license in the group to calculate the new time
+			var oLastLicenseInGroup = aLicences[groupLastIndex];
+			var currentTime = this._convertShiftToMinutes(oLastLicenseInGroup.TurnoAsignado);
+			var shiftDuration = oDetachedLicense.Jobcond === "04" ? 30 : 15;
+
+			currentTime += shiftDuration;
+			oDetachedLicense.TurnoAsignado = this._formatTime(currentTime);
+
+			// Assign a unique group for the detached license
+			oDetachedLicense.Grupo = "_Desacoplado_" + oDetachedLicense.Id;
+
+			// Insert the detached license after the last element of the group
+			aLicences.splice(groupLastIndex + 1, 0, oDetachedLicense);
+
+			// Update the model
+			oModel.setProperty("/", aLicences);
+			oModel.refresh(true);
+
+			// Clear selection in the table
+			oTable.clearSelection();
+
+			// Notify the user
+			MessageToast.show("Licencia desacoplada, asignada después del último elemento del grupo con nuevo turno y grupo individual.");
 		},
 
 
-
-		// 	// Obtener el valor seleccionado del desplegable
-		// 	var oSelect = this._oDialog.getContent()[0]; // Obtener el Select del contenido del diálogo
-		// 	var iMinutesToAdd = parseInt(oSelect.getSelectedKey());
-
-		// 	// Acceder al modelo y actualizar el turno del empleado
-		// 	var oModel = this.getView().getModel("LicencesJsonModel");
-		// 	var aLicenses = oModel.getData();
-
-		// 	var iLicenseIndex = aLicenses.findIndex((license) => license.Id === this._selectedLicenseId);
-		// 	if (iLicenseIndex !== -1) {
-		// 		// Sumar los minutos seleccionados al turno del empleado
-		// 		this._adjustShiftForLicense(aLicenses, iLicenseIndex, iMinutesToAdd);
-
-		// 		// Refrescar el modelo
-		// 		oModel.refresh(true);
-		// 		MessageToast.show("Se ha ajustado el turno de la licencia y los turnos siguientes.");
-		// 	}
-
-		// 	// Cerrar el diálogo
-		// 	this._oDialog.close();
-		// },
 		onAddMinutes: function () {
 			var oInput = this._oDialog.getContent()[0];
 			var iMinutesToAdd = parseInt(oInput.getValue(), 10);
@@ -5420,7 +5404,68 @@ sap.ui.define([
 			// Actualizar el modelo con el nuevo array
 			oModel.setProperty(sPath + "/accionesEntregas", aAccionesEntregas);
 		},
-
+		onChangeHour: function (oEvent) {
+			// Obtener el contexto de la fila seleccionada
+			var oSource = oEvent.getSource();
+			var sPath = oSource.getBindingContext("LicencesJsonModel").getPath();
+			var iLicenseIndex = parseInt(sPath.split("/")[1], 10); // Índice de la fila seleccionada
+	
+			// Obtener el modelo y los datos actuales
+			var oModel = this.getView().getModel("LicencesJsonModel");
+			var aLicences = oModel.getProperty("/");
+	
+			// Obtener el nuevo horario del TimePicker
+			var sNewTime = oEvent.getParameter("value");
+	
+			// Obtener los datos de la fila seleccionada
+			var oSelectedLicence = aLicences[iLicenseIndex];
+	
+			// Actualizar solo las filas del mismo Grupo y Consola
+			this._updateSameGroupAndConsoleShifts(aLicences, oSelectedLicence, sNewTime);
+	
+			// Reordenar las filas por Consola, luego por Grupo y finalmente por TurnoAsignado
+			this._sortLicences(aLicences);
+	
+			// Actualizar el modelo con los cambios
+			oModel.setProperty("/", aLicences);
+			oModel.refresh(true);
+		  },
+	
+		  _updateSameGroupAndConsoleShifts: function (aLicences, oSelectedLicence, sNewTime) {
+			// Recorre las licencias y actualiza el horario solo de aquellas que comparten el mismo Grupo y Consola
+			aLicences.forEach(function (oLicence) {
+			  if (oLicence.Consola === oSelectedLicence.Consola && oLicence.Grupo === oSelectedLicence.Grupo) {
+				oLicence.TurnoAsignado = sNewTime;
+			  }
+			});
+		  },
+		  _sortLicences: function (aLicences) {
+			aLicences.sort((a, b) => {
+			  return this._convertShiftToMinutes(a.TurnoAsignado) - this._convertShiftToMinutes(b.TurnoAsignado);
+			});
+	
+			aLicences.sort((a, b) => {
+			  if (a.Consola !== b.Consola) {
+				return a.Consola.localeCompare(b.Consola);
+			  }
+	
+			  return 0;
+			});
+		  },
+	
+		  // Método para convertir TurnoAsignado a minutos
+		  _convertShiftToMinutes: function (shift) {
+			const [hours, minutes] = shift.split(":").map(Number);
+			return hours * 60 + minutes;
+		  },
+		  _formatTime: function (iMinutes) {
+			// Convertir los minutos de nuevo a formato HH:mm
+			var iHours = Math.floor(iMinutes / 60);
+			var iRemainderMinutes = iMinutes % 60;
+	
+			// Asegurarse de que siempre tenga 2 dígitos
+			return (iHours < 10 ? "0" : "") + iHours + ":" + (iRemainderMinutes < 10 ? "0" : "") + iRemainderMinutes;
+		  },
 	});
 });
 

@@ -2036,7 +2036,7 @@ sap.ui.define([
 			//  filters.push(new Filter("Anio", FilterOperator.EQ, turno.Anio));
 			//  filters.push(new Filter("Tipo", FilterOperator.EQ, turno.Tipo));
 
-			 filters.push(new Filter("Id", FilterOperator.EQ, "L202400039"));
+			 filters.push(new Filter("Id", FilterOperator.EQ, "L202400059"));
 			 filters.push(new Filter("Empresa", FilterOperator.EQ, "100"));
 			 filters.push(new Filter("Anio", FilterOperator.EQ, "2024"));
 			 filters.push(new Filter("Tipo", FilterOperator.EQ, "L"));

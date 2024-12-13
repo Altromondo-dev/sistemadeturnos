@@ -178,12 +178,13 @@
 							<Label text="{i18n>shift}" textAlign="Center"/>
 							<t:template>
 								<HBox alignItems="Center" justifyContent="SpaceBetween">
-									<Text text="{LicencesJsonModel>TurnoAsignado}" wrapping="false" class="turno"/>
+								   <TimePicker value="{LicencesJsonModel>TurnoAsignado}" valueFormat="HH:mm" displayFormat="HH:mm" valueState="{path: 'LicencesJsonModel>Consola', formatter: '.FormatterHelper.turnoColor'}" change="onChangeHour" />
+									<!-- <ObjectStatus text="{LicencesJsonModel>TurnoAsignado}" state="{path: 'LicencesJsonModel>Consola', formatter: '.FormatterHelper.turnoColor'}"  wrapping="false" class="turno"/>
 									<Button icon="sap-icon://create-entry-time" press="openMinuteDialog">
 										<customData>
 											<core:CustomData key="LicenseId" value="{LicencesJsonModel>Id}"/>
 										</customData>
-									</Button>
+									</Button> -->
 								</HBox>
 							</t:template>
 						</t:Column>
