@@ -145,6 +145,7 @@ sap.ui.define([
 			var sPath = FioriHelper.getAppPath();
 
 			AppManagementHelper.getModel("consolasModel").loadData(sPath + "model/ConsolasModel.json", "", false);
+			AppManagementHelper.getModel("enabledModel").loadData(sPath + "model/EnabledModel.json", "", false);
 			var permisosModel = AppManagementHelper.getModel("permisosModel");
 			permisosModel.loadData(sPath + "conf/permisos.json", "", false);
 
@@ -375,11 +376,19 @@ sap.ui.define([
 			oLicenseTableItems.filter(oFilter);
 		},
 		onSearch: function () {
-			AppManagementHelper.getModel("LicencesJsonModel").setData([])
-			var oTable = this.byId('turnosTable')
-			var sPath = FioriHelper.getAppPath();
 
-			var oView = this.getView()
+
+			var dateTurno = this.byId('date')
+			const FechaTurno = dateTurno.getDateValue().toISOString().split('T')[0]
+
+
+			AppManagementHelper.getModel("LicencesJsonModel").setData([])
+			var oLicencesModel = AppManagementHelper.getModel("LicencesJsonModel");
+
+			var oTable = this.byId('turnosTable')
+			//var sPath = FioriHelper.getAppPath();
+
+			//var oView = this.getView()
 			var aFilters = []
 			var oDataModel = oDataService.getModel('TransenerOperaciones')
 
@@ -395,8 +404,6 @@ sap.ui.define([
 			}
 
 			oTable.setBusy(true)
-
-
 
 
 			if (sFromDate && sToDate) {
@@ -425,53 +432,24 @@ sap.ui.define([
 				filters: aFilters,
 				success: (data) => {
 
-					this.onCountItems(data.results)
-					AppManagementHelper.getModel("LicencesJsonModel").setData(data.results)
-					var oLicencesModel = AppManagementHelper.getModel("LicencesJsonModel");
-					var datos = oLicencesModel.getData();
+					const datosFiltrados = this.filtrarFechasTipo(data.results, FechaTurno)
 
-					// Procesar los datos según la lógica de negocio
-					const arrayOrdenado = this.encontrarGrupo(this.ordenarPorEqunr(datos));
-					this.assignShiftsToLicences(arrayOrdenado);
+					if (datosFiltrados.length > 0) {
+						// Procesar los datos según la lógica de negocio
+						const arrayOrdenado = this.encontrarGrupo(this.ordenarPorEqunr(datosFiltrados));
+						this.assignShiftsToLicences(arrayOrdenado);
 
-					// Asignar los datos procesados de nuevo al modelo
+						// Asignar los datos procesados de nuevo al modelo
+						oLicencesModel.setData(arrayOrdenado)
+						oLicencesModel.refresh()
+
+						oTable.setBusy(false)
+					}
+
+					oLicencesModel.setData(datosFiltrados)
 					oLicencesModel.refresh()
-					// AppManagementHelper.getModel("LicencesJsonModel").loadData("../../model/data.json");
-
-					// var datos = AppManagementHelper.getModel("LicencesJsonModel").getData()
-
-					// const Array = this.encontrarGrupo(this.ordenarPorEqunr(datos));
-
-
-					// var oTurnosModel = this.assignShiftsToLicences(Array);
-					//var oTurnosModel = new sap.ui.model.json.JSONModel();
-					//oView.setModel(oTurnosModel);
-					//AppManagementHelper.getModel("LicencesJsonModel").setData(oTurnosModel)
+					this.onCountItems(oLicencesModel.getData())
 					oTable.setBusy(false)
-					// oLicencesModel.loadData(sPath + "/model/data.json");
-					// oLicencesModel.attachRequestCompleted(() => {
-					// 	// Obtener los datos cargados en el modelo
-					// 	var datos = oLicencesModel.getData();
-
-					// 	// Procesar los datos según la lógica de negocio
-					// 	const arrayOrdenado = this.encontrarGrupo(this.ordenarPorEqunr(datos));
-					// 	this.assignShiftsToLicences(arrayOrdenado);
-
-					// 	// Asignar los datos procesados de nuevo al modelo
-					// 	oLicencesModel.refresh()
-					// 	// AppManagementHelper.getModel("LicencesJsonModel").loadData("../../model/data.json");
-
-					// 	// var datos = AppManagementHelper.getModel("LicencesJsonModel").getData()
-
-					// 	// const Array = this.encontrarGrupo(this.ordenarPorEqunr(datos));
-
-
-					// 	// var oTurnosModel = this.assignShiftsToLicences(Array);
-					// 	//var oTurnosModel = new sap.ui.model.json.JSONModel();
-					// 	//oView.setModel(oTurnosModel);
-					// 	//AppManagementHelper.getModel("LicencesJsonModel").setData(oTurnosModel)
-					// 	oTable.setBusy(false)
-					// })
 
 				},
 				error: (error) => {
@@ -483,6 +461,39 @@ sap.ui.define([
 
 			this.closeDialog()
 
+		},
+		filtrarFechasTipo: function (datos, fechaSeleccionada) {
+			if (!Array.isArray(datos)) {
+				throw new Error("El parámetro 'datos' debe ser un array.");
+			}
+
+			// Convertir fecha seleccionada a un formato estandarizado si es necesario
+
+
+			// Filtrar los datos según las condiciones
+			const datosFiltrados = datos.filter(dato => {
+				if (
+					dato.Licstat !== "01" &&
+					dato.Licstat !== "08" &&
+					dato.Licstat !== "10" &&
+					dato.Licstat !== "07" &&
+					dato.Licstat !== "02" &&
+					dato.Licstat !== "23"
+				) {
+					return false; // Excluir si Licstat no coincide con ninguno
+				}
+				if (dato.Period === "C") {
+					return dato.Solbeg.toISOString().split('T')[0] === fechaSeleccionada; // Incluir si Period es "C" y Solbeg coincide con la fecha
+				}
+
+				if (dato.Period === "D") {
+					return dato.Solend.toISOString().split('T')[0] === fechaSeleccionada; // Incluir si Period es "D" y Solend coincide con la fecha
+				}
+
+				return false; // Excluir cualquier otro caso
+			});
+
+			return datosFiltrados;
 		},
 		rows: function (data) {
 			const oView = this.getView()
@@ -4807,6 +4818,7 @@ sap.ui.define([
 
 		onSelectTurno: function (oEvent) {
 
+			AppManagementHelper.getModel("enabledModel").setData({ "btnCrear": true, "btnGuardar": true, "btnEnviar": true })
 			var oDatePicker = oEvent.getSource();
 			var sSelectedDate = oDatePicker.getDateValue();
 			var sFormattedDate = this._formatDate(sSelectedDate);
@@ -5126,7 +5138,7 @@ sap.ui.define([
 			oModel.setProperty("/", aLicences); // Reemplazar el array con la versión actualizada
 			oModel.refresh(true); // Refrescar el modelo para reflejar los cambios en la vista
 		},
-		
+
 		onDeletePress: function () {
 
 			var oTable = this.byId("turnosTable");
@@ -5409,63 +5421,63 @@ sap.ui.define([
 			var oSource = oEvent.getSource();
 			var sPath = oSource.getBindingContext("LicencesJsonModel").getPath();
 			var iLicenseIndex = parseInt(sPath.split("/")[1], 10); // Índice de la fila seleccionada
-	
+
 			// Obtener el modelo y los datos actuales
 			var oModel = this.getView().getModel("LicencesJsonModel");
 			var aLicences = oModel.getProperty("/");
-	
+
 			// Obtener el nuevo horario del TimePicker
 			var sNewTime = oEvent.getParameter("value");
-	
+
 			// Obtener los datos de la fila seleccionada
 			var oSelectedLicence = aLicences[iLicenseIndex];
-	
+
 			// Actualizar solo las filas del mismo Grupo y Consola
 			this._updateSameGroupAndConsoleShifts(aLicences, oSelectedLicence, sNewTime);
-	
+
 			// Reordenar las filas por Consola, luego por Grupo y finalmente por TurnoAsignado
 			this._sortLicences(aLicences);
-	
+
 			// Actualizar el modelo con los cambios
 			oModel.setProperty("/", aLicences);
 			oModel.refresh(true);
-		  },
-	
-		  _updateSameGroupAndConsoleShifts: function (aLicences, oSelectedLicence, sNewTime) {
+		},
+
+		_updateSameGroupAndConsoleShifts: function (aLicences, oSelectedLicence, sNewTime) {
 			// Recorre las licencias y actualiza el horario solo de aquellas que comparten el mismo Grupo y Consola
 			aLicences.forEach(function (oLicence) {
-			  if (oLicence.Consola === oSelectedLicence.Consola && oLicence.Grupo === oSelectedLicence.Grupo) {
-				oLicence.TurnoAsignado = sNewTime;
-			  }
+				if (oLicence.Consola === oSelectedLicence.Consola && oLicence.Grupo === oSelectedLicence.Grupo) {
+					oLicence.TurnoAsignado = sNewTime;
+				}
 			});
-		  },
-		  _sortLicences: function (aLicences) {
+		},
+		_sortLicences: function (aLicences) {
 			aLicences.sort((a, b) => {
-			  return this._convertShiftToMinutes(a.TurnoAsignado) - this._convertShiftToMinutes(b.TurnoAsignado);
+				return this._convertShiftToMinutes(a.TurnoAsignado) - this._convertShiftToMinutes(b.TurnoAsignado);
 			});
-	
+
 			aLicences.sort((a, b) => {
-			  if (a.Consola !== b.Consola) {
-				return a.Consola.localeCompare(b.Consola);
-			  }
-	
-			  return 0;
+				if (a.Consola !== b.Consola) {
+					return a.Consola.localeCompare(b.Consola);
+				}
+
+				return 0;
 			});
-		  },
-	
-		  // Método para convertir TurnoAsignado a minutos
-		  _convertShiftToMinutes: function (shift) {
+		},
+
+		// Método para convertir TurnoAsignado a minutos
+		_convertShiftToMinutes: function (shift) {
 			const [hours, minutes] = shift.split(":").map(Number);
 			return hours * 60 + minutes;
-		  },
-		  _formatTime: function (iMinutes) {
+		},
+		_formatTime: function (iMinutes) {
 			// Convertir los minutos de nuevo a formato HH:mm
 			var iHours = Math.floor(iMinutes / 60);
 			var iRemainderMinutes = iMinutes % 60;
-	
+
 			// Asegurarse de que siempre tenga 2 dígitos
 			return (iHours < 10 ? "0" : "") + iHours + ":" + (iRemainderMinutes < 10 ? "0" : "") + iRemainderMinutes;
-		  },
+		},
 	});
 });
 
