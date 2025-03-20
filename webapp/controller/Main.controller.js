@@ -433,6 +433,7 @@ sap.ui.define([
 				success: (data) => {
 
 					const datosFiltrados = this.filtrarFechasTipo(data.results, FechaTurno)
+					//const datosFiltrados = data.results
 
 					if (datosFiltrados.length > 0) {
 						// Procesar los datos según la lógica de negocio
@@ -445,6 +446,8 @@ sap.ui.define([
 
 						oTable.setBusy(false)
 					}
+
+					console.log(datosFiltrados)
 
 					oLicencesModel.setData(datosFiltrados)
 					oLicencesModel.refresh()
@@ -467,34 +470,35 @@ sap.ui.define([
 				throw new Error("El parámetro 'datos' debe ser un array.");
 			}
 
-			// Convertir fecha seleccionada a un formato estandarizado si es necesario
+			if (typeof fechaSeleccionada !== "string") {
+				throw new Error("El parámetro 'fechaSeleccionada' debe ser un string con formato de fecha.");
+			}
 
+			const estadosPermitidos = ["01", "08", "10", "07", "02", "23"];
 
-			// Filtrar los datos según las condiciones
 			const datosFiltrados = datos.filter(dato => {
-				if (
-					dato.Licstat !== "01" &&
-					dato.Licstat !== "08" &&
-					dato.Licstat !== "10" &&
-					dato.Licstat !== "07" &&
-					dato.Licstat !== "02" &&
-					dato.Licstat !== "23"
-				) {
-					return false; // Excluir si Licstat no coincide con ninguno
-				}
-				if (dato.Period === "C") {
-					return dato.Solbeg.toISOString().split('T')[0] === fechaSeleccionada; // Incluir si Period es "C" y Solbeg coincide con la fecha
+				if (!estadosPermitidos.includes(dato.Licstat)) {
+					return false; // Excluir si Licstat no está en la lista permitida
 				}
 
-				if (dato.Period === "D") {
-					return dato.Solend.toISOString().split('T')[0] === fechaSeleccionada; // Incluir si Period es "D" y Solend coincide con la fecha
+				// Convertimos las fechas si vienen en string
+				const fechaSolbeg = dato.Solbeg instanceof Date ? dato.Solbeg : new Date(dato.Solbeg);
+				const fechaSolend = dato.Solend instanceof Date ? dato.Solend : new Date(dato.Solend);
+
+				if (dato.Period === "C" && !isNaN(fechaSolbeg)) {
+					return fechaSolbeg.toISOString().split('T')[0] === fechaSeleccionada;
 				}
 
-				return false; // Excluir cualquier otro caso
+				if (dato.Period === "D" && !isNaN(fechaSolend)) {
+					return fechaSolend.toISOString().split('T')[0] === fechaSeleccionada;
+				}
+
+				return false;
 			});
 
 			return datosFiltrados;
 		},
+
 		rows: function (data) {
 			const oView = this.getView()
 			var startTime = new Date();
@@ -4770,14 +4774,15 @@ sap.ui.define([
 		},
 		onSaveTurnoPress: function () {
 
-			const FechaTurno = AppManagementHelper.getModel("LicencesJsonModel").getProperty("/FechaTurno")
+			const FechaTurno = AppManagementHelper.getModel("LicencesTurnoJsonModel").getProperty("/FechaTurno")
+			const Fecha = this.getView().byId('date').getDateValue()
 			const oTable = this.getView().byId('turnosTable');
 			const aRows = oTable.getRows(); // Obtén las filas visibles de la tabla
 			const aData = []; // Array para almacenar los datos de cada fila
 
 			aRows.forEach(function (oRow) {
 				// Accede al contexto de cada fila (a través del modelo asociado)
-				const oContext = oRow.getBindingContext("LicencesListJsonModel");
+				const oContext = oRow.getBindingContext("LicencesJsonModel");
 				if (oContext) {
 					// Obtén los datos de la fila a través del contexto
 					const oRowData = oContext.getObject();
@@ -4787,7 +4792,7 @@ sap.ui.define([
 						Empresa: oRowData.Empresa,
 						Tipo: oRowData.Tipo,
 						Anio: oRowData.Anio,
-						Fecha: FechaTurno,
+						Fecha: Fecha,
 						Turno: oRowData.TurnoAsignado
 
 					}
@@ -4799,22 +4804,27 @@ sap.ui.define([
 
 			console.log("Datos de cada fila:", aData);
 
-			//	this.createTurno()
+			this.createTurno(aData)
 		},
-		createTurno: function () {
+		createTurno: function (licencias) {
 			var entity = "/TurnosLicenciasSet";
-			const license = {
-				"Id": "L202400008",
-				"Empresa": "100",
-				"Tipo": "L",
-				"Anio": "2024",
-				"Dateturno": new Date("2024-10-08T00:00:00"),
-				"Turno": "070000"
-			}
 
-			oDataService.getModel("TransenerOperaciones").create(entity, license);
 
-		},
+			licencias.forEach(function (licencia) {
+
+				var license = {
+					"Id": licencia.Id,
+					"Empresa": licencia.Empresa,
+					"Tipo": licencia.Tipo || "L",
+					"Anio": licencia.Anio,
+					"Dateturno": new Date(licencia.Fecha),
+					"Turno": licencia.Turno
+				};
+
+				oDataService.getModel("TransenerOperaciones").create(entity, license);
+			});
+		}
+		,
 
 		onSelectTurno: function (oEvent) {
 
@@ -4825,68 +4835,46 @@ sap.ui.define([
 
 			AppManagementHelper.getModel("LicencesTurnoJsonModel").setProperty("/FechaTurno", sFormattedDate);
 			var filters = [];
-			filters.push(new Filter("Dateturno", FilterOperator.EQ, "2024-10-08"));
+			filters.push(new Filter("Dateturno", FilterOperator.EQ, this.getView().byId("date").getDateValue()));
 			filters.push(new Filter("Empresa", FilterOperator.EQ, "100"));
 			var entity = "/TurnosLicenciasSet";
-			// oDataService.getModel("TransenerOperaciones").read(entity, {
-			// 	filters: filters,
-			// 	success: (oData) => {
-			// 		this.successSelectTurno(oData)
-			// 	},
-			// 	error: (Error) => {
-			// 		console.log(Error);
-			// 	},
-			// });
-			LicenseService.GETLicense("L202400039")
-		},
-
-		successSelectTurno: function (data) {
-			const TurnoLicencias = []
-
-			data.results.forEach(licencia => {
-				TurnoLicencias.push(LicenseService.GETLicense(licencia))
-			})
-
-			console.log(TurnoLicencias)
-
-			AppManagementHelper.getModel('LicencesListJsonModel').setData(TurnoLicencias)
-		},
-
-		openMinuteDialog: function (oEvent) {
-			// Obtener el botón que fue presionado
-			var oButton = oEvent.getSource();
-
-			// Obtener el valor de CustomData (id del empleado)
-			var sLicenseId = oButton.data("LicenseId");
-			this._selectedLicenseId = sLicenseId; // Guardar el ID del empleado seleccionado
-
-			// Crear el diálogo
-			this._oDialog = new sap.m.Dialog({
-				title: "Seleccionar Minutos",
-				content: [
-					new sap.m.Input("minuteInput", {
-						placeholder: "Ingrese minutos",
-						type: "Number" // Asegúrate de que el campo solo acepte números
-					}),
-				],
-				beginButton: new sap.m.Button({
-					text: "Agregar",
-					press: this.onAddMinutes.bind(this), // Enlazar el método
-				}),
-				endButton: new sap.m.Button({
-					text: "Cancelar",
-					press: function () {
-						this._oDialog.close(); // Cerrar el diálogo al cancelar
-					}.bind(this), // Asegúrate de que 'this' se refiere al controlador
-				}),
-				afterClose: function () {
-					this._oDialog.destroy(); // Destruir el diálogo después de cerrarlo
-				}.bind(this), // Asegúrate de que 'this' se refiere al controlador
+			oDataService.getModel("TransenerOperaciones").read(entity, {
+				filters: filters,
+				success: (oData) => {
+					this.successSelectTurno(oData)
+				},
+				error: (Error) => {
+					console.log(Error);
+				},
 			});
 
-			// Abrir el diálogo
-			this._oDialog.open();
 		},
+
+		successSelectTurno: async function (data) {
+			const oLicencesModel = AppManagementHelper.getModel("LicencesJsonModel")
+			try {
+
+				const TurnoLicencias = [];
+
+				const results = await Promise.all(data.results.map(async (licencia) => {
+					const result = await LicenseService.FIND(licencia);
+					TurnoLicencias.push(result);
+					return result;
+				}));
+				if (results.length > 0) {
+					// Procesar los datos según la lógica de negocio
+					const arrayOrdenado = this.encontrarGrupo(this.ordenarPorEqunr(results));
+					this.assignShiftsToLicences(arrayOrdenado);
+
+					// Asignar los datos procesados de nuevo al modelo
+					oLicencesModel.setData(arrayOrdenado)
+					oLicencesModel.refresh()
+				}
+			} catch (error) {
+				console.error("Error en successSelectTurno:", error);
+			}
+		},
+
 		_applyMinuteChange: function (oContext, iMinutesToAdd) {
 			console.log(oContext)
 			var oTable = this.byId("turnosTable");
@@ -4937,6 +4925,28 @@ sap.ui.define([
 				pattern: "dd/MM/yyyy" // El formato que necesites
 			});
 			return oDateFormat.format(oDate);
+		},
+		onAddLicense: function () {
+			this.openDialog("transener.sistemadeturnos.fragments.addLicenses");
+		},
+		onSelectLicense: async function () {
+			const Id = this.byId("idLicense").getValue().toString()
+			const licencia = {
+				Id,
+				Empresa: '100',
+				Tipo: 'L',
+				Anio: '2025'
+			}
+			const result = await LicenseService.FIND(licencia);
+			const model = AppManagementHelper.getModel("SearchLicense");
+
+
+			model.setData([result]); 
+			console.log(model.getData());
+			this.getView().setModel(model, "SearchLicense"); 
+
+
+			// this.getView().setModel("SearchLicense", AppManagementHelper.getModel("SearchLicense").setData(result))
 		},
 		onOpenActionSheet: function (oEvent) {
 			// Crear el ActionSheet solo si no existe
@@ -5012,60 +5022,55 @@ sap.ui.define([
 		},
 
 		assignShiftsToLicences: function (licences) {
-			var initialTime = 7 * 60; // Hora inicial (7:00 AM en minutos)
-			var currentTime = initialTime;
-			var previousConsola = ""; // Para rastrear cambios en la consola
-			var previousGrupo = ""; // Para rastrear cambios en el grupo
-			var firstShiftInGroup = ""; // Para almacenar el primer turno asignado en el grupo
+			let initialTime = 7 * 60; // 7:00 AM en minutos
+			let currentTime = initialTime;
+			let previousConsola = "";
+			let previousGrupo = "";
+			let firstShiftInGroup = "";
 
-			// Asignar grupo por defecto si no existe
-			licences.forEach(function (license) {
+			licences.forEach((license) => {
 				if (!license.Grupo) {
 					license.Grupo = license.Equnr;
 				}
 			});
 
-			// Asignar turnos por grupo y consola
-			licences.forEach(
-				function (license) {
-					// Reiniciar tiempo si cambia la consola
-					if (license.Consola !== previousConsola) {
-						currentTime = initialTime;
-						previousConsola = license.Consola;
-					}
+			licences.forEach((license) => {
+				if (license.Consola !== previousConsola) {
+					currentTime = initialTime;
+					previousConsola = license.Consola;
+				}
 
-					if (license.Grupo.startsWith("_")) {
-						return;
-					}
+				// Si tiene TurnosLicencias_nav con datos, tomar el Turno directamente
+				if (Array.isArray(license.TurnosLicencias_nav?.results) && license.TurnosLicencias_nav.results.length > 0) {
+					license.TurnoAsignado = license.TurnosLicencias_nav.results[0].Turno;
+					return;
+				}
 
-					// Si el Grupo es diferente al anterior, asignar un nuevo turno y guardar el primero
-					if (license.Grupo !== previousGrupo) {
-						previousGrupo = license.Grupo;
+				if (license.Grupo.startsWith("_")) {
+					license.TurnoAsignado = this._formatTime(currentTime);
+					currentTime += 15; // Duración estándar
+					return;
+				}
 
-						// Determinar la duración del turno en función del Grupo
-						var shiftDuration = license.Jobcond === "04" ? 30 : 15; // 30 mins para Grupo "04", 15 mins para otros
-						license.TurnoAsignado = this._formatTime(currentTime);
-						firstShiftInGroup = license.TurnoAsignado; // Guardar el primer turno del grupo
-						currentTime += shiftDuration;
-					} else {
-						// Si es el mismo Grupo, asignar el mismo turno que al primer empleado del grupo
-						license.TurnoAsignado = firstShiftInGroup;
-					}
-				}.bind(this)
-			);
+				if (license.Grupo !== previousGrupo) {
+					previousGrupo = license.Grupo;
+					let shiftDuration = license.Jobcond === "04" ? 30 : 15;
+					firstShiftInGroup = this._formatTime(currentTime);
+					license.TurnoAsignado = firstShiftInGroup;
+					currentTime += shiftDuration;
+				} else {
+					license.TurnoAsignado = firstShiftInGroup;
+				}
+			});
 
-			// Asignar turnos a las licencias desacopladas tomando el último turno disponible
-			licences.forEach(
-				function (license) {
-					if (license.Grupo.startsWith("_")) {
-						license.TurnoAsignado = this._formatTime(currentTime);
-						currentTime += 15; // Asignar 15 minutos como duración estándar para desacoplados
-					}
-				}.bind(this)
-			);
+			licences.sort((a, b) => this._convertTimeToMinutes(a.TurnoAsignado) - this._convertTimeToMinutes(b.TurnoAsignado));
 		},
 
-
+		_convertTimeToMinutes: function (timeString) {
+			if (!timeString) return 0;
+			let [hours, minutes] = timeString.split(":").map(Number);
+			return hours * 60 + minutes;
+		},
 		onDragStart: function (oEvent) {
 			const oDraggedRow = oEvent.getParameter("target");
 			const oDragSession = oEvent.getParameter("dragSession");

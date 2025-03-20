@@ -8,7 +8,7 @@
 	<App id="app">
 		<pages>
 			<Page id="page" title="{i18n>title}">
-				<Panel expandable="true" expanded="true">
+				<Panel expandable="true" expanded="true" headerText="Filtros">
 					<FlexBox>
 						<VBox width="50%" alignItems="End">
 							<HBox alignItems="Center">
@@ -36,7 +36,8 @@
 								</ComboBox>
 							</HBox>
 						</VBox>
-						<VBox width="50%" alignItems="End">
+						<VBox width="50%" alignItems="Center">
+						<HBox direction="Column" alignItems="End" >
 							<HBox alignItems="Center">
 								<Label text="{i18n>date}:" class="sapUiTinyMarginEnd"/>
 								<DatePicker id="date" valueFormat="dd.MM.yyyy" displayFormat="dd.MM.yyyy" change="onSelectTurno" class="sapUiSmallMarginBottom"/>
@@ -54,6 +55,7 @@
 								</ComboBox>
 							</HBox>
 							<Button icon="sap-icon://add-filter" text="Filtros Avanzados" press="openAdvancedFilters"/>
+							</HBox>
 						</VBox>
 					</FlexBox>
 				</Panel>
@@ -79,7 +81,15 @@
 					<VBox justifyContent="Center">
 						<NumericContent value="{countsModel>/Total}" valueColor="Error"/>
 					</VBox>
-					<HBox width="60%" class="border" alignItems="End">
+					
+				</FlexBox>
+				<HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMarginBeginEnd">
+				<HBox>
+					<Button icon="sap-icon://add" press="onAddLicense" class="sapUiSmallMarginEnd" />
+					<Button icon="sap-icon://delete" press=".onDeletePress" class="sapUiSmallMarginEnd"/>
+					<Button icon="sap-icon://order-status" press="onDetachLicense" class="sapUiSmallMarginEnd"/>
+						</HBox>
+					<HBox width="500px" class="border" alignItems="End">
 						<HBox class="border sapUiTinyMargin" width="100%" justifyContent="SpaceAround">
 							<Input placeholder="{i18n>fastSearch}"/>
 							<HBox width="50%" class="btnContainer" justifyContent="SpaceBetween">
@@ -89,16 +99,11 @@
 							</HBox>
 						</HBox>
 					</HBox>
-				</FlexBox>
-				<HBox justifyContent="Start">
-					<Button icon="sap-icon://add" press="onAddLicense" class="sapUiSmallMarginEnd" />
-					<Button icon="sap-icon://less" press=".onDeletePress" class="sapUiSmallMarginEnd"/>
-					<Button icon="sap-icon://order-status" press="onDetachLicense" class="sapUiSmallMarginEnd"/>
 				</HBox>
 				<t:Table id="turnosTable" selectionMode="MultiToggle" selectionBehavior="Row" ariaLabelledBy="title2" rows="{LicencesJsonModel>/}">
-					<t:dragDropConfig>
+					<!-- <t:dragDropConfig>
 						<dnd:DragDropInfo sourceAggregation="rows" targetAggregation="rows" dropPosition="Between" dragStart="onDragStart" drop="onDropTable2"/>
-					</t:dragDropConfig>
+					</t:dragDropConfig> -->
 					<t:columns>
 						<!--	<t:Column width="100px">
 								<Label text="Acciones"/>
@@ -150,7 +155,7 @@
 								<!--<Text text="{path: 'LicencesJsonModel>Jobcond'}" wrapping="false"/>-->
 							</t:template>
 						</t:Column>
-						<t:Column id="initHour" hAlign="End" sortProperty="initHour" filterProperty="initHour">
+						<t:Column id="initHour" hAlign="Center" sortProperty="initHour" filterProperty="initHour">
 							<Label text="{i18n>initHour}" textAlign="Center"/>
 							<t:template>
 								<Text text="{path:'LicencesJsonModel>Gdate', formatter: '.FormatterHelper.msTohoursSeconds'}" class="text-bold" wrapping="false"/>
@@ -188,7 +193,7 @@
 								</HBox>
 							</t:template>
 						</t:Column>
-						<t:Column id="comment" hAlign="End" sortProperty="Prgcomments" filterProperty="Prgcomments">
+						<t:Column id="comment" hAlign="Center" sortProperty="Prgcomments" filterProperty="Prgcomments">
 							<Label text="{i18n>comment}"/>
 							<t:template>
 								<Text text="{LicencesJsonModel>Prgcomments}" wrapping="true"/>

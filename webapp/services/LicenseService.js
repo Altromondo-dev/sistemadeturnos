@@ -25,7 +25,7 @@ sap.ui.define([
 		nullLegajo: "00000000",
 
 		_expandProperties: "HorariosPorLicencia_nav,CoordinacionesLicencia_nav,ObservacionesLicencia_nav,TramitacionesLicencia_nav," +
-			"SuspensionLicencia_nav,ReanudacionLicencia_nav,TransferenciaJefeTrabajo_nav,DevolucionLicencia_nav,EntregasLicencia_nav,AttachmentXLicencia_nav,EsquemaUnifilar_nav",
+			"SuspensionLicencia_nav,ReanudacionLicencia_nav,TransferenciaJefeTrabajo_nav,DevolucionLicencia_nav,EntregasLicencia_nav,AttachmentXLicencia_nav,EsquemaUnifilar_nav,TurnosLicencias_nav",
 
 		PostDaysLicence: function (oLicenseData) {
 			return new Promise((resolve, reject) => {
@@ -123,7 +123,7 @@ sap.ui.define([
 			return new Promise((resolve, reject) => {
 
 				let aFilters = [new sap.ui.model.Filter("Tabname", sap.ui.model.FilterOperator.EQ, "ZTAB_LICENCIAS"),
-					new sap.ui.model.Filter("Fieldname", sap.ui.model.FilterOperator.EQ, "JOBCOND")
+				new sap.ui.model.Filter("Fieldname", sap.ui.model.FilterOperator.EQ, "JOBCOND")
 				]
 				oDataService.getModel("TransenerOperaciones").read("/FixedValuesSet", {
 					filters: aFilters,
@@ -258,13 +258,13 @@ sap.ui.define([
 				oDay.Horafin = FormatHelper.getTimeStringSAPFormat(oDay.Horafin);
 				oDataService.getModel("TransenerOperaciones").update(entity + "(Id='" + oDay.Id + "',Modif='" + oDay.Modif + "')",
 					oDay, {
-						success: function () {
-							resolve()
-						},
-						error: function (error) {
-							reject(error)
-						}
-					});
+					success: function () {
+						resolve()
+					},
+					error: function (error) {
+						reject(error)
+					}
+				});
 			});
 		},
 
@@ -390,17 +390,17 @@ sap.ui.define([
 			// 		this.FIND, this, license));
 			// } else {
 			LibroGuardiasService.POSTLibroGuardia(oLibroGuardia).then(() => {
-					BusyDialogHelper.close();
-					var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
-					var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
-					MessageBoxHelper.showAlert("Alert", `Se ha realizado la ${ this.bMotivoNo ? "NO Entrega" : "Entrega"} de manera exitosa`, $.proxy(
-						this.FIND, this, license));
-				}).catch((e) => {
-					BusyDialogHelper.close();
-					console.error(e)
-					MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al crear guardia")
-				})
-				// }
+				BusyDialogHelper.close();
+				var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+				var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+				MessageBoxHelper.showAlert("Alert", `Se ha realizado la ${this.bMotivoNo ? "NO Entrega" : "Entrega"} de manera exitosa`, $.proxy(
+					this.FIND, this, license));
+			}).catch((e) => {
+				BusyDialogHelper.close();
+				console.error(e)
+				MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al crear guardia")
+			})
+			// }
 		},
 
 		errorPOSTDelivery: function (error) {
@@ -465,7 +465,7 @@ sap.ui.define([
 						});
 
 						emails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"],
-							hashPermisos["JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"], hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"]
+						hashPermisos["JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"], hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"]
 						].map(permiso => permiso && permiso.Mail || "nurrestarazu@inclusion.cloud");
 
 						let usuariosAsignados = {
@@ -753,7 +753,7 @@ sap.ui.define([
 				if (Tipo === "L") {
 					aEmails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"], hashPermisos[
 						"JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"], hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"]].map(permiso => permiso &&
-						permiso.Mail || "nurrestarazu@inclusion.cloud");
+							permiso.Mail || "nurrestarazu@inclusion.cloud");
 				} else {
 					aEmails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"]].map(permiso => permiso && permiso.Mail ||
 						"nurrestarazu@inclusion.cloud");
@@ -1116,7 +1116,7 @@ sap.ui.define([
 					sEmailEt = "";
 				} else {
 					emails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"], hashPermisos["JEFE_TRABAJO"],
-						hashPermisos["JEFE_TRABAJO_SUPLENTE"], hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"]
+					hashPermisos["JEFE_TRABAJO_SUPLENTE"], hashPermisos["SOLICITANTE_SUPLENTE_AUXILIAR"]
 					].map(permiso => permiso && permiso.Mail || "nurrestarazu@inclusion.cloud");
 					sEmailEt = res[2].results && res[2].results !== 0 ? res[2].results.map(e => (e.Mail)).join(",") : "";
 				}
@@ -1180,15 +1180,15 @@ sap.ui.define([
 					ObservacionDeAnulacion, fechaAnulacion, vieneDeTramitacion, vieneDeObservacion, comentObserCoord, nameLegacyObservator,
 					vieneDeCoordinacion, vieneDeCancelacion, nameLegacyCoordinator, nameLegacyTramitador, MotivoObservacion,
 					ComentarioObservacion, MotivoNoAut, ComentariosNoAut).then(() => {
-					var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
-					var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
-					var stipo = license.Tipo === "S" ? "Solicitud" : "Licencia";
-					MessageBoxHelper.showAlert("Alerta", "Se ha observado la " + stipo + " de manera correcta", $.proxy(this.handleSuccesObservation,
-						this));
-				}).catch((e) => {
-					console.error(e);
-					MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail.", $.proxy(this.goToHome, this));
-				});
+						var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+						var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+						var stipo = license.Tipo === "S" ? "Solicitud" : "Licencia";
+						MessageBoxHelper.showAlert("Alerta", "Se ha observado la " + stipo + " de manera correcta", $.proxy(this.handleSuccesObservation,
+							this));
+					}).catch((e) => {
+						console.error(e);
+						MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail.", $.proxy(this.goToHome, this));
+					});
 			}, (err) => {
 				MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail.", $.proxy(this.goToHome, this));
 			});
@@ -1287,12 +1287,12 @@ sap.ui.define([
 					ObservacionDeAnulacion, fechaAnulacion, vieneDeTramitacion, vieneDeObservacion, comentObserCoord, nameLegacyObservator,
 					vieneDeCoordinacion, vieneDeCancelacion, nameLegacyCoordinator, nameLegacyTramitador, MotivoObservacion,
 					ComentarioObservacion, MotivoNoAut, ComentariosNoAut).then(() => {
-					BusyDialogHelper.close();
-					MessageBoxHelper.showAlert("Alerta", this.sMessageAnnulate, $.proxy(this.goToHome, this, license));
-				}, () => {
-					BusyDialogHelper.close();
-					MessageBoxHelper.showAlert("Alerta", "Error al enviar email al usuario", $.proxy(this.goToHome, this, license));
-				});
+						BusyDialogHelper.close();
+						MessageBoxHelper.showAlert("Alerta", this.sMessageAnnulate, $.proxy(this.goToHome, this, license));
+					}, () => {
+						BusyDialogHelper.close();
+						MessageBoxHelper.showAlert("Alerta", "Error al enviar email al usuario", $.proxy(this.goToHome, this, license));
+					});
 			});
 		},
 
@@ -1403,9 +1403,9 @@ sap.ui.define([
 				hashPermisos["COORDINADOR"] = hashPermisos["COORDINADOR"] || "";
 
 				emails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"], hashPermisos[
-						"SOLICITANTE_SUPLENTE_AUXILIAR"], hashPermisos[
-						"TRAMITADOR"],
-					hashPermisos["JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"], hashPermisos["COORDINADOR"]
+					"SOLICITANTE_SUPLENTE_AUXILIAR"], hashPermisos[
+				"TRAMITADOR"],
+				hashPermisos["JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"], hashPermisos["COORDINADOR"]
 				].map(permiso => permiso && permiso.Mail || "pgotelli@inclusion.cloud");
 
 				//emails = "hzea@inclusion.cloud"
@@ -1446,13 +1446,13 @@ sap.ui.define([
 					oLicence.Licstat = '07';
 					MailHelper.sendEmail(oLicence, oUsuariosAsignados, stringEmails, sEmailEt, sInfAdicional, esAnulacion, MotivoDeAnulacion,
 						ObservacionDeAnulacion, fechaAnulacion, vieneDeTramitacion).then(() => {
-						MessageBoxHelper.showAlert("Alerta", "Se ha cancelado la tramitación de manera exitosa", $.proxy(this.goToHome, this));
-					}).catch((e) => {
-						BusyDialogHelper.close();
-						console.error(e);
-						MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail para la coordinacion.", $.proxy(this.goToHome,
-							this));
-					});
+							MessageBoxHelper.showAlert("Alerta", "Se ha cancelado la tramitación de manera exitosa", $.proxy(this.goToHome, this));
+						}).catch((e) => {
+							BusyDialogHelper.close();
+							console.error(e);
+							MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail para la coordinacion.", $.proxy(this.goToHome,
+								this));
+						});
 				}).catch((e) => {
 					BusyDialogHelper.close();
 					console.error(e);
@@ -1495,7 +1495,7 @@ sap.ui.define([
 				if (sStatusFromSelect === "TA") {
 					// Autorizada
 					licenseClone.Licstat = "01"
-						//TN
+					//TN
 				} else {
 					// No autorizada
 					licenseClone.Licstat = "06"
@@ -1566,9 +1566,9 @@ sap.ui.define([
 						"',Empresa='" + oTramite.Empresa + "',Id='" + oTramite.Id +
 						"',Traindex='" + oTramite.Traindex + "')",
 						oTramite, {
-							success: resolve,
-							error: reject
-						});
+						success: resolve,
+						error: reject
+					});
 				});
 			}
 		},
@@ -1630,9 +1630,9 @@ sap.ui.define([
 				oDataService.getModel("TransenerOperaciones").read("/TramitacionesSet" + "(Anio='" + oTramite.Anio + "',Empresa='" + oTramite.Empresa +
 					"',Id='" + sId +
 					"',Traindex='" + oTramite.Traindex + "')/LicenciaEstadoDiarioSet", {
-						success: resolve,
-						error: reject
-					});
+					success: resolve,
+					error: reject
+				});
 			})
 		},
 
@@ -1675,7 +1675,7 @@ sap.ui.define([
 					hashPermisos["COORDINADOR"] = hashPermisos["COORDINADOR"] || "";
 					emails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"], hashPermisos[
 						"SOLICITANTE_SUPLENTE_AUXILIAR"], hashPermisos["JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"]].map(permiso => permiso &&
-						permiso.Mail || "nurrestarazu@inclusion.cloud").join(",");
+							permiso.Mail || "nurrestarazu@inclusion.cloud").join(",");
 
 					var oUserJson = AppManagementHelper.getModel("UserJsonModel").getData();
 					var sCurrentUserMail = oUserJson.email;
@@ -1731,11 +1731,11 @@ sap.ui.define([
 							ObservacionDeAnulacion, fechaAnulacion, vieneDeTramitacion, vieneDeObservacion, comentObserCoord, nameLegacyObservator,
 							vieneDeCoordinacion, vieneDeCancelacion, nameLegacyCoordinator, nameLegacyTramitador, MotivoObservacion,
 							ComentarioObservacion, MotivoNoAut, ComentariosNoAut).then(() => {
-							resolve();
-						}).catch((e) => {
-							console.error(e);
-							reject();
-						});
+								resolve();
+							}).catch((e) => {
+								console.error(e);
+								reject();
+							});
 					});
 				});
 			});
@@ -1756,7 +1756,7 @@ sap.ui.define([
 				hashPermisos["COORDINADOR"] = hashPermisos["COORDINADOR"] || "";
 				emails = [hashPermisos["CREADOR"], hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"], hashPermisos[
 					"SOLICITANTE_SUPLENTE_AUXILIAR"], hashPermisos["JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"]].map(permiso => permiso &&
-					permiso.Mail || "nurrestarazu@inclusion.cloud").join(",");
+						permiso.Mail || "nurrestarazu@inclusion.cloud").join(",");
 
 				var oUserJson = AppManagementHelper.getModel("UserJsonModel").getData();
 				var sCurrentUserMail = oUserJson.email;
@@ -1840,23 +1840,23 @@ sap.ui.define([
 								ComentarioObservacion,
 								MotivoNoAut,
 								ComentariosNoAut).then(() => {
-								this.logTramitationChange(sCurrentUserName).then(() => {
-									BusyDialogHelper.close();
-									var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
-									var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
-									MessageBoxHelper.showAlert("Alerta", sMessage, $.proxy(this.goToHome, this));
+									this.logTramitationChange(sCurrentUserName).then(() => {
+										BusyDialogHelper.close();
+										var sId = AppManagementHelper.getModel("LicenseJsonModel").getProperty("/Id");
+										var license = AppManagementHelper.getModel("LicenseJsonModel").getData();
+										MessageBoxHelper.showAlert("Alerta", sMessage, $.proxy(this.goToHome, this));
+									}).catch((e) => {
+										BusyDialogHelper.close();
+										console.error(e);
+										MessageBoxHelper.showAlert("Alerta", "Se ha guardado correctamente los cambios, pero ha habido un error en el logueo.",
+											$.proxy(this.goToHome, this));
+									});
 								}).catch((e) => {
 									BusyDialogHelper.close();
 									console.error(e);
-									MessageBoxHelper.showAlert("Alerta", "Se ha guardado correctamente los cambios, pero ha habido un error en el logueo.",
-										$.proxy(this.goToHome, this));
+									MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail para la coordinacion.", $.proxy(this.goToHome,
+										this));
 								});
-							}).catch((e) => {
-								BusyDialogHelper.close();
-								console.error(e);
-								MessageBoxHelper.showAlert("Alerta", "Se ha producido un error al enviar mail para la coordinacion.", $.proxy(this.goToHome,
-									this));
-							});
 						}
 					}
 				}).catch((e) => {
@@ -1951,12 +1951,12 @@ sap.ui.define([
 
 		formatLicstatValues: function (sValue) {
 			switch (sValue) {
-			case "90":
-				return "1E";
-			case "10":
-				return "1S";
-			default:
-				return sValue;
+				case "90":
+					return "1E";
+				case "10":
+					return "1S";
+				default:
+					return sValue;
 			}
 		},
 
@@ -1993,10 +1993,10 @@ sap.ui.define([
 		GETWithFilters: function (aFilters, bDontSort) {
 
 			console.log("Pase", aFilters)
-				// var aFiltersFound = this.checkFilterLogic(aFilters);
-				// this.validateChecks(aFiltersFound);
-				// this.validateLicStatFilters(aFiltersFound);
-				// var aWithoutAroBloqueoRdisparo = this.validateAroBloqueoRdisparoFilters(aFiltersFound);
+			// var aFiltersFound = this.checkFilterLogic(aFilters);
+			// this.validateChecks(aFiltersFound);
+			// this.validateLicStatFilters(aFiltersFound);
+			// var aWithoutAroBloqueoRdisparo = this.validateAroBloqueoRdisparoFilters(aFiltersFound);
 			BusyDialogHelper.open("", "");
 			var entity = "/LicenciaTrabajoSet";
 			oDataService.getModel("TransenerOperaciones").read(entity, {
@@ -2036,10 +2036,10 @@ sap.ui.define([
 			//  filters.push(new Filter("Anio", FilterOperator.EQ, turno.Anio));
 			//  filters.push(new Filter("Tipo", FilterOperator.EQ, turno.Tipo));
 
-			 filters.push(new Filter("Id", FilterOperator.EQ, "L202400059"));
-			 filters.push(new Filter("Empresa", FilterOperator.EQ, "100"));
-			 filters.push(new Filter("Anio", FilterOperator.EQ, "2024"));
-			 filters.push(new Filter("Tipo", FilterOperator.EQ, "L"));
+			filters.push(new Filter("Id", FilterOperator.EQ, "L202500051"));
+			filters.push(new Filter("Empresa", FilterOperator.EQ, "100"));
+			filters.push(new Filter("Anio", FilterOperator.EQ, "2025"));
+			filters.push(new Filter("Tipo", FilterOperator.EQ, "L"));
 			oDataService.getModel("TransenerOperaciones").read("/LicenciaTrabajoSet", {
 				filters: filters,
 				success: (data) => {
@@ -2219,25 +2219,57 @@ sap.ui.define([
 			this.GETLicenses(filters).then(this.successGET.bind(this, false)).catch($.proxy(this.errorGET, this));
 		},
 
-		FIND: function (license, fnCallback, fnCallbackError) {
-			this.fnCallbackSuccess = fnCallback;
-			this.fnCallbackError = fnCallbackError;
-			var entity = "/LicenciaTrabajoSet";
-			var key = entity + "(Empresa='" + license.Empresa + "',Id='" + license.Id + "',Tipo='" + license.Tipo + "',Anio='" + license.Anio +
-				"')";
-			let urlParameters = {};
-			if (license.Tipo === "L") {
-				urlParameters.$expand = this._expandProperties;
-			} else {
-				urlParameters.$expand = "HorariosPorLicencia_nav,CoordinacionesLicencia_nav,ObservacionesLicencia_nav";
-			}
-			oDataService.getModel("TransenerOperaciones").read(key, {
-				urlParameters: urlParameters,
-				success: $.proxy(this.successFIND, this),
-				error: $.proxy(this.errorFIND, this)
+		// FIND: function (license, fnCallback, fnCallbackError) {
+		// 	this.fnCallbackSuccess = fnCallback;
+		// 	this.fnCallbackError = fnCallbackError;
+		// 	var entity = "/LicenciaTrabajoSet";
+		// 	var key = entity + "(Empresa='" + license.Empresa + "',Id='" + license.Id + "',Tipo='" + license.Tipo + "',Anio='" + license.Anio +
+		// 		"')";
+		// 	let urlParameters = {};
+		// 	if (license.Tipo === "L") {
+		// 		urlParameters.$expand = this._expandProperties;
+		// 	} else {
+		// 		urlParameters.$expand = "HorariosPorLicencia_nav,CoordinacionesLicencia_nav,ObservacionesLicencia_nav";
+		// 	}
+		// 	oDataService.getModel("TransenerOperaciones").read(key, {
+		// 		urlParameters: urlParameters,
+		// 		// success: $.proxy(this.successFIND, this),
+		// 		// error: $.proxy(this.errorFIND, this)
+		// 		success: function (data) {
+		// 			console.log(data)
+		// 			resolve( data)
+		// 		},
+		// 		error: function (error) {
+		// 			console.log(error)
+		// 		}
+		// 	});
+		// },
+		FIND: function (license) {
+			return new Promise((resolve, reject) => {
+				var entity = "/LicenciaTrabajoSet";
+				var key = entity + "(Empresa='" + license.Empresa + "',Id='" + license.Id + "',Tipo='" + license.Tipo + "',Anio='" + license.Anio + "')";
+		
+				let urlParameters = {};
+				if (license.Tipo === "L") {
+					urlParameters.$expand = this._expandProperties;
+				} else {
+					urlParameters.$expand = "HorariosPorLicencia_nav,CoordinacionesLicencia_nav,ObservacionesLicencia_nav,TurnosLicencias_nav";
+				}
+		
+				oDataService.getModel("TransenerOperaciones").read(key, {
+					urlParameters: urlParameters,
+					success: function (data) {
+						console.log("FIND Success:", data);
+						resolve(data); 
+					},
+					error: function (error) {
+						console.error("FIND Error:", error);
+						reject(error); 
+					}
+				});
 			});
 		},
-
+		
 		getPromise: function (license, expand) {
 			return new Promise((resolve, reject) => {
 				var entity = "/LicenciaTrabajoSet";
@@ -2488,9 +2520,9 @@ sap.ui.define([
 					"',Id='" +
 					oDay.Id +
 					"',Modif='" + oDay.Modif + "',Anio='" + oDay.Anio + "')", oDay, {
-						success: resolve,
-						error: reject
-					});
+					success: resolve,
+					error: reject
+				});
 			});
 		},
 
@@ -2518,9 +2550,9 @@ sap.ui.define([
 					"',Id='" +
 					oDay.Id +
 					"',Modif='" + oDay.Modif + "',Anio='" + oDay.Anio + "')", {
-						success: resolve,
-						error: reject
-					});
+					success: resolve,
+					error: reject
+				});
 			});
 		},
 
@@ -2530,9 +2562,9 @@ sap.ui.define([
 					"',Id='" +
 					oTramitacion.Id +
 					"',Traindex='" + oTramitacion.Traindex + "',Anio='" + oTramitacion.Anio + "')", {
-						success: resolve,
-						error: reject
-					});
+					success: resolve,
+					error: reject
+				});
 			});
 		},
 
@@ -2556,9 +2588,9 @@ sap.ui.define([
 						"',Id='" +
 						oCalendarPayload.Id +
 						"',Traindex='" + oCalendarPayload.Traindex + "',Fecha=datetime'" + sDate + "')", {
-							success: resolve,
-							error: reject
-						});
+						success: resolve,
+						error: reject
+					});
 				}));
 			}
 			return aPromise;
@@ -2597,7 +2629,7 @@ sap.ui.define([
 
 			//para complentar dps
 			var aRolesForCreation = ["CREADOR", "JEFE_TRABAJO", "JEFE_TRABAJO_SUPLENTE", "SOLICITANTE", "SOLICITANTE_SUPLENTE"]
-				//coordinacion y observacion. 
+			//coordinacion y observacion. 
 			var aRolesForCoordinationObservation = ["COORDINADOR"];
 			var aRolesForTramitation = ["TRAMITADOR"];
 
@@ -2608,16 +2640,16 @@ sap.ui.define([
 			var sSelectedArray = [];
 
 			switch (sLicStat) {
-			case "02":
-			case "30":
-				sSelectedArray = aRolesForCreation;
-				break;
-			case "07":
-				sSelectedArray = aRolesForTramitation;
-				break;
-			case "09":
-				sSelectedArray = aRolesForCoordinationObservation;
-				break;
+				case "02":
+				case "30":
+					sSelectedArray = aRolesForCreation;
+					break;
+				case "07":
+					sSelectedArray = aRolesForTramitation;
+					break;
+				case "09":
+					sSelectedArray = aRolesForCoordinationObservation;
+					break;
 
 			}
 			//ROLES CORRESPONDIENTES AL ESTADO
@@ -2970,15 +3002,15 @@ sap.ui.define([
 				// se debe mantener el estado 30 "Creada"
 				if (bSolicitanteLicTBA && sLicStatAux === "09") {
 					switch (sTipoLic) {
-					case "N":
-						sLicStat = "09";
-						break;
-					case "EM":
-						sLicStat = "07";
-						break;
-					case "TE":
-						sLicStat = "09";
-						break;
+						case "N":
+							sLicStat = "09";
+							break;
+						case "EM":
+							sLicStat = "07";
+							break;
+						case "TE":
+							sLicStat = "09";
+							break;
 					}
 				} else if (bSolicitanteLicTBA && sLicStatAux === "30") {
 					sLicStat = "30";
@@ -3229,9 +3261,9 @@ sap.ui.define([
 					if (oLicencia.Tipo === "L") {
 						var aEmailsPermisos = [hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"], hashPermisos[
 							"SOLICITANTE_SUPLENTE_AUXILIAR"], hashPermisos["JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"]].map(permiso =>
-							permiso &&
-							permiso.Mail ||
-							"hzea@inclusion.cloud")
+								permiso &&
+								permiso.Mail ||
+								"hzea@inclusion.cloud")
 					} else {
 						var aEmailsPermisos = []
 					}
@@ -3291,7 +3323,7 @@ sap.ui.define([
 					resolve([])
 				} else {
 					//var role = "Portal_Proveedores_Gestion";
-					var destination =  mBaseUrl + "/destinations/Examinadores_PT15/";
+					var destination = mBaseUrl + "/destinations/Examinadores_PT15/";
 					$.get(destination + "Users/?filter=groups eq '" + sRole + "'", function (res) {
 						var users = res.Resources;
 						var emails = users.map(function (user) {
@@ -3360,38 +3392,38 @@ sap.ui.define([
 				var oUserJson = AppManagementHelper.getModel("UserJsonModel").getData();
 				var sCurrentUserName = oUserJson.nombre + ", " + oUserJson.apellido;
 				var oUsuariosAsignados = {
-						Coordinador: "",
-						Creador: oCurrentUser.Legajo + ", " + sCurrentUserName
-					}
-					//TODO creador
+					Coordinador: "",
+					Creador: oCurrentUser.Legajo + ", " + sCurrentUserName
+				}
+				//TODO creador
 				switch (oLicencia.Licstat) {
-				case "30":
-					if (bIsSol) {
-						sMessage = "Solicitud Nº " + sLicenceId + " creada con exito";
-						AppManagementHelper.getModel("LicenciaClonadaID");
-						AppManagementHelper.getModel("LicenciaClonadaID").setData({
-							"IdClonada": sLicenceId
-						});
-					} else {
-						sMessage = "Licencia Nº" + sLicenceId + " creada con exito";
-						AppManagementHelper.getModel("LicenciaClonadaID");
-						AppManagementHelper.getModel("LicenciaClonadaID").setData({
-							"IdClonada": sLicenceId
-						});
-					}
-					//	BusyDialogHelper.close();
-					//	MessageBoxHelper.showAlert("Alerta", sMessage, $.proxy(this.goToHome, this));
-					//	return;
-					aPromises.push(this.getMailsByRole(""));
-					break;
-				case "09":
-					//se hace pero no uso esto 460 461
-					aPromises.push(this.getMailsByRole(this.rolCoordinador + "_" + FormatterHelper.centroToRegion(oLicencia.Werks)));
-					break;
-				case "07":
-					oUsuariosAsignados.RecepOper = oUsuariosAsignados.Creador;
-					aPromises.push(this.getMailsByRole(this.rolTramitador));
-					break;
+					case "30":
+						if (bIsSol) {
+							sMessage = "Solicitud Nº " + sLicenceId + " creada con exito";
+							AppManagementHelper.getModel("LicenciaClonadaID");
+							AppManagementHelper.getModel("LicenciaClonadaID").setData({
+								"IdClonada": sLicenceId
+							});
+						} else {
+							sMessage = "Licencia Nº" + sLicenceId + " creada con exito";
+							AppManagementHelper.getModel("LicenciaClonadaID");
+							AppManagementHelper.getModel("LicenciaClonadaID").setData({
+								"IdClonada": sLicenceId
+							});
+						}
+						//	BusyDialogHelper.close();
+						//	MessageBoxHelper.showAlert("Alerta", sMessage, $.proxy(this.goToHome, this));
+						//	return;
+						aPromises.push(this.getMailsByRole(""));
+						break;
+					case "09":
+						//se hace pero no uso esto 460 461
+						aPromises.push(this.getMailsByRole(this.rolCoordinador + "_" + FormatterHelper.centroToRegion(oLicencia.Werks)));
+						break;
+					case "07":
+						oUsuariosAsignados.RecepOper = oUsuariosAsignados.Creador;
+						aPromises.push(this.getMailsByRole(this.rolTramitador));
+						break;
 				}
 
 				aPromises.push(EtMailService.getPromise(oLicencia.Empresa, oLicencia.Tplnr, this.getSelectionArea(oLicencia.Tipo, oLicencia.Licstat)));
@@ -3411,9 +3443,9 @@ sap.ui.define([
 					if (oLicencia.Tipo === "L") {
 						var aEmailsPermisos = [hashPermisos["SOLICITANTE"], hashPermisos["SOLICITANTE_SUPLENTE"], hashPermisos[
 							"SOLICITANTE_SUPLENTE_AUXILIAR"], hashPermisos["JEFE_TRABAJO"], hashPermisos["JEFE_TRABAJO_SUPLENTE"]].map(permiso =>
-							permiso &&
-							permiso.Mail ||
-							"hzea@inclusion.cloud")
+								permiso &&
+								permiso.Mail ||
+								"hzea@inclusion.cloud")
 					} else {
 						// Issue 581 - Se debe enviar correo al solicitante ,  creador y Coordinador de Mantenimiento cuando se genere una solicitud
 						var aEmailsPermisos = [hashPermisos["SOLICITANTE"], hashPermisos["CREADOR"]].map(permiso =>
@@ -3486,25 +3518,25 @@ sap.ui.define([
 
 		acceptEmptyValues: function (sAttribute, object) {
 			switch (sAttribute) {
-			case "Substatus":
-				var oFilterData = AppManagementHelper.getModel("FiltersJsonModel").getData();
-				var sKey = oFilterData.Licstat.value;
-				if (object.value === "" && sKey === "01") {
-					object.value = "Z";
-					return true
-				} else {
-					if (object.value !== "") {
+				case "Substatus":
+					var oFilterData = AppManagementHelper.getModel("FiltersJsonModel").getData();
+					var sKey = oFilterData.Licstat.value;
+					if (object.value === "" && sKey === "01") {
+						object.value = "Z";
 						return true
 					} else {
-						return false
+						if (object.value !== "") {
+							return true
+						} else {
+							return false
+						}
 					}
-				}
-				return true;
-			case "Equstatnocam":
-			case "Equstat":
-				return true;
-			default:
-				return object.value !== "";
+					return true;
+				case "Equstatnocam":
+				case "Equstat":
+					return true;
+				default:
+					return object.value !== "";
 			}
 		},
 
@@ -3555,26 +3587,26 @@ sap.ui.define([
 		getFilterObject: function (sValue) {
 			var oObject = {};
 			switch (sValue) {
-			case "0":
-				oObject.attribute = "Senalestados";
-				oObject.value = "X";
-				break;
-			case "1":
-				oObject.attribute = "Senalalarmas";
-				oObject.value = "X";
-				break;
-			case "2":
-				oObject.attribute = "Senalmedicion";
-				oObject.value = "X";
-				break;
-			case "3":
-				oObject.attribute = "Precauciones";
-				oObject.value = "X";
-				break;
-			case "4":
-				oObject.attribute = "Ninguna";
-				oObject.value = "X";
-				break;
+				case "0":
+					oObject.attribute = "Senalestados";
+					oObject.value = "X";
+					break;
+				case "1":
+					oObject.attribute = "Senalalarmas";
+					oObject.value = "X";
+					break;
+				case "2":
+					oObject.attribute = "Senalmedicion";
+					oObject.value = "X";
+					break;
+				case "3":
+					oObject.attribute = "Precauciones";
+					oObject.value = "X";
+					break;
+				case "4":
+					oObject.attribute = "Ninguna";
+					oObject.value = "X";
+					break;
 			}
 			return oObject;
 
@@ -3598,18 +3630,18 @@ sap.ui.define([
 				if (licenseClone.Equstat === "Y") licenseClone.Equstat = "";
 				oDataService.getModel("TransenerOperaciones").update(entity + "(Empresa='" + licenseClone.Empresa + "',Id='" + licenseClone.Id +
 					"',Tipo='" + licenseClone.Tipo + "',Anio='" + licenseClone.Anio + "')", licenseClone, {
-						success: function (data) {
-							var oResponse = {
-								bIsSol: bSolChanged,
-								responseData: data,
-								licence: licenseClone
-							}
-							resolve(oResponse);
-						},
-						error: function () {
-							reject(error);
+					success: function (data) {
+						var oResponse = {
+							bIsSol: bSolChanged,
+							responseData: data,
+							licence: licenseClone
 						}
-					});
+						resolve(oResponse);
+					},
+					error: function () {
+						reject(error);
+					}
+				});
 			});
 		},
 

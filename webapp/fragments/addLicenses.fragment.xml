@@ -1,0 +1,63 @@
+<core:FragmentDefinition xmlns="sap.m"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:core="sap.ui.core" width="50%">
+    <Dialog id="formAddLicense" title="{i18n>newShift}">
+        <content>
+            <f:Form width="900px">
+                <f:layout>
+                    <f:ResponsiveGridLayout labelSpanXL="4" labelSpanL="3" labelSpanM="4" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="" columnsM="2" singleContainerFullSize="true" />
+                </f:layout>
+                <f:formContainers>
+                    <f:FormContainer>
+                        <f:formElements>
+                            <f:FormElement>
+                                <f:fields>
+                                    <VBox justifyContent="SpaceBetween">
+                                        <Label text="{i18n>id}:" required="true" />
+                                        <Input id="idLicense" width="40%" change="handleChange" class="sapUiSmallMarginBottom" />
+                                    </VBox>
+                                </f:fields>
+                            </f:FormElement>
+                            <f:FormElement>
+                                <f:fields>
+                                    <VBox justifyContent="SpaceBetween">
+                                        <Table id="idLicensesTable" items="{SearchLicense>/}" inset="false" class="sapUiResponsiveMargin">
+                                            <columns>
+                                                <Column>
+                                                    <header>
+                                                        <Text text="ID"/>
+                                                    </header>
+                                                </Column>
+                                                <Column>
+                                                    <header>
+                                                        <Text text="Hora"/>
+                                                    </header>
+                                                </Column>
+                                            </columns>
+                                            <items>
+                                                <ColumnListItem>
+                                                    <cells>
+                                                        <Text text="{SearchLicense>Id}"/>
+                                                        <Text text="{SearchLicense>Equnr}"/>
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        </Table>
+
+                                    </VBox>
+                                </f:fields>
+                            </f:FormElement>
+                        </f:formElements>
+                    </f:FormContainer>
+                </f:formContainers>
+            </f:Form>
+        </content>
+        <beginButton>
+            <Button icon="sap-icon://save" text="Crear Turno" press="onSelectLicense" />
+        </beginButton>
+        <endButton>
+            <Button icon="sap-icon://inspect-down" text="Cerrar" press="closeDialog" />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>
