@@ -19,7 +19,7 @@
 							</HBox>
 							<HBox alignItems="Center">
 								<Label text="{i18n>ET}:" class="sapUiTinyMarginEnd"/>
-								<MultiComboBox width="20rem" selectionChange=".changeUbicacion" items="{ path: 'EstacionesJsonModel>/Estaciones', templateShareable: true }">
+								<MultiComboBox width="20rem" id="Estaciones" selectionChange=".changeUbicacion" items="{ path: 'EstacionesJsonModel>/Estaciones', templateShareable: true }">
 									<core:Item key="{EstacionesJsonModel>Codigo}" text="{EstacionesJsonModel>Codigo} - {EstacionesJsonModel>Descripcion}"/>
 								</MultiComboBox>
 							</HBox>

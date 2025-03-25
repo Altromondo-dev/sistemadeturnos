@@ -8,6 +8,7 @@ sap.ui.define([
 	"sap/ui/model/FilterOperator",
 	"sap/ui/table/Row",
 	"sap/m/MessageToast",
+	"sap/m/MessageBox",
 	//utils
 	"transener/sistemadeturnos/utils/NavigationHelper",
 	"transener/sistemadeturnos/utils/FormatHelper",
@@ -42,6 +43,7 @@ sap.ui.define([
 	"transener/sistemadeturnos/services/ReportesService",
 	// "transener/sistemadeturnos/utils/ReportesHelper",
 	"transener/sistemadeturnos/services/UserService",
+	"transener/sistemadeturnos/services/TurnosService",
 	//excel
 	"transener/sistemadeturnos/view/Main/ExcelDownloadHelper",
 	"transener/sistemadeturnos/utils/BusyDialogHelper",
@@ -53,15 +55,15 @@ sap.ui.define([
 	"transener/sistemadeturnos/utils/UnifilarHelper",
 	"transener/sistemadeturnos/services/checkAlternativeLabelService",
 
-], function (Controller, Fragment, Filter, FilterOperator, TableRow, MessageToast, NavigationHelper, FormatHelper, FioriComponentHelper, MailHelper,
+], function (Controller, Fragment, Filter, FilterOperator, TableRow, MessageToast,MessageBox, NavigationHelper, FormatHelper, FioriComponentHelper, MailHelper,
 	ValidateHelper,
-	MessageBoxHelper, i18nTranslationHelper, AppManagementHelper, DateHelper, ExportLicenseHelper, formatter, HardCodeModel, models,
+	MessageBoxHelper,  i18nTranslationHelper, AppManagementHelper, DateHelper, ExportLicenseHelper, formatter, HardCodeModel, models,
 	LicenseService,
 	RegionesService,
 	PersonalHabilitadoService, WorkPlaceService, oDataService, EmpresaTramitacionService, TipoEquipoService, EquiposService,
 	OrdenesService, EstacionesService, RepositionTimeService, InterventionTypesService, TipoOfEstacionalListService, StatusService,
 	GrupoPlanificadorService, ReportesService,
-	UserService, ExcelDownloadHelper, BusyDialogHelper, FioriHelper, LicenseHelper, RolAuthorizationHelper, FormatterHelper,
+	UserService, TurnosService, ExcelDownloadHelper, BusyDialogHelper, FioriHelper, LicenseHelper, RolAuthorizationHelper, FormatterHelper,
 	LegacyValidationHelper,
 	UnifilarHelper, checkAlternativeLabelService) {
 	"use strict";
@@ -92,11 +94,11 @@ sap.ui.define([
 			AppManagementHelper.getModel("vistaSeleccionada");
 
 			AppManagementHelper.getModel('vistaSeleccionada').setProperty("/vista", 0);
-			//	oRouter.getRoute("Licencias").attachPatternMatched(this._routePatternMatched, this);
+
 			HardCodeModel.getModel();
 			AppManagementHelper.getModel("HorarioLicenciaJsonModel");
 			AppManagementHelper.getModel("consolasModel")
-			AppManagementHelper.getModel("LocalFilterJsonModel"); //this creates the model
+			AppManagementHelper.getModel("LocalFilterJsonModel");
 			AppManagementHelper.getModel("filtrosAplicadosTextVisibleModel");
 			AppManagementHelper.getModel("filtrosAplicadosTextVisibleModel").setData({
 				Data: false
@@ -360,7 +362,7 @@ sap.ui.define([
 
 			var oTable = this.getView().byId('turnosTable')
 
-			var oLicenseTableItems = oTable.getBinding("items");
+			var oLicenseTableItems = oTable.getBinding("rows");
 			var aFilter = [];
 
 			var Region = this.byId('Region').getSelectedKey()
@@ -376,27 +378,25 @@ sap.ui.define([
 			oLicenseTableItems.filter(oFilter);
 		},
 		onSearch: function () {
-
-
 			var dateTurno = this.byId('date')
+			var oTable = this.byId('turnosTable')
+
 			const FechaTurno = dateTurno.getDateValue().toISOString().split('T')[0]
 
-
-			AppManagementHelper.getModel("LicencesJsonModel").setData([])
 			var oLicencesModel = AppManagementHelper.getModel("LicencesJsonModel");
+			oLicencesModel.setData([])
 
-			var oTable = this.byId('turnosTable')
-			//var sPath = FioriHelper.getAppPath();
 
-			//var oView = this.getView()
 			var aFilters = []
-			var oDataModel = oDataService.getModel('TransenerOperaciones')
 
-			var dateInitPicker = this.byId('initDate')
-			var dateEndPicker = this.byId('endDate')
 
-			var sFromDate = dateInitPicker.getDateValue()
-			var sToDate = dateEndPicker.getDateValue()
+			var dateInitPicker = this.byId('initDate');
+			var dateEndPicker = this.byId('endDate');
+			var dateFromPicker = this.byId('fromDate');
+			var dateToPicker = this.byId('toDate');
+
+			var sFromDate = dateInitPicker?.getDateValue() || dateFromPicker?.getDateValue() || null;
+			var sToDate = dateEndPicker?.getDateValue() || dateToPicker?.getDateValue() || null;
 
 			if (!sFromDate || !sToDate) {
 				MessageBoxHelper.showAlert("Alerta", "Debe completar los campos de fecha")
@@ -427,77 +427,25 @@ sap.ui.define([
 				value1: "L"
 			}))
 
-			oDataModel.setUseBatch(false)
-			oDataModel.read('/LicenciaTrabajoSet', {
-				filters: aFilters,
-				success: (data) => {
-
-					const datosFiltrados = this.filtrarFechasTipo(data.results, FechaTurno)
-					//const datosFiltrados = data.results
-
-					if (datosFiltrados.length > 0) {
-						// Procesar los datos según la lógica de negocio
-						const arrayOrdenado = this.encontrarGrupo(this.ordenarPorEqunr(datosFiltrados));
-						this.assignShiftsToLicences(arrayOrdenado);
-
-						// Asignar los datos procesados de nuevo al modelo
-						oLicencesModel.setData(arrayOrdenado)
-						oLicencesModel.refresh()
-
-						oTable.setBusy(false)
-					}
-
-					console.log(datosFiltrados)
-
-					oLicencesModel.setData(datosFiltrados)
-					oLicencesModel.refresh()
-					this.onCountItems(oLicencesModel.getData())
-					oTable.setBusy(false)
-
-				},
-				error: (error) => {
-					console.log(error)
-					MessageBoxHelper.showAlert("Alerta", "No se encontraron datos en las fechas seleccionadas")
-					oTable.setBusy(false)
-				}
-			})
+			TurnosService.search(aFilters, FechaTurno)
+				.then((data) => {
+					console.log("Datos obtenidos:", data);
+					oLicencesModel.setData(data);
+					oLicencesModel.refresh();
+					oTable.setBusy(false);
+					this.onCountItems(data)
+				})
+				.catch((error) => {
+					console.error("Error en la búsqueda:", error);
+					oLicencesModel.setData([]); // Asigna un array vacío para evitar errores
+					oLicencesModel.refresh();
+					oTable.setBusy(false);
+				});
 
 			this.closeDialog()
 
 		},
-		filtrarFechasTipo: function (datos, fechaSeleccionada) {
-			if (!Array.isArray(datos)) {
-				throw new Error("El parámetro 'datos' debe ser un array.");
-			}
 
-			if (typeof fechaSeleccionada !== "string") {
-				throw new Error("El parámetro 'fechaSeleccionada' debe ser un string con formato de fecha.");
-			}
-
-			const estadosPermitidos = ["01", "08", "10", "07", "02", "23"];
-
-			const datosFiltrados = datos.filter(dato => {
-				if (!estadosPermitidos.includes(dato.Licstat)) {
-					return false; // Excluir si Licstat no está en la lista permitida
-				}
-
-				// Convertimos las fechas si vienen en string
-				const fechaSolbeg = dato.Solbeg instanceof Date ? dato.Solbeg : new Date(dato.Solbeg);
-				const fechaSolend = dato.Solend instanceof Date ? dato.Solend : new Date(dato.Solend);
-
-				if (dato.Period === "C" && !isNaN(fechaSolbeg)) {
-					return fechaSolbeg.toISOString().split('T')[0] === fechaSeleccionada;
-				}
-
-				if (dato.Period === "D" && !isNaN(fechaSolend)) {
-					return fechaSolend.toISOString().split('T')[0] === fechaSeleccionada;
-				}
-
-				return false;
-			});
-
-			return datosFiltrados;
-		},
 
 		rows: function (data) {
 			const oView = this.getView()
@@ -523,39 +471,32 @@ sap.ui.define([
 			}
 			return "";
 		},
+		onPressAdd: function () {
+			var oTable = this.byId("idLicensesTable"); // Obtener la tabla
+			var aSelectedItems = oTable.getSelectedItems(); // Obtener los elementos seleccionados
 
-		encontrarGrupo: function (licencias) {
-			const consolasModel = this.getView().getModel("consolasModel").getData();
-
-			if (!consolasModel || typeof consolasModel !== "object") {
-				return "Modelo no encontrado o no es válido";
+			if (aSelectedItems.length === 0) {
+				MessageBox.warning("Debe seleccionar al menos un elemento.");
+				return;
 			}
 
-			licencias.forEach((licencia) => {
-				for (const grupo in consolasModel) {
-					const consolas = consolasModel[grupo];
-
-					if (Array.isArray(consolas)) {
-						const consolaEncontrada = consolas.find((consola) => consola === licencia.Tplnr);
-
-						if (consolaEncontrada) {
-							licencia.Consola = grupo;
-						}
-					} else {
-						console.warn(`El grupo '${grupo}' no es un array. Se ignorará.`);
-					}
-				}
-			});
-			licencias.sort((a, b) => {
-				if (a.Consola < b.Consola) return -1;
-				if (a.Consola > b.Consola) return 1;
-				return 0;
+			// Obtener los datos seleccionados
+			var aSelectedData = aSelectedItems.map(function (oItem) {
+				return oItem.getBindingContext("SearchLicense").getObject();
 			});
 
-			console.log(licencias);
+			// Extraer solo los IDs (si necesitas solo los IDs)
+			var aSelectedIds = aSelectedData.map(item => item.Id);
 
-			return licencias;
-		},
+			console.log("Datos seleccionados:", aSelectedData);
+			console.log("IDs seleccionados:", aSelectedIds);
+
+			// Aquí puedes hacer lo que necesites con los datos, como agregarlos a otro modelo, enviarlos al backend, etc.
+
+			MessageBox.success("Se han agregado " + aSelectedData.length + " elementos correctamente.");
+		}
+		,
+
 
 		transformData: function (data) {
 			const transformedData = [];
@@ -3802,8 +3743,11 @@ sap.ui.define([
 		onClearFilter: function () {
 			var oTable = this.getView().byId('turnosTable')
 
+
 			var cmbEstaciones = this.getView().byId('Estaciones')
+			var cmbRegion = this.getView().byId('Region')
 			cmbEstaciones.setValue("")
+			cmbRegion.setValue("")
 
 			var oLicenseTableItems = oTable.getBinding("rows");
 			var aFilter = [];
@@ -4670,10 +4614,7 @@ sap.ui.define([
 
 		},
 		loadGrupoPlanificador: function (evt) {
-			//let region = evt.getParameters().selectedItem.getKey();
 			let region = AppManagementHelper.getModel("FiltersJsonModel").getData().Werks.value;
-
-			console.log("Region", region)
 			if (region === '') {
 				AppManagementHelper.getModel("FiltersJsonModel").setProperty("/Werks/value", "");
 			}
@@ -4681,10 +4622,7 @@ sap.ui.define([
 		},
 
 		goToGantt: function () {
-
-			//ocation.hash = "Gantt_Licencias-Display?Empresa=" + this.society 
 			window.open("#" + "Gantt_Licencias-Display?Empresa=" + this.society);
-
 		},
 		onCreateShiftPress: function () {
 			this.openDialog("transener.sistemadeturnos.fragments.newShift");
@@ -4863,8 +4801,8 @@ sap.ui.define([
 				}));
 				if (results.length > 0) {
 					// Procesar los datos según la lógica de negocio
-					const arrayOrdenado = this.encontrarGrupo(this.ordenarPorEqunr(results));
-					this.assignShiftsToLicences(arrayOrdenado);
+					const arrayOrdenado = TurnosService.encontrarGrupo(TurnosService.ordenarPorEqunr(results));
+					TurnosService.assignShiftsToLicences(arrayOrdenado);
 
 					// Asignar los datos procesados de nuevo al modelo
 					oLicencesModel.setData(arrayOrdenado)
@@ -4873,6 +4811,7 @@ sap.ui.define([
 			} catch (error) {
 				console.error("Error en successSelectTurno:", error);
 			}
+			this.onCountItems(oLicencesModel.getData())
 		},
 
 		_applyMinuteChange: function (oContext, iMinutesToAdd) {
@@ -4930,20 +4869,71 @@ sap.ui.define([
 			this.openDialog("transener.sistemadeturnos.fragments.addLicenses");
 		},
 		onSelectLicense: async function () {
-			const Id = this.byId("idLicense").getValue().toString()
-			const licencia = {
-				Id,
-				Empresa: '100',
-				Tipo: 'L',
-				Anio: '2025'
-			}
-			const result = await LicenseService.FIND(licencia);
+			// const Id = this.byId("idLicense").getValue().toString()
+			// const licencia = {
+			// 	Id,
+			// 	Empresa: '100',
+			// 	Tipo: 'L',
+			// 	Anio: '2025'
+			// }
+			// const result = await LicenseService.FIND(licencia);
+
 			const model = AppManagementHelper.getModel("SearchLicense");
+			this.getView().setModel(model, "SearchLicense");
+
+			var dateTurno = this.byId('date')
+
+			const FechaTurno = dateTurno.getDateValue().toISOString().split('T')[0]
+
+			var aFilters = []
 
 
-			model.setData([result]); 
-			console.log(model.getData());
-			this.getView().setModel(model, "SearchLicense"); 
+			var dateInitPicker = this.byId('initDate');
+			var dateEndPicker = this.byId('endDate');
+			var dateFromPicker = this.byId('fromDate');
+			var dateToPicker = this.byId('toDate');
+
+			var sFromDate = dateInitPicker?.getDateValue() || dateFromPicker?.getDateValue() || null;
+			var sToDate = dateEndPicker?.getDateValue() || dateToPicker?.getDateValue() || null;
+
+			if (!sFromDate || !sToDate) {
+				MessageBoxHelper.showAlert("Alerta", "Debe completar los campos de fecha")
+				return
+			}
+
+			if (sFromDate && sToDate) {
+
+				aFilters.push(new sap.ui.model.Filter({
+					path: "Solbeg",
+					operator: sap.ui.model.FilterOperator.BT,
+					value1: sFromDate,
+					value2: sToDate
+				}))
+			}
+
+			aFilters.push(new sap.ui.model.Filter({
+				path: "Empresa",
+				operator: sap.ui.model.FilterOperator.EQ,
+				value1: 100
+			}))
+			aFilters.push(new sap.ui.model.Filter({
+				path: "Tipo",
+				operator: sap.ui.model.FilterOperator.EQ,
+				value1: "L"
+			}))
+
+			TurnosService.search(aFilters, FechaTurno)
+				.then((data) => {
+					console.log("Datos obtenidos:", data);
+					model.setData(data);
+					model.refresh();
+					this.onCountItems(data)
+				})
+				.catch((error) => {
+					console.error("Error en la búsqueda:", error);
+					model.setData([]); // Asigna un array vacío para evitar errores
+					model.refresh();
+				});
 
 
 			// this.getView().setModel("SearchLicense", AppManagementHelper.getModel("SearchLicense").setData(result))
@@ -5009,68 +4999,7 @@ sap.ui.define([
 		clearAdvancedFilters: function () {
 			models.createFiltersModel();
 		},
-		ordenarPorEqunr: function (data) {
-			// Ordenar los elementos por el campo 'Equnr'
-			data.sort((a, b) => {
-				if (a.Equnr === b.Equnr) {
-					// Si las consolas son iguales, no cambiar el orden
-					return 0;
-				}
-				return a.Equnr < b.Equnr ? -1 : 1;
-			});
-			return data;
-		},
 
-		assignShiftsToLicences: function (licences) {
-			let initialTime = 7 * 60; // 7:00 AM en minutos
-			let currentTime = initialTime;
-			let previousConsola = "";
-			let previousGrupo = "";
-			let firstShiftInGroup = "";
-
-			licences.forEach((license) => {
-				if (!license.Grupo) {
-					license.Grupo = license.Equnr;
-				}
-			});
-
-			licences.forEach((license) => {
-				if (license.Consola !== previousConsola) {
-					currentTime = initialTime;
-					previousConsola = license.Consola;
-				}
-
-				// Si tiene TurnosLicencias_nav con datos, tomar el Turno directamente
-				if (Array.isArray(license.TurnosLicencias_nav?.results) && license.TurnosLicencias_nav.results.length > 0) {
-					license.TurnoAsignado = license.TurnosLicencias_nav.results[0].Turno;
-					return;
-				}
-
-				if (license.Grupo.startsWith("_")) {
-					license.TurnoAsignado = this._formatTime(currentTime);
-					currentTime += 15; // Duración estándar
-					return;
-				}
-
-				if (license.Grupo !== previousGrupo) {
-					previousGrupo = license.Grupo;
-					let shiftDuration = license.Jobcond === "04" ? 30 : 15;
-					firstShiftInGroup = this._formatTime(currentTime);
-					license.TurnoAsignado = firstShiftInGroup;
-					currentTime += shiftDuration;
-				} else {
-					license.TurnoAsignado = firstShiftInGroup;
-				}
-			});
-
-			licences.sort((a, b) => this._convertTimeToMinutes(a.TurnoAsignado) - this._convertTimeToMinutes(b.TurnoAsignado));
-		},
-
-		_convertTimeToMinutes: function (timeString) {
-			if (!timeString) return 0;
-			let [hours, minutes] = timeString.split(":").map(Number);
-			return hours * 60 + minutes;
-		},
 		onDragStart: function (oEvent) {
 			const oDraggedRow = oEvent.getParameter("target");
 			const oDragSession = oEvent.getParameter("dragSession");
@@ -5475,14 +5404,7 @@ sap.ui.define([
 			const [hours, minutes] = shift.split(":").map(Number);
 			return hours * 60 + minutes;
 		},
-		_formatTime: function (iMinutes) {
-			// Convertir los minutos de nuevo a formato HH:mm
-			var iHours = Math.floor(iMinutes / 60);
-			var iRemainderMinutes = iMinutes % 60;
 
-			// Asegurarse de que siempre tenga 2 dígitos
-			return (iHours < 10 ? "0" : "") + iHours + ":" + (iRemainderMinutes < 10 ? "0" : "") + iRemainderMinutes;
-		},
 	});
 });
 
