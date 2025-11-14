@@ -55,9 +55,9 @@ sap.ui.define([
 	"transener/sistemadeturnos/utils/UnifilarHelper",
 	"transener/sistemadeturnos/services/checkAlternativeLabelService",
 
-], function (Controller, Fragment, Filter, FilterOperator, TableRow, MessageToast,MessageBox, NavigationHelper, FormatHelper, FioriComponentHelper, MailHelper,
+], function (Controller, Fragment, Filter, FilterOperator, TableRow, MessageToast, MessageBox, NavigationHelper, FormatHelper, FioriComponentHelper, MailHelper,
 	ValidateHelper,
-	MessageBoxHelper,  i18nTranslationHelper, AppManagementHelper, DateHelper, ExportLicenseHelper, formatter, HardCodeModel, models,
+	MessageBoxHelper, i18nTranslationHelper, AppManagementHelper, DateHelper, ExportLicenseHelper, formatter, HardCodeModel, models,
 	LicenseService,
 	RegionesService,
 	PersonalHabilitadoService, WorkPlaceService, oDataService, EmpresaTramitacionService, TipoEquipoService, EquiposService,
@@ -383,6 +383,8 @@ sap.ui.define([
 
 			const FechaTurno = dateTurno.getDateValue().toISOString().split('T')[0]
 
+			const Fecha = dateTurno.getDateValue()
+
 			var oLicencesModel = AppManagementHelper.getModel("LicencesJsonModel");
 			oLicencesModel.setData([])
 
@@ -390,29 +392,29 @@ sap.ui.define([
 			var aFilters = []
 
 
-			var dateInitPicker = this.byId('initDate');
-			var dateEndPicker = this.byId('endDate');
-			var dateFromPicker = this.byId('fromDate');
-			var dateToPicker = this.byId('toDate');
+			// var dateInitPicker = this.byId('initDate');
+			// var dateEndPicker = this.byId('endDate');
+			// var dateFromPicker = this.byId('fromDate');
+			// var dateToPicker = this.byId('toDate');
 
-			var sFromDate = dateInitPicker?.getDateValue() || dateFromPicker?.getDateValue() || null;
-			var sToDate = dateEndPicker?.getDateValue() || dateToPicker?.getDateValue() || null;
+			// var sFromDate = dateInitPicker?.getDateValue() || dateFromPicker?.getDateValue() || null;
+			// var sToDate = dateEndPicker?.getDateValue() || dateToPicker?.getDateValue() || null;
 
-			if (!sFromDate || !sToDate) {
-				MessageBoxHelper.showAlert("Alerta", "Debe completar los campos de fecha")
-				return
-			}
+			// if (!sFromDate || !sToDate) {
+			// 	MessageBoxHelper.showAlert("Alerta", "Debe completar los campos de fecha")
+			// 	return
+			// }
 
 			oTable.setBusy(true)
 
 
-			if (sFromDate && sToDate) {
+			if (Fecha) {
 
 				aFilters.push(new sap.ui.model.Filter({
 					path: "Solbeg",
 					operator: sap.ui.model.FilterOperator.BT,
-					value1: sFromDate,
-					value2: sToDate
+					value1: Fecha,
+					value2: Fecha
 				}))
 			}
 
@@ -472,31 +474,45 @@ sap.ui.define([
 			return "";
 		},
 		onPressAdd: function () {
-			var oTable = this.byId("idLicensesTable"); // Obtener la tabla
-			var aSelectedItems = oTable.getSelectedItems(); // Obtener los elementos seleccionados
+			var oTable = this.byId("idLicensesTable");
+			var aSelectedItems = oTable.getSelectedItems();
 
 			if (aSelectedItems.length === 0) {
 				MessageBox.warning("Debe seleccionar al menos un elemento.");
 				return;
 			}
 
-			// Obtener los datos seleccionados
 			var aSelectedData = aSelectedItems.map(function (oItem) {
 				return oItem.getBindingContext("SearchLicense").getObject();
 			});
 
-			// Extraer solo los IDs (si necesitas solo los IDs)
-			var aSelectedIds = aSelectedData.map(item => item.Id);
+			var oLicencesModel = this.getView().getModel("LicencesJsonModel");
+			var aCurrentData = oLicencesModel.getProperty("/") || [];
 
-			console.log("Datos seleccionados:", aSelectedData);
-			console.log("IDs seleccionados:", aSelectedIds);
 
-			// Aquí puedes hacer lo que necesites con los datos, como agregarlos a otro modelo, enviarlos al backend, etc.
+			var aNewData = aSelectedData.filter(function (item) {
+				return !aCurrentData.some(existing => existing.Id === item.Id);
+			});
 
-			MessageBox.success("Se han agregado " + aSelectedData.length + " elementos correctamente.");
-		}
-		,
+			if (aNewData.length === 0) {
+				MessageBox.information("Los elementos seleccionados ya están en la lista.");
+				return;
+			}
 
+			var aUpdatedData = aCurrentData.concat(aNewData);
+
+
+
+
+
+
+			oLicencesModel.setProperty("/", aUpdatedData);
+			oLicencesModel.refresh();
+
+			console.log("Datos agregados al modelo:", aUpdatedData);
+
+			MessageBox.success("Se han agregado " + aNewData.length + " elementos correctamente.");
+		},
 
 		transformData: function (data) {
 			const transformedData = [];
@@ -4627,25 +4643,35 @@ sap.ui.define([
 		onCreateShiftPress: function () {
 			this.openDialog("transener.sistemadeturnos.fragments.newShift");
 		},
-
 		openDialog: function (fragment) {
-			var oView = this.getView()
+			var oView = this.getView();
+
+			// Si ya había un diálogo, lo destruyo
 			if (oDialog) {
 				oDialog.destroy();
+				oDialog = null;
 			}
 
 			Fragment.load({
-				id: oView.getId(),
+				id: oView.getId(),       // 👈 importante para heredar los ids
 				name: fragment,
 				controller: this,
-			}).then(
-				function (oFragment) {
-					oDialog = oFragment;
-					this.getView().addDependent(oDialog);
-					oDialog.open();
-				}.bind(this)
-			);
+			}).then(function (oFragment) {
+				oDialog = oFragment;
+
+				// Lo cuelgo de la vista
+				oView.addDependent(oDialog);
+
+				// 👇 Traigo el modelo de la vista y se lo paso al diálogo
+				var oSearchLicenseModel = oView.getModel("SearchLicense");
+				if (oSearchLicenseModel) {
+					oDialog.setModel(oSearchLicenseModel, "SearchLicense");
+				}
+
+				oDialog.open();
+			}.bind(this));
 		},
+
 
 		closeDialog: function () {
 			if (oDialog) {
@@ -4866,78 +4892,74 @@ sap.ui.define([
 			return oDateFormat.format(oDate);
 		},
 		onAddLicense: function () {
-			this.openDialog("transener.sistemadeturnos.fragments.addLicenses");
+			this.onSelectLicense()
+				.then(function () {
+					this.openDialog("transener.sistemadeturnos.fragments.addLicenses");
+				}.bind(this));
 		},
-		onSelectLicense: async function () {
-			// const Id = this.byId("idLicense").getValue().toString()
-			// const licencia = {
-			// 	Id,
-			// 	Empresa: '100',
-			// 	Tipo: 'L',
-			// 	Anio: '2025'
-			// }
-			// const result = await LicenseService.FIND(licencia);
 
-			const model = AppManagementHelper.getModel("SearchLicense");
-			this.getView().setModel(model, "SearchLicense");
+		onSelectLicense: function () {
+			const oSearchModel = AppManagementHelper.getModel("SearchLicense");
+			this.getView().setModel(oSearchModel, "SearchLicense");
 
-			var dateTurno = this.byId('date')
+			var dateTurno = this.byId('date');
+			const FechaTurno = dateTurno.getDateValue();
+			const Fecha = dateTurno.getDateValue().toISOString().split('T')[0];
 
-			const FechaTurno = dateTurno.getDateValue().toISOString().split('T')[0]
+			var aFilters = [];
 
-			var aFilters = []
-
-
-			var dateInitPicker = this.byId('initDate');
-			var dateEndPicker = this.byId('endDate');
-			var dateFromPicker = this.byId('fromDate');
-			var dateToPicker = this.byId('toDate');
-
-			var sFromDate = dateInitPicker?.getDateValue() || dateFromPicker?.getDateValue() || null;
-			var sToDate = dateEndPicker?.getDateValue() || dateToPicker?.getDateValue() || null;
-
-			if (!sFromDate || !sToDate) {
-				MessageBoxHelper.showAlert("Alerta", "Debe completar los campos de fecha")
-				return
-			}
-
-			if (sFromDate && sToDate) {
-
+			if (FechaTurno) {
 				aFilters.push(new sap.ui.model.Filter({
 					path: "Solbeg",
 					operator: sap.ui.model.FilterOperator.BT,
-					value1: sFromDate,
-					value2: sToDate
-				}))
+					value1: FechaTurno,
+					value2: FechaTurno
+				}));
 			}
 
 			aFilters.push(new sap.ui.model.Filter({
 				path: "Empresa",
 				operator: sap.ui.model.FilterOperator.EQ,
 				value1: 100
-			}))
+			}));
+
 			aFilters.push(new sap.ui.model.Filter({
 				path: "Tipo",
 				operator: sap.ui.model.FilterOperator.EQ,
 				value1: "L"
-			}))
+			}));
 
-			TurnosService.search(aFilters, FechaTurno)
-				.then((data) => {
-					console.log("Datos obtenidos:", data);
-					model.setData(data);
-					model.refresh();
-					this.onCountItems(data)
+			// 👇 devolvemos la promesa
+			return TurnosService.search(aFilters, Fecha)
+				.then((resultadoFinal) => {
+
+					// 1) Tomamos las licencias ya agregadas
+					const oLicencesModel = AppManagementHelper.getModel("LicencesJsonModel");
+					const aLicenciasExistentes = oLicencesModel?.getData() || [];
+
+					// 2) Armamos un Set con los Id ya existentes
+					const idsExistentes = new Set(
+						aLicenciasExistentes.map((l) => l.Id)   // 🔁 CAMBIAR "Id" por tu campo real (p.ej. "IdLicencia")
+					);
+
+					// 3) Nos quedamos SOLO con las nuevas
+					const aNuevas = resultadoFinal.filter(item =>
+						!idsExistentes.has(item.Id)             // 🔁 mismo campo que arriba
+					);
+
+					// 4) Guardamos SOLO las nuevas en el modelo de búsqueda
+					oSearchModel.setData(aNuevas);
+					oSearchModel.refresh();
+
+					this.onCountItems(aNuevas);
 				})
 				.catch((error) => {
 					console.error("Error en la búsqueda:", error);
-					model.setData([]); // Asigna un array vacío para evitar errores
-					model.refresh();
+					oSearchModel.setData([]);
+					oSearchModel.refresh();
 				});
-
-
-			// this.getView().setModel("SearchLicense", AppManagementHelper.getModel("SearchLicense").setData(result))
 		},
+
 		onOpenActionSheet: function (oEvent) {
 			// Crear el ActionSheet solo si no existe
 			if (!this._oActionSheet) {
@@ -5073,37 +5095,90 @@ sap.ui.define([
 			oModel.refresh(true); // Refrescar el modelo para reflejar los cambios en la vista
 		},
 
+		// onDeletePress: function () {
+
+		// 	var oTable = this.byId("turnosTable");
+
+		// 	var iSelectedIndex = oTable.getSelectedIndex();
+
+		// 	if (iSelectedIndex === -1) {
+		// 		MessageToast.show("Por favor, seleccione una fila para eliminar.");
+		// 		return;
+		// 	}
+
+		// 	var oModel = this.getView().getModel("LicencesJsonModel");
+		// 	var aLicenses = oModel.getData();
+
+		// 	if (iSelectedIndex >= 0 && iSelectedIndex < aLicenses.length) {
+
+		// 		aLicenses.splice(iSelectedIndex, 1);
+
+		// 		oModel.setProperty("/", aLicenses);
+		// 		oModel.refresh(true);
+
+		// 		oTable.clearSelection();
+
+		// 		MessageToast.show("La licencia ha sido eliminada.");
+		// 	}
+		// },
 		onDeletePress: function () {
+			const oTable = this.getView().byId("turnosTable");
+			const aSelectedIndices = oTable.getSelectedIndices(); // Índices seleccionados
 
-			var oTable = this.byId("turnosTable");
-
-
-			var iSelectedIndex = oTable.getSelectedIndex();
-
-
-			if (iSelectedIndex === -1) {
-				MessageToast.show("Por favor, seleccione una fila para eliminar.");
+			if (aSelectedIndices.length === 0) {
+				MessageToast.show("Por favor, seleccione al menos una fila para eliminar.");
 				return;
 			}
 
+			const oModel = this.getView().getModel("LicencesJsonModel");
+			let aLicenses = oModel.getProperty("/");
 
-			var oModel = this.getView().getModel("LicencesJsonModel");
-			var aLicenses = oModel.getData();
-
-
-			if (iSelectedIndex >= 0 && iSelectedIndex < aLicenses.length) {
-
-				aLicenses.splice(iSelectedIndex, 1);
-
-
-				oModel.setProperty("/", aLicenses);
-				oModel.refresh(true);
-
-				oTable.clearSelection();
-
-				MessageToast.show("La licencia ha sido eliminada.");
+			if (!Array.isArray(aLicenses) || aLicenses.length === 0) {
+				MessageToast.show("No hay datos para eliminar.");
+				return;
 			}
+
+			let aDataToDelete = [];
+
+			// Ordenar índices de mayor a menor para evitar errores al eliminar
+			aSelectedIndices.sort((a, b) => b - a);
+
+			// Extraer datos de las filas seleccionadas
+			aSelectedIndices.forEach(index => {
+				if (index >= 0 && index < aLicenses.length) {
+					let oRowData = aLicenses[index];
+
+					aDataToDelete.push({
+						Id: oRowData.Id,
+						Empresa: oRowData.Empresa,
+						Tipo: oRowData.Tipo || "L",
+						Anio: oRowData.Anio,
+						Dateturno: new Date(oRowData.Fecha),
+					});
+
+					aLicenses.splice(index, 1); // Eliminar del modelo local
+				}
+			});
+
+			// Actualizar modelo en la vista
+			oModel.setProperty("/", aLicenses);
+			oModel.refresh(true);
+			oTable.clearSelection();
+
+			MessageToast.show("Se ha eliminado la(s) licencia(s) seleccionada(s).");
+
+			// Enviar al backend
+			this.deleteTurno(aDataToDelete);
 		},
+
+		deleteTurno: function (licencias) {
+			var entity = "/TurnosLicenciasSet";
+
+			licencias.forEach(licencia => {
+				oDataService.getModel("TransenerOperaciones").remove(entity, licencia);
+			});
+		},
+
 		onDetachLicense: function () {
 			var oTable = this.byId("turnosTable");
 
@@ -5165,7 +5240,14 @@ sap.ui.define([
 			// Notify the user
 			MessageToast.show("Licencia desacoplada, asignada después del último elemento del grupo con nuevo turno y grupo individual.");
 		},
+		_formatTime: function (iMinutes) {
+			// Convertir los minutos de nuevo a formato HH:mm
+			var iHours = Math.floor(iMinutes / 60);
+			var iRemainderMinutes = iMinutes % 60;
 
+			// Asegurarse de que siempre tenga 2 dígitos
+			return (iHours < 10 ? "0" : "") + iHours + ":" + (iRemainderMinutes < 10 ? "0" : "") + iRemainderMinutes;
+		},
 
 		onAddMinutes: function () {
 			var oInput = this._oDialog.getContent()[0];

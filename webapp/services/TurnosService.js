@@ -59,13 +59,14 @@ sap.ui.define([
                 }
 
                 if (dato.Period === "D" && !isNaN(fechaSolend)) {
-                    return fechaSolend.toISOString().split('T')[0] === fechaSeleccionada;
+                    return fechaSolbeg.toISOString().split('T')[0] === fechaSeleccionada;
                 }
 
                 return false;
             });
 
             return datosFiltrados;
+           //   return datos;
         },
         encontrarGrupo: function (licencias) {
             const consolasModel = AppManagementHelper.getModel("consolasModel").getData();

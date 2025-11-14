@@ -11,23 +11,15 @@
                 <f:formContainers>
                     <f:FormContainer>
                         <f:formElements>
-                            <!-- <f:FormElement>
+                            <f:FormElement>
                                 <f:fields>
-                                    <VBox justifyContent="SpaceBetween">
-                                        <Label text="{i18n>id}:" required="true" />
-                                        <Input id="idLicense" width="40%" change="handleChange" class="sapUiSmallMarginBottom" />
-                                    </VBox>
-                                </f:fields>
-                            </f:FormElement> -->
-                               <f:FormElement>
-                                <f:fields>
-                                    <VBox justifyContent="SpaceBetween">
+                                    <!-- <VBox justifyContent="SpaceBetween">
                                         <Label text="{i18n>init}:" required="true" />
                                         <DatePicker id="fromDate" width="40%" valueFormat="dd.MM.yyyy" displayFormat="dd.MM.yyyy" change="handleChange" class="sapUiSmallMarginBottom" />
                                        <Label text="{i18n>end}:" required="true" />
                                         <DatePicker id="toDate" width="40%" valueFormat="dd.MM.yyyy" displayFormat="dd.MM.yyyy" change="handleChange" class="sapUiSmallMarginBottom" />
                                    <Button icon="sap-icon://search" press="onSelectLicense"></Button>
-                                    </VBox>
+                                    </VBox> -->
                                 </f:fields>
                             </f:FormElement>
                             <f:FormElement>
@@ -35,6 +27,11 @@
                                     <VBox justifyContent="SpaceBetween">
                                         <Table id="idLicensesTable" items="{SearchLicense>/}" inset="false" class="sapUiResponsiveMargin" mode="MultiSelect">
                                             <columns>
+                                                <Column>
+                                                    <header>
+                                                        <Text text=""/>
+                                                    </header>
+                                                </Column>
                                                 <Column>
                                                     <header>
                                                         <Text text="ID"/>
