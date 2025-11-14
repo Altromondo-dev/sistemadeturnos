@@ -4,15 +4,22 @@
   font-size: 14px;
   font-weight: 400;
 }
+
 .textColor {
   color: #3a668b;
 }
-.counts{
-	font-size:16px;
+
+.counts {
+  font-size: 16px;
 }
+
 .text-bold {
   font-weight: bold;
   font-size: 15px;
+}
+
+.textWhite {
+  color: #fff
 }
 
 /* Contenedor Botones */
@@ -35,7 +42,8 @@
 .sapMPopup-CTX .sapMIBar.sapMHeader-CTX {
   background-color: #255780 !important;
 }
-.sapMDialog > header .sapMDialogTitleGroup .sapMTitle {
+
+.sapMDialog>header .sapMDialogTitleGroup .sapMTitle {
   color: #fff;
 }
 
@@ -50,9 +58,9 @@
   color: #fff;
 }
 
-.sapUiTableCell .sapMObjStatus{
-    font-size: 20px;
-    font-weight: 600;
+.sapUiTableCell .sapMObjStatus {
+  font-size: 20px;
+  font-weight: 600;
 }
 
 .sapMBtnInner {

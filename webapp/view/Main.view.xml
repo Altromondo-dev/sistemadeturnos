@@ -37,24 +37,24 @@
 							</HBox>
 						</VBox>
 						<VBox width="50%" alignItems="Center">
-						<HBox direction="Column" alignItems="End" >
-							<HBox alignItems="Center">
-								<Label text="{i18n>date}:" class="sapUiTinyMarginEnd"/>
-								<DatePicker id="date" valueFormat="dd.MM.yyyy" displayFormat="dd.MM.yyyy" change="onSelectTurno" class="sapUiSmallMarginBottom"/>
-							</HBox>
-							<HBox alignItems="Center">
-								<Label text="{i18n>equipRecierre}:" class="sapUiTinyMarginEnd"/>
-								<ComboBox width="10rem" id="ERecierre" selectionChange="" items="{ path: 'HardCodeModel>/Rdisparo', templateShareable: true }">
-									<core:Item key="{HardCodeModel>key}" text="{HardCodeModel>value}"/>
-								</ComboBox>
-							</HBox>
-							<HBox alignItems="Center">
-								<Label text="{i18n>equipDisparo}:" class="sapUiTinyMarginEnd"/>
-								<ComboBox width="10rem" id="EDisparo" selectionChange="" items="{ path: 'HardCodeModel>/Bloqueo', templateShareable: true }">
-									<core:Item key="{HardCodeModel>key}" text="{HardCodeModel>value}"/>
-								</ComboBox>
-							</HBox>
-							<Button icon="sap-icon://add-filter" text="Filtros Avanzados" press="openAdvancedFilters"/>
+							<HBox direction="Column" alignItems="End">
+								<HBox alignItems="Center">
+									<Label text="{i18n>date}:" class="sapUiTinyMarginEnd"/>
+									<DatePicker id="date" valueFormat="dd.MM.yyyy" displayFormat="dd.MM.yyyy" change="onSelectTurno" class="sapUiSmallMarginBottom"/>
+								</HBox>
+								<HBox alignItems="Center">
+									<Label text="{i18n>equipRecierre}:" class="sapUiTinyMarginEnd"/>
+									<ComboBox width="10rem" id="ERecierre" selectionChange="" items="{ path: 'HardCodeModel>/Rdisparo', templateShareable: true }">
+										<core:Item key="{HardCodeModel>key}" text="{HardCodeModel>value}"/>
+									</ComboBox>
+								</HBox>
+								<HBox alignItems="Center">
+									<Label text="{i18n>equipDisparo}:" class="sapUiTinyMarginEnd"/>
+									<ComboBox width="10rem" id="EDisparo" selectionChange="" items="{ path: 'HardCodeModel>/Bloqueo', templateShareable: true }">
+										<core:Item key="{HardCodeModel>key}" text="{HardCodeModel>value}"/>
+									</ComboBox>
+								</HBox>
+								<Button icon="sap-icon://add-filter" text="Filtros Avanzados" press="openAdvancedFilters"/>
 							</HBox>
 						</VBox>
 					</FlexBox>
@@ -81,14 +81,14 @@
 					<VBox justifyContent="Center">
 						<NumericContent value="{countsModel>/Total}" valueColor="Error"/>
 					</VBox>
-					
+
 				</FlexBox>
 				<HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMarginBeginEnd">
-				<HBox>
-					<Button icon="sap-icon://add" press="onAddLicense" class="sapUiSmallMarginEnd" />
-					<Button icon="sap-icon://delete" press=".onDeletePress" class="sapUiSmallMarginEnd"/>
-					<Button icon="sap-icon://order-status" press="onDetachLicense" class="sapUiSmallMarginEnd"/>
-						</HBox>
+					<HBox>
+						<Button icon="sap-icon://add" press="onAddLicense" class="sapUiSmallMarginEnd" />
+						<Button icon="sap-icon://delete" press=".onDeletePress" class="sapUiSmallMarginEnd"/>
+						<Button icon="sap-icon://broken-link" press="onDetachLicense" class="sapUiSmallMarginEnd"/>
+					</HBox>
 					<HBox width="500px" class="border" alignItems="End">
 						<HBox class="border sapUiTinyMargin" width="100%" justifyContent="SpaceAround">
 							<Input placeholder="{i18n>fastSearch}"/>
@@ -101,48 +101,16 @@
 					</HBox>
 				</HBox>
 				<t:Table id="turnosTable" selectionMode="MultiToggle" selectionBehavior="Row" ariaLabelledBy="title2" rows="{LicencesJsonModel>/}">
-					<!-- <t:dragDropConfig>
-						<dnd:DragDropInfo sourceAggregation="rows" targetAggregation="rows" dropPosition="Between" dragStart="onDragStart" drop="onDropTable2"/>
-					</t:dragDropConfig> -->
+
 					<t:columns>
-						<!--	<t:Column width="100px">
-								<Label text="Acciones"/>
-								<t:template>
-									<HBox justifyContent="SpaceBetween">
-										<Button icon="sap-icon://less" press=".onDeletePress">
-											<customData>
-												<core:CustomData key="LicenseId" value="{LicencesJsonModel>Id}"/>
-											</customData>
-										</Button>
-										<Button icon="sap-icon://order-status" press="onDetachLicense">
-											<customData>
-												<core:CustomData key="LicenseId" value="{LicencesJsonModel>Id}"/>
-											</customData>
-										</Button>
-									
-									</HBox>
-								</t:template>
-							</t:Column>
-								<t:Column width="170px">
-								<Label text="Acciones para la entrega"/>
-								<t:template>
-									<HBox justifyContent="SpaceBetween">
-													<Button icon="sap-icon://add-activity-2" press="onOpenComboPopover" />
-													<List items="{LicencesJsonModel>accionesEntregas}">
-                            <items>
-                                <StandardListItem title="{LicencesJsonModel>nombre}" />
-                            </items>
-                        </List>
-									</HBox>
-								</t:template>
-							</t:Column> -->
+						
 						<t:Column id="equipment" width="100px" class="customColumnBackground" hAlign="Center" sortProperty="equipment" filterProperty="equipment">
 							<Label text="{i18n>equipment}"/>
 							<t:template>
 								<Text text="{LicencesJsonModel>Equnr}" wrapping="false" class="{= ${firstItem} ? 'text-bold' : '' }"/>
 							</t:template>
 						</t:Column>
-						<t:Column id="status" hAlign="Center" sortProperty="Equstat" filterProperty="Equstat">
+						<t:Column id="status"  width="88px" hAlign="Center" sortProperty="Equstat" filterProperty="Equstat">
 							<Label text="{i18n>status}" class="back"/>
 							<t:template>
 								<Text text="{ path: 'LicencesJsonModel>Equstat' ,formatter: '.FormatterHelper.getEstado' }" wrapping="false"/>
@@ -179,17 +147,29 @@
 								<Text text="{LicencesJsonModel>Consola}" wrapping="false"/>
 							</t:template>
 						</t:Column>
-						<t:Column hAlign="Center" width="130px" sortProperty="initHour" filterProperty="TurnoAsignado">
+						<t:Column hAlign="Center" width="140px" sortProperty="initHour" filterProperty="TurnoAsignado">
 							<Label text="{i18n>shift}" textAlign="Center"/>
 							<t:template>
 								<HBox alignItems="Center" justifyContent="SpaceBetween">
-								   <TimePicker value="{LicencesJsonModel>TurnoAsignado}" valueFormat="HH:mm" displayFormat="HH:mm" valueState="{path: 'LicencesJsonModel>Consola', formatter: '.FormatterHelper.turnoColor'}" change="onChangeHour" />
-									<!-- <ObjectStatus text="{LicencesJsonModel>TurnoAsignado}" state="{path: 'LicencesJsonModel>Consola', formatter: '.FormatterHelper.turnoColor'}"  wrapping="false" class="turno"/>
+									<TimePicker value="{LicencesJsonModel>TurnoAsignado}" valueFormat="HH:mm" displayFormat="HH:mm" valueState="{path: 'LicencesJsonModel>Consola', formatter: '.FormatterHelper.turnoColor'}" change="onChangeHour" class="sapUiTinyMarginEnd"/>
 									<Button icon="sap-icon://create-entry-time" press="openMinuteDialog">
 										<customData>
 											<core:CustomData key="LicenseId" value="{LicencesJsonModel>Id}"/>
 										</customData>
-									</Button> -->
+									</Button>
+								</HBox>
+							</t:template>
+						</t:Column>
+						<t:Column width="170px">
+							<Label text="Acciones para la entrega"/>
+							<t:template>
+								<HBox justifyContent="SpaceBetween">
+									<Button icon="sap-icon://add-activity-2" press="onOpenComboPopover" />
+									<List items="{LicencesJsonModel>accionesEntregas}">
+										<items>
+											<StandardListItem title="{LicencesJsonModel>nombre}" />
+										</items>
+									</List>
 								</HBox>
 							</t:template>
 						</t:Column>
@@ -202,9 +182,12 @@
 					</t:columns>
 				</t:Table>
 				<content/>
+		
 				<footer>
 					<OverflowToolbar>
 						<Button text="{i18n>reports}" press="onReportsPress"/>
+						<ToolbarSpacer/>
+						<Text text="V{appVersion>/version}" class="textWhite"/>
 						<ToolbarSpacer/>
 						<Button icon="sap-icon://save" text="{i18n>saveTurno}" enabled="{enabledModel>/btnGuardar}" press="onSaveTurnoPress"/>
 						<Button icon="sap-icon://create-form" text="{i18n>createTurno}" enabled="{enabledModel>/btnCrear}" press="onSearch"/>

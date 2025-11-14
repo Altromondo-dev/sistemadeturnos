@@ -82,10 +82,12 @@ sap.ui.define([
 			oTableBindingItems.filter(LicenseHelper.getFastSearchFilters(sValue, this));
 		},
 		onInit: function () {
-			//  cdr migracion
-			// var jCond = LicenseService.getJobCond()
+		
+    this._busyDialog = null;
 
-			var cUrl = this.getBaseURL();
+
+			this.getVersion()
+			 this.getBaseURL();
 
 			//	var oRouter = this.getOwnerComponent().getRouter()
 			AppManagementHelper.getModel("OrderNumberJsonModel").setData({
@@ -117,6 +119,33 @@ sap.ui.define([
 			this.setApplicationModels()
 
 		},
+		getVersion: function () {
+			const oComponent = this.getOwnerComponent();
+
+			// Buscar si ya existe el modelo
+			let jsonModel = sap.ui.getCore().getModel("appVersion");
+
+			if (!jsonModel) {
+				jsonModel = new sap.ui.model.json.JSONModel();
+				jsonModel.setSizeLimit(9999);
+
+				const sVersion = oComponent.getManifestEntry("/sap.app/applicationVersion/version");
+
+				// Colocamos solo la versión, sin borrar otros posibles datos
+				jsonModel.setData({
+					version: sVersion
+				});
+
+				sap.ui.getCore().setModel(jsonModel, "appVersion");
+				this.getView().setModel(jsonModel, "appVersion");
+			} else {
+				// Si ya existe, igual lo sincronizamos en la vista
+				if (!this.getView().getModel("appVersion")) {
+					this.getView().setModel(jsonModel, "appVersion");
+				}
+			}
+		},
+
 
 		getBaseURL: function () {
 
@@ -4791,8 +4820,10 @@ sap.ui.define([
 		,
 
 		onSelectTurno: function (oEvent) {
-
+			
+		this.showGlobalBusy("Buscando turnos creados…");
 			AppManagementHelper.getModel("enabledModel").setData({ "btnCrear": true, "btnGuardar": true, "btnEnviar": true })
+
 			var oDatePicker = oEvent.getSource();
 			var sSelectedDate = oDatePicker.getDateValue();
 			var sFormattedDate = this._formatDate(sSelectedDate);
@@ -4815,30 +4846,54 @@ sap.ui.define([
 		},
 
 		successSelectTurno: async function (data) {
-			const oLicencesModel = AppManagementHelper.getModel("LicencesJsonModel")
+			const oLicencesModel = AppManagementHelper.getModel("LicencesJsonModel");
+
+
+
 			try {
+				const aResults = Array.isArray(data?.results) ? data.results : [];
 
-				const TurnoLicencias = [];
-
-				const results = await Promise.all(data.results.map(async (licencia) => {
-					const result = await LicenseService.FIND(licencia);
-					TurnoLicencias.push(result);
-					return result;
-				}));
-				if (results.length > 0) {
-					// Procesar los datos según la lógica de negocio
-					const arrayOrdenado = TurnosService.encontrarGrupo(TurnosService.ordenarPorEqunr(results));
-					TurnosService.assignShiftsToLicences(arrayOrdenado);
-
-					// Asignar los datos procesados de nuevo al modelo
-					oLicencesModel.setData(arrayOrdenado)
-					oLicencesModel.refresh()
+				if (!aResults.length) {
+					oLicencesModel.setData([]);
+					this.onCountItems([]);
+					return;
 				}
+
+				// Ejecutar todos FIND en paralelo
+				const results = await Promise.all(
+					aResults.map((licencia) => LicenseService.FIND(licencia))
+				);
+
+				if (!results.length) {
+					oLicencesModel.setData([]);
+					this.onCountItems([]);
+					return;
+				}
+
+				// Procesar lógica de negocio
+				const arrayOrdenado = TurnosService.encontrarGrupo(
+					TurnosService.ordenarPorEqunr(results)
+				);
+
+				TurnosService.assignShiftsToLicences(arrayOrdenado);
+
+				// Actualizar modelo
+				oLicencesModel.setData(arrayOrdenado);
+
+				// Contador
+				this.onCountItems(arrayOrdenado);
+
 			} catch (error) {
 				console.error("Error en successSelectTurno:", error);
+				oLicencesModel.setData([]);
+				this.onCountItems([]);
+			} finally {
+				// Ocultar Busy global
+				 this.hideGlobalBusy();
 			}
-			this.onCountItems(oLicencesModel.getData())
 		},
+
+
 
 		_applyMinuteChange: function (oContext, iMinutesToAdd) {
 			console.log(oContext)
@@ -5486,6 +5541,26 @@ sap.ui.define([
 			const [hours, minutes] = shift.split(":").map(Number);
 			return hours * 60 + minutes;
 		},
+		showGlobalBusy: function (sText) {
+    if (!this._busyDialog) {
+        this._busyDialog = sap.ui.xmlfragment(
+            "transener.sistemadeturnos.fragments.BusyDialog",
+            this
+        );
+        this.getView().addDependent(this._busyDialog);
+    }
+
+    sap.ui.getCore().byId("busyLabel").setText(sText || "");
+
+    this._busyDialog.open();
+},
+
+hideGlobalBusy: function () {
+    if (this._busyDialog) {
+        this._busyDialog.close();
+    }
+}
+
 
 	});
 });
