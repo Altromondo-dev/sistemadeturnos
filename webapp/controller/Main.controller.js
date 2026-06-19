@@ -14,13 +14,11 @@ sap.ui.define([
 	"transener/sistemadeturnos/utils/FormatHelper",
 	"transener/sistemadeturnos/utils/FioriComponentHelper",
 	"transener/sistemadeturnos/utils/MailHelper",
-	"transener/sistemadeturnos/utils/ValidateHelper",
 	"transener/sistemadeturnos/utils/MessageBoxHelper",
-	"transener/sistemadeturnos/utils/i18nTranslationHelper",
+
 	"transener/sistemadeturnos/utils/AppManagementHelper",
 	"transener/sistemadeturnos/utils/DateHelper",
 	"transener/sistemadeturnos/utils/ExportLicenseHelper",
-	"transener/sistemadeturnos/utils/formatter",
 	//model
 	"transener/sistemadeturnos/model/HardCodeModel",
 	"transener/sistemadeturnos/model/models",
@@ -39,7 +37,6 @@ sap.ui.define([
 	"transener/sistemadeturnos/services/InterventionTypesService",
 	"transener/sistemadeturnos/services/TipoOfEstacionalListService",
 	"transener/sistemadeturnos/services/StatusService",
-	"transener/sistemadeturnos/services/GrupoPlanificadorService",
 	"transener/sistemadeturnos/services/ReportesService",
 	// "transener/sistemadeturnos/utils/ReportesHelper",
 	"transener/sistemadeturnos/services/UserService",
@@ -56,13 +53,13 @@ sap.ui.define([
 	"transener/sistemadeturnos/services/checkAlternativeLabelService",
 
 ], function (Controller, Fragment, Filter, FilterOperator, TableRow, MessageToast, MessageBox, NavigationHelper, FormatHelper, FioriComponentHelper, MailHelper,
-	ValidateHelper,
-	MessageBoxHelper, i18nTranslationHelper, AppManagementHelper, DateHelper, ExportLicenseHelper, formatter, HardCodeModel, models,
+	
+	MessageBoxHelper, AppManagementHelper, DateHelper, ExportLicenseHelper, HardCodeModel, models,
 	LicenseService,
 	RegionesService,
 	PersonalHabilitadoService, WorkPlaceService, oDataService, EmpresaTramitacionService, TipoEquipoService, EquiposService,
 	OrdenesService, EstacionesService, RepositionTimeService, InterventionTypesService, TipoOfEstacionalListService, StatusService,
-	GrupoPlanificadorService, ReportesService,
+	ReportesService,
 	UserService, TurnosService, ExcelDownloadHelper, BusyDialogHelper, FioriHelper, LicenseHelper, RolAuthorizationHelper, FormatterHelper,
 	LegacyValidationHelper,
 	UnifilarHelper, checkAlternativeLabelService) {
@@ -82,12 +79,17 @@ sap.ui.define([
 			oTableBindingItems.filter(LicenseHelper.getFastSearchFilters(sValue, this));
 		},
 		onInit: function () {
-		
-    this._busyDialog = null;
+			if (this._bOnInitDone) {
+				return;
+			}
+			this._bOnInitDone = true;
+
+
+			this._busyDialog = null;
 
 
 			this.getVersion()
-			 this.getBaseURL();
+			this.getBaseURL();
 
 			//	var oRouter = this.getOwnerComponent().getRouter()
 			AppManagementHelper.getModel("OrderNumberJsonModel").setData({
@@ -115,8 +117,8 @@ sap.ui.define([
 				Rdisparo: false,
 			});
 			UserService.loadModel();
-
-			this.setApplicationModels()
+			this.loadSociety();
+		//	this.setApplicationModels()
 
 		},
 		getVersion: function () {
@@ -1537,25 +1539,18 @@ sap.ui.define([
 			this.getView().setModel(oModel, "LicenseIdModel");
 		},
 
-		onAfterRendering: function () {
-			var oController = this;
-			// this.byId("turnosTable").addEventDelegate({
-			// 	onkeyup: function (event) {
-			// 		var data = event.srcControl.getBindingContext("LicencesListJsonModel").getObject();
-			// 		oController.formatAndShowData(data);
-			// 		LicenseService.FIND(data);
-			// 	}
-			// });
-			if (!this.hasExported) {
-				this.hasExported = true;
-				this.loadSociety();
-				this.loadTipoIntModel();
-				this.loadStacionalListModel();
-				this.loadStatusModel();
-				this.loadMotivoNoAutorizacionModel();
-			}
+		// onAfterRendering: function () {
+		
+		// 	if (!this.hasExported) {
+		// 		this.hasExported = true;
 
-		},
+		// 		this.loadTipoIntModel();
+		// 		this.loadStacionalListModel();
+		// 		this.loadStatusModel();
+		// 		this.loadMotivoNoAutorizacionModel();
+		// 	}
+
+		// },
 		loadCatalogDataReports: async function () {
 			let aDataJobCond = await LicenseService.getJobCond();
 			return {
@@ -1598,12 +1593,15 @@ sap.ui.define([
 
 		loadSociety: function () {
 			var that = this;
+
+			// Si ya resolvimos la sociedad una vez, no volvemos a hacer todo
+			if (this._societyResolved) {
+				return;
+			}
+
 			var oModeld = oDataService.getModel("TransenerOperaciones");
+
 			oModeld.read("/EmpresaUsuarioSet", {
-				/*urlParameters: {
-					$expand: "TurnoUsuarioSet"
-				},*/
-				//filters: filters,
 				success: function (data) {
 					var empresa = data.results[0].Empresa;
 					var werks = data.results[0].Region;
@@ -1616,14 +1614,18 @@ sap.ui.define([
 						AppManagementHelper.getModel("FiltersJsonModel").setProperty("/Werks/value", werks);
 						that.afterEmpresa();
 					}
-					//TODO OJO
-					//data.results[0].Region = "103";
+
 					AppManagementHelper.getModel("CurrentUser").setData(data.results[0]);
+
+					// Marcamos que ya resolvimos este flujo
+					that._societyResolved = true;
 				},
 				error: function (err) {
 					//do something;
+					console.log("Error en EmpresaUsuarioSet", err);
 				}
 			});
+
 			oModeld.read("/EstadoTramitacionCammesaSet", {
 				success: (data) => {
 					let oModel = AppManagementHelper.getModel("EstadosModel");
@@ -1635,15 +1637,26 @@ sap.ui.define([
 					console.log("Error cargando estados");
 				}
 			});
-
 		},
 
 		changeUbicacion: function (oEvent) {
 			LicenseHelper.changeUbicacion(oEvent);
 		},
-
 		InitSociety: function () {
+			// Si ya existe el diálogo, solo lo abrimos (y opcionalmente reseteamos el modelo)
+			if (this.dialogSociety) {
+				var oModel = this.dialogSociety.getModel("Society");
+				if (oModel) {
+					oModel.setData({ Code: "" }); // valor inicial si querés reset
+				}
 
+				if (!this.dialogSociety.isOpen()) {
+					this.dialogSociety.open();
+				}
+				return;
+			}
+
+			// Crear SOLO una vez
 			this.dialogSociety = new sap.m.Dialog({
 				type: sap.m.DialogType.Message,
 				title: "Selección de Empresa",
@@ -1660,23 +1673,13 @@ sap.ui.define([
 								change: [this.ValidateCombo, this],
 								selectedKey: "{Society>/Code}",
 								items: [
-									new sap.ui.core.Item({
-										key: "",
-										text: "Elija Uno"
-									}),
-									new sap.ui.core.Item({
-										key: "100",
-										text: "TRANSENER S.A."
-									}),
-									new sap.ui.core.Item({
-										key: "300",
-										text: "TRANSBA S.A."
-									})
+									new sap.ui.core.Item({ key: "", text: "Elija Uno" }),
+									new sap.ui.core.Item({ key: "100", text: "TRANSENER S.A." }),
+									new sap.ui.core.Item({ key: "300", text: "TRANSBA S.A." })
 								]
 							})
 						]
 					})
-
 				],
 				buttons: [
 					new sap.m.Button({
@@ -1687,10 +1690,16 @@ sap.ui.define([
 					})
 				]
 			});
-			var oModel = new sap.ui.model.json.JSONModel();
+
+			var oModel = new sap.ui.model.json.JSONModel({
+				Code: ""
+			});
 			this.dialogSociety.setModel(oModel, "Society");
+
+			this.getView().addDependent(this.dialogSociety);
 			this.dialogSociety.open();
 		},
+
 
 		onSelectedSociety: function () {
 			var society = this.dialogSociety.getModel("Society").getData().Code;
@@ -4658,14 +4667,7 @@ sap.ui.define([
 			}
 
 		},
-		loadGrupoPlanificador: function (evt) {
-			let region = AppManagementHelper.getModel("FiltersJsonModel").getData().Werks.value;
-			if (region === '') {
-				AppManagementHelper.getModel("FiltersJsonModel").setProperty("/Werks/value", "");
-			}
-			GrupoPlanificadorService.loadModel(region);
-		},
-
+	
 		goToGantt: function () {
 			window.open("#" + "Gantt_Licencias-Display?Empresa=" + this.society);
 		},
@@ -4820,8 +4822,8 @@ sap.ui.define([
 		,
 
 		onSelectTurno: function (oEvent) {
-			
-		this.showGlobalBusy("Buscando turnos creados…");
+
+			this.showGlobalBusy("Buscando turnos creados…");
 			AppManagementHelper.getModel("enabledModel").setData({ "btnCrear": true, "btnGuardar": true, "btnEnviar": true })
 
 			var oDatePicker = oEvent.getSource();
@@ -4889,7 +4891,7 @@ sap.ui.define([
 				this.onCountItems([]);
 			} finally {
 				// Ocultar Busy global
-				 this.hideGlobalBusy();
+				this.hideGlobalBusy();
 			}
 		},
 
@@ -5542,24 +5544,24 @@ sap.ui.define([
 			return hours * 60 + minutes;
 		},
 		showGlobalBusy: function (sText) {
-    if (!this._busyDialog) {
-        this._busyDialog = sap.ui.xmlfragment(
-            "transener.sistemadeturnos.fragments.BusyDialog",
-            this
-        );
-        this.getView().addDependent(this._busyDialog);
-    }
+			if (!this._busyDialog) {
+				this._busyDialog = sap.ui.xmlfragment(
+					"transener.sistemadeturnos.fragments.BusyDialog",
+					this
+				);
+				this.getView().addDependent(this._busyDialog);
+			}
 
-    sap.ui.getCore().byId("busyLabel").setText(sText || "");
+			sap.ui.getCore().byId("busyLabel").setText(sText || "");
 
-    this._busyDialog.open();
-},
+			this._busyDialog.open();
+		},
 
-hideGlobalBusy: function () {
-    if (this._busyDialog) {
-        this._busyDialog.close();
-    }
-}
+		hideGlobalBusy: function () {
+			if (this._busyDialog) {
+				this._busyDialog.close();
+			}
+		}
 
 
 	});

@@ -1,16 +1,34 @@
-sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/resource/ResourceModel", "sap/ui/Device", "transener/sistemadeturnos/model/models",
+sap.ui.define([
+	"sap/ui/core/UIComponent",
+	"sap/ui/model/resource/ResourceModel",
+	"sap/ui/Device",
+	"transener/sistemadeturnos/model/models",
 	"transener/sistemadeturnos/utils/FioriComponentHelper"
-], function (e, t, i, s, n) {
+], function (UIComponent, ResourceModel, Device, models,FioriComponentHelper) {
 	"use strict";
-	return e.extend("transener.sistemadeturnos.Component", {
+
+	return UIComponent.extend("transener.sistemadeturnos.Component", {
+
 		metadata: {
 			manifest: "json"
 		},
+
+		/**
+		 * The component is initialized by UI5 automatically during the startup of the app and calls the init method once.
+		 * @public
+		 * @override
+		 */
 		init: function () {
-			e.prototype.init.apply(this, arguments);
-			n.setComponent(this);
+			// call the base component's init function
+			//FioriComponentHelper.setComponent(this);
+			UIComponent.prototype.init.apply(this, arguments);
+			
+			// enable routing
 			this.getRouter().initialize();
-			this.setModel(s.createDeviceModel(), "device")
+
+			// set the device model
+			this.setModel(models.createDeviceModel(), "device");
+			//	DeviceModelHelper.loadModel();
 		}
-	})
+	});
 });
