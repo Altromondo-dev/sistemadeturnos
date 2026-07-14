@@ -1,6 +1,6 @@
 {
   "name": "transener.sistemadeturnos",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": true,
   "sapuxLayer": "CUSTOMER_BASE",
   "description": "",
@@ -26,11 +26,13 @@
     "build:mta": "rimraf resources mta_archives && mbt build",
     "undeploy": "cf undeploy transenersistemadeturnos --delete-services --delete-service-keys --delete-service-brokers"
   },
+  "engines": {
+    "node": "22.13.1"
+  },
   "devDependencies": {
     "@ui5/cli": "^3.0.0",
-    "@sap/ux-ui5-tooling": "1",
+    "@sap/ux-ui5-tooling": "^1.14.0",
     "rimraf": "3.0.2",
-    "@sap/ui5-builder-webide-extension": "^1.1.9",
     "ui5-task-zipper": "^3.1.3",
     "mbt": "^1.2.27"
   }
