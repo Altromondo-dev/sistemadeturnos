@@ -38,6 +38,10 @@ sap.ui.define([
 		},
 
 		getApp: function () {
+			if (!this._oApp) {
+				var oComponent = FioriComponentHelper.getComponent();
+				this._oApp = oComponent.getAggregation("rootControl");
+			}
 			return this._oApp;
 		},
 
@@ -51,25 +55,25 @@ sap.ui.define([
 		},
 
 		getUser: function () {
-			var oUserData = oApp.getModel("UserJsonModel").getData();
+			var oUserData = this.getApp().getModel("UserJsonModel").getData();
 			return oUserData.nombre + " " + oUserData.apellido;
 		},
 
 		getLoginName: function () {
-			var oUserData = oApp.getModel("UserJsonModel").getData();
+			var oUserData = this.getApp().getModel("UserJsonModel").getData();
 			return oUserData.login_name;
 		},
 
 		getStringUserLegacy: function () {
-			var oUserData = oApp.getModel("UserJsonModel").getData();
-			var oUserDataCu = oApp.getModel("CurrentUser").getData();
+			var oUserData = this.getApp().getModel("UserJsonModel").getData();
+			var oUserDataCu = this.getApp().getModel("CurrentUser").getData();
 			var name = oUserData.nombre + " " + oUserData.apellido;
 			var legacy = oUserDataCu.Legajo ? oUserDataCu.Legajo + " - " : "";
 			return `${legacy} ${name}`;
 		},
 
 		getUserLegacy: function () {
-			return oApp.getModel("CurrentUser").getData();
+			return this.getApp().getModel("CurrentUser").getData();
 		},
 
 		handleTramitacionesLicenciaExpand: function (aTramitacionesExpand) {

@@ -20,7 +20,7 @@ sap.ui.define([
 		 */
 		init: function () {
 			// call the base component's init function
-			//FioriComponentHelper.setComponent(this);
+			FioriComponentHelper.setComponent(this);
 			UIComponent.prototype.init.apply(this, arguments);
 			
 			// enable routing
