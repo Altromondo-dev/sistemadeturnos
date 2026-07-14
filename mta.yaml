@@ -56,8 +56,7 @@ modules:
     commands:
     - npm install
     - npm run build:cf
-    supported-platforms:
-      - cf
+    supported-platforms: []
 resources:
 - name: transenersistemadeturnos-destination-service
   type: org.cloudfoundry.managed-service
