@@ -28,7 +28,7 @@
         "sistemadeturnos-view": {
           "semanticObject": "sistemadeturnos",
           "action": "view",
-          "title": "Sistema de Turnos",
+          "title": "Sistema de Turnos (Doc11)",
           "signature": {
             "parameters": {},
             "additionalParameters": "allowed"
