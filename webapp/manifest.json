@@ -22,6 +22,19 @@
           "localUri": "localService/metadata.xml"
         }
       }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "sistemadeturnos-view": {
+          "semanticObject": "sistemadeturnos",
+          "action": "view",
+          "title": "Sistema de Turnos",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
     }
   },
   "sap.ui": {
